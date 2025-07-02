@@ -19,10 +19,8 @@ export default function Header() {
   const navigation = [
     { name: 'Özellikler', href: '/features', icon: '✨' },
     { name: 'Kurslar', href: '/courses', icon: '📚' },
-    { name: 'Koç Paneli', href: '/panel', icon: '👨‍⚕️' },
-    { name: 'Öğrenci Paneli', href: '/student-panel', icon: '🎓' },
     { name: 'Başarı Hikayeleri', href: '#success-stories', icon: '🏆' },
-    { name: 'İletişim', href: '#contact', icon: '📞' },
+    { name: 'İletişim', href: '/contact', icon: '📞' },
   ];
 
   return (
@@ -109,7 +107,7 @@ export default function Header() {
                 >
                   {item.icon}
                 </motion.span>
-                <span className="font-bold text-gray-900 group-hover:text-[#349e97] transition-colors duration-300 text-shadow-sm">
+                <span className="font-bold text-gray-900 group-hover:text-[#349e97] transition-colors duration-300 text-shadow-sm whitespace-nowrap">
                   {item.name}
                 </span>
               </span>
@@ -173,7 +171,7 @@ export default function Header() {
           </motion.a>
           
           <motion.a
-            href="/auth?mode=register"
+            href="/coach-application"
             className="relative inline-flex items-center gap-2 px-6 py-3 text-base font-bold text-white bg-gradient-to-r from-[#349e97] via-cyan-500 to-[#2a7f77] rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden"
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
@@ -203,7 +201,7 @@ export default function Header() {
             />
             
             <SparklesIcon className="h-5 w-5 relative z-10" />
-            <span className="relative z-10 font-bold">Kayıt Ol</span>
+            <span className="relative z-10 font-bold">Koç Ol</span>
           </motion.a>
 
           <motion.a
@@ -306,7 +304,7 @@ export default function Header() {
                     >
                       {item.icon}
                     </motion.span>
-                    <span className="font-bold text-gray-900 group-hover:text-[#349e97] transition-colors duration-300 relative z-10">
+                    <span className="font-bold text-gray-900 group-hover:text-[#349e97] transition-colors duration-300 relative z-10 whitespace-nowrap">
                       {item.name}
                     </span>
                     

@@ -60,19 +60,18 @@ export default function HeroSection() {
       
       <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-5xl text-center">
-          {/* Badge */}
+          {/* Minimalist Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="mb-8"
           >
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-6 py-3 text-sm font-semibold text-blue-700 ring-2 ring-blue-200/50 shadow-lg backdrop-blur-sm">
-              <AcademicCapIcon className="h-4 w-4 mr-2 text-blue-600" />
-              <span className="bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent font-bold">
-                Türkiye'nin İlk AI Destekli Tıp Akademisi
+            <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-gray-200/60 shadow-sm">
+              <span className="text-sm font-semibold text-gray-700">
+                Türkiye'nin En Kapsamlı Tıp Akademisi
               </span>
-            </span>
+            </div>
           </motion.div>
           
           {/* Main Heading */}
@@ -188,13 +187,21 @@ export default function HeroSection() {
           >
             <motion.a
               href="#"
-              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full sm:w-auto"
+              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full sm:w-auto"
+              style={{
+                background: 'linear-gradient(to right, #19b59b, #19a0b5, #1c8c85)'
+              }}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              <span 
+                className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  background: 'linear-gradient(to right, #1c8c85, #19a0b5, #19b59b)'
+                }}
+              ></span>
               <BeakerIcon className="w-6 h-6 mr-3 relative z-10" />
-              <span className="relative z-10">Ücretsiz Deneme Başlat</span>
+              <span className="relative z-10">Bizimle Çalış</span>
             </motion.a>
             
             <motion.a
