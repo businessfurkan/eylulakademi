@@ -1,26 +1,360 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --medical-primary: #8fdbd6; /* Main teal color */
+  --medical-secondary: #6fcfc7; /* Light teal */
+  --medical-accent: #97dfd7; /* Very light teal */
+  --medical-light: #bfefe7; /* Pale teal */
+  --medical-dark: #359f97; /* Dark teal */
+  --medical-darker: #2a7f77; /* Darker teal */
+  --background-color: #8fdbd6; /* Main teal background */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Force light theme always */
+html, body {
+  background: #8fdbd6 !important;
+  color: #1f2937 !important;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Ensure all text is readable */
+* {
+  color-scheme: light !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #8fdbd6, #359f97);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #359f97, #2a7f77);
+}
+
+/* Smooth animations */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Glass effect */
+.glass-effect {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Hover animations */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(143, 219, 214, 0.1), 0 10px 10px -5px rgba(53, 159, 151, 0.04);
+}
+
+/* Medical Background Icons */
+.medical-icon {
+  color: var(--medical-primary);
+  filter: drop-shadow(0 2px 4px rgba(143, 219, 214, 0.1));
+  transition: all 0.3s ease;
+}
+
+.medical-icon:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(143, 219, 214, 0.2));
+}
+
+/* Medical pattern background utility */
+.medical-pattern {
+  background-color: #8fdbd6 !important;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(143, 219, 214, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(53, 159, 151, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(111, 207, 199, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 60% 60%, rgba(191, 239, 231, 0.08) 0%, transparent 50%);
+  background-size: 600px 600px, 800px 800px, 400px 400px, 700px 700px;
+  background-position: 0 0, 100% 100%, 50% 50%, 25% 75%;
+  animation: medicalFloat 20s ease-in-out infinite;
+}
+
+/* Medical Icon Animations */
+@keyframes sway {
+  0%, 100% { transform: translateX(0px) rotate(0deg); }
+  50% { transform: translateX(10px) rotate(5deg); }
+}
+
+@keyframes slideAcross {
+  0% { transform: translateX(-20px); opacity: 0.4; }
+  50% { transform: translateX(10px); opacity: 0.8; }
+  100% { transform: translateX(-20px); opacity: 0.4; }
+}
+
+@keyframes glow {
+  0%, 100% { 
+    opacity: 0.5; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.1); 
   }
 }
 
+@keyframes moveLeftRight {
+  0%, 100% { transform: translateX(0px); }
+  50% { transform: translateX(20px); }
+}
+
+@keyframes floatRotate {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  33% { 
+    transform: translateY(-15px) rotate(120deg); 
+  }
+  66% { 
+    transform: translateY(-5px) rotate(240deg); 
+  }
+  100% { 
+    transform: translateY(0px) rotate(360deg); 
+  }
+}
+
+@keyframes medicalFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.3;
+  }
+  33% {
+    transform: translateY(-10px) rotate(1deg);
+    opacity: 0.4;
+  }
+  66% {
+    transform: translateY(5px) rotate(-1deg);
+    opacity: 0.35;
+  }
+}
+
+/* Enhanced Pulse Animation for Medical Elements */
+@keyframes medicalPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: scale(1.05); 
+    opacity: 0.8; 
+  }
+}
+
+/* Heartbeat Animation */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.2);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+/* DNA Spiral Animation */
+@keyframes dnaSpiral {
+  0% {
+    transform: translateY(0px) rotate(0deg) scaleX(1);
+  }
+  25% {
+    transform: translateY(-10px) rotate(90deg) scaleX(0.8);
+  }
+  50% {
+    transform: translateY(0px) rotate(180deg) scaleX(1);
+  }
+  75% {
+    transform: translateY(10px) rotate(270deg) scaleX(0.8);
+  }
+  100% {
+    transform: translateY(0px) rotate(360deg) scaleX(1);
+  }
+}
+
+/* Floating Up Down Animation */
+@keyframes floatUpDown {
+  0%, 100% { 
+    transform: translateY(0px); 
+    opacity: 0.75;
+  }
+  50% { 
+    transform: translateY(-20px); 
+    opacity: 0.9;
+  }
+}
+
+/* Force custom background color on all states */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #8fdbd6 !important;
+}
+
+html {
+  background-color: #8fdbd6 !important;
+}
+
+/* Override any dark mode attempts */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #8fdbd6 !important;
+    color: black !important;
+  }
+  
+  html {
+    background-color: #8fdbd6 !important;
+  }
+}
+
+/* Shimmer animation for header button */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-12deg);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out;
+}
+
+/* Medical icon animations */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Apply different animations to medical icons */
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin 4s linear infinite;
+}
+
+.animate-glow {
+  animation: glow 2.5s ease-in-out infinite;
+}
+
+.animate-moveLeftRight {
+  animation: moveLeftRight 4s ease-in-out infinite;
+}
+
+.animate-floatRotate {
+  animation: floatRotate 6s ease-in-out infinite;
+}
+
+.animate-heartbeat {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+.animate-dnaSpiral {
+  animation: dnaSpiral 5s ease-in-out infinite;
+}
+
+/* Animated gradient text effects */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 
+                 0 0 40px rgba(255, 255, 255, 0.3),
+                 0 0 60px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 
+                 0 0 60px rgba(255, 255, 255, 0.5),
+                 0 0 90px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes slideGradient {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease-in-out infinite;
+}
+
+.animate-text-glow {
+  animation: textGlow 3s ease-in-out infinite;
+}
+
+.animate-slide-gradient {
+  background-size: 200% auto;
+  animation: slideGradient 6s linear infinite;
 }
