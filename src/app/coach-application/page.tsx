@@ -327,7 +327,7 @@ export default function CoachApplication() {
             >
               <GraduationCap size={12} className="text-white" />
             </motion.div>
-            <span className="text-indigo-700 font-semibold">🎓 Eylül Akademi Ailesi</span>
+                              <span className="text-indigo-700 font-semibold">🎓 Eylül Büyükkaya Akademi Ailesi</span>
           </div>
           
           <motion.h1
@@ -352,7 +352,7 @@ export default function CoachApplication() {
             className="text-xl text-gray-700 max-w-3xl mx-auto mb-8 leading-relaxed"
           >
             Tıp eğitimi alanındaki deneyiminizi paylaşın, öğrencilerin hedeflerine ulaşmasına destek olun ve 
-            <span className="font-semibold text-indigo-700"> Eylül Akademi ailesinin bir parçası</span> olun.
+                              <span className="font-semibold text-indigo-700"> Eylül Büyükkaya Akademi ailesinin bir parçası</span> olun.
           </motion.p>
 
           <motion.div

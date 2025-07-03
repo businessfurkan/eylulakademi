@@ -138,7 +138,7 @@ export default function AdminPanel() {
   const [coachApplications, setCoachApplications] = useState<CoachApplication[]>([]);
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
-    platformName: 'Eylül Akademi',
+    platformName: 'Eylül Büyükkaya Akademi',
     maintenanceMode: false,
     registrationEnabled: true,
     maxStudentsPerCoach: 200,
@@ -426,7 +426,7 @@ export default function AdminPanel() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Süper Admin Panel</h1>
-                <p className="text-gray-600">Eylül Akademi Platform Yönetimi</p>
+                <p className="text-gray-600">Eylül Büyükkaya Akademi Platform Yönetimi</p>
               </div>
             </div>
             

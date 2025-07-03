@@ -15,11 +15,11 @@ const navigation = {
     { name: 'Koç Sistemi', href: '#' }
   ],
   support: [
-    { name: 'Yardım Merkezi', href: '#' },
-    { name: 'İletişim', href: '#' },
-    { name: 'KVKK', href: '#' },
-    { name: 'Kullanım Şartları', href: '#' },
-    { name: 'Gizlilik Politikası', href: '#' }
+    { name: 'Yardım Merkezi', href: '/faq' },
+    { name: 'İletişim', href: '/contact' },
+    { name: 'KVKK', href: '/privacy-policy' },
+    { name: 'Kullanım Şartları', href: '/terms-of-service' },
+    { name: 'Gizlilik Politikası', href: '/privacy-policy' }
   ],
   social: [
     {

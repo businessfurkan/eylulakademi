@@ -413,7 +413,7 @@ export default function ContactPage() {
           >
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Sıkça Sorulan Sorular</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Eylül Akademi hakkında merak ettiklerinizin cevaplarını burada bulabilirsiniz
+                              Eylül Büyükkaya Akademi hakkında merak ettiklerinizin cevaplarını burada bulabilirsiniz
             </p>
           </motion.div>
 

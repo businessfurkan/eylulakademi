@@ -169,6 +169,40 @@ export default function Header() {
             <div className="absolute inset-0 bg-gradient-to-r from-[#349e97]/5 via-cyan-500/5 to-[#349e97]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
             <span className="relative z-10">Giriş Yap</span>
           </motion.a>
+
+          <motion.a
+            href="/student-registration"
+            className="relative inline-flex items-center gap-2 px-6 py-3 text-base font-bold text-white bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
+            style={{
+              boxShadow: '0 8px 30px rgba(79, 70, 229, 0.3), 0 4px 15px rgba(79, 70, 229, 0.2)',
+              filter: 'drop-shadow(0 0 15px rgba(79, 70, 229, 0.4))'
+            }}
+          >
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            {/* Sparkle effects */}
+            <motion.div
+              className="absolute top-1 right-2 w-1.5 h-1.5 bg-white rounded-full opacity-60"
+              animate={{
+                scale: [0, 1, 0],
+                rotate: [0, 180, 360]
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                repeatType: "loop"
+              }}
+            />
+            
+            <SparklesIcon className="h-5 w-5 relative z-10" />
+            <span className="relative z-10 font-bold">Öğrenci Ol</span>
+          </motion.a>
           
           <motion.a
             href="/coach-application"
@@ -329,14 +363,24 @@ export default function Header() {
                     Giriş Yap
                   </motion.a>
                   <motion.a
-                    href="/auth?mode=register"
+                    href="/student-registration"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-3 rounded-lg text-base font-semibold shadow-lg"
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.32 }}
+                  >
+                    <SparklesIcon className="h-5 w-5" />
+                    Öğrenci Ol
+                  </motion.a>
+                  <motion.a
+                    href="/coach-application"
                     className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#349e97] to-[#2a7f77] text-white px-4 py-3 rounded-lg text-base font-semibold shadow-lg"
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.35 }}
                   >
                     <SparklesIcon className="h-5 w-5" />
-                    Kayıt Ol
+                    Koç Ol
                   </motion.a>
                   <motion.a
                     href="/admin"

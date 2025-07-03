@@ -102,11 +102,10 @@ export default function StudentPanel() {
     { id: 'dashboard', name: 'Dashboard', icon: Home, color: 'text-cyan-400', badge: 0 },
     { id: 'lessons', name: 'Derslerim', icon: BookOpen, color: 'text-emerald-400', badge: 3 },
     { id: 'calendar', name: 'Takvim', icon: Calendar, color: 'text-violet-400', badge: 0 },
-    { id: 'materials', name: 'Materyaller', icon: Library, color: 'text-orange-400', badge: 5 },
+    { id: 'materials', name: 'Koçtan Gelenler', icon: Library, color: 'text-orange-400', badge: 5 },
     { id: 'messages', name: 'Mesajlar', icon: MessageCircle, color: 'text-pink-400', badge: 2 },
     { id: 'exams', name: 'Sınavlarım', icon: Trophy, color: 'text-yellow-400', badge: 1 },
     { id: 'aiflashcards', name: 'AI Flashcard', icon: Brain, color: 'text-indigo-400', badge: 0 },
-    { id: 'notifications', name: 'Bildirimler', icon: Bell, color: 'text-red-400', badge: notifications },
     { id: 'profile', name: 'Profil', icon: User, color: 'text-gray-400', badge: 0 }
   ];
 
@@ -152,24 +151,25 @@ export default function StudentPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #046961 0%, #19827a 100%)' }}>
              {/* Modern Background Elements */}
        <div 
          className="absolute inset-0"
          style={{
-           background: 'radial-gradient(ellipse at top, rgba(168, 85, 247, 0.2), rgba(88, 28, 135, 0.1), transparent)'
+           background: 'radial-gradient(ellipse at top, rgba(4, 105, 97, 0.4), rgba(4, 105, 97, 0.3), rgba(25, 130, 122, 0.2))'
          }}
        ></div>
        <div 
-         className="absolute inset-0 opacity-30"
+         className="absolute inset-0 opacity-50"
          style={{
-           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a855f7' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23046961' fill-opacity='0.12'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
          }}
        ></div>
       
       {/* Floating Orbs */}
       <motion.div
-        className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-3xl"
+        className="absolute top-20 left-20 w-72 h-72 rounded-full blur-3xl"
+        style={{ background: 'linear-gradient(45deg, rgba(4, 105, 97, 0.35), rgba(25, 130, 122, 0.20))' }}
         animate={{
           x: [0, 100, 0],
           y: [0, -50, 0],
@@ -181,7 +181,8 @@ export default function StudentPanel() {
         }}
       />
       <motion.div
-        className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-600/20 rounded-full blur-3xl"
+        className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl"
+        style={{ background: 'linear-gradient(135deg, rgba(4, 105, 97, 0.4), rgba(25, 130, 122, 0.25))' }}
         animate={{
           x: [0, -100, 0],
           y: [0, 50, 0],
@@ -199,10 +200,14 @@ export default function StudentPanel() {
           initial={{ x: -288 }}
           animate={{ x: sidebarOpen ? 0 : -288 }}
           transition={{ duration: 0.3 }}
-          className={`${sidebarOpen ? 'fixed lg:relative' : 'fixed'} bg-black/20 backdrop-blur-xl border-r border-white/10 h-screen top-0 z-50 w-72`}
+          className={`${sidebarOpen ? 'fixed lg:relative' : 'fixed'} backdrop-blur-xl border-r h-screen top-0 z-50 w-72`}
+          style={{ 
+            background: 'linear-gradient(180deg, rgba(69, 152, 145, 0.90) 0%, rgba(69, 152, 145, 0.80) 50%, rgba(103, 181, 175, 0.75) 100%)',
+            borderRightColor: 'rgba(69, 152, 145, 0.4)'
+          }}
         >
           {/* Sidebar Glass Effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] to-white/[0.02] rounded-r-3xl"></div>
+          <div className="absolute inset-0 rounded-r-3xl" style={{ background: 'linear-gradient(135deg, rgba(69, 152, 145, 0.15) 0%, rgba(69, 152, 145, 0.08) 100%)' }}></div>
           
           {/* Sidebar Header */}
           <div className="p-6 border-b border-white/10 relative">
@@ -213,10 +218,10 @@ export default function StudentPanel() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-200 via-teal-300 to-cyan-200 bg-clip-text text-transparent">
                     Öğrenci Paneli
                   </h1>
-                  <p className="text-sm text-gray-400 mt-1">Eylül Akademi</p>
+                  <p className="text-sm text-gray-400 mt-1">Eylül Büyükkaya Akademi</p>
                 </motion.div>
               )}
               
@@ -249,9 +254,12 @@ export default function StudentPanel() {
                 whileTap={{ scale: 0.98 }}
                 className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group ${
                   activeModule === item.id
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-white shadow-lg'
+                    ? 'text-white shadow-lg'
                     : 'hover:bg-white/5 text-gray-300'
                 }`}
+                style={activeModule === item.id ? { 
+                  background: 'linear-gradient(135deg, rgba(69, 152, 145, 0.35), rgba(69, 152, 145, 0.20))'
+                } : {}}
               >
                 <div className={`p-2 rounded-lg ${
                   activeModule === item.id ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'
@@ -294,7 +302,7 @@ export default function StudentPanel() {
                     <img
                       src={studentData.photo}
                       alt={studentData.name}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-cyan-400/50"
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-teal-300/60"
                     />
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-black/20"></div>
                   </div>
@@ -305,7 +313,7 @@ export default function StudentPanel() {
                     <p className="text-sm text-gray-300 truncate">
                       {studentData.class}
                     </p>
-                    <p className="text-xs text-cyan-400 font-medium">
+                    <p className="text-xs font-medium" style={{ color: '#459891' }}>
                       Koç: {studentData.coach}
                     </p>
                   </div>
@@ -326,7 +334,10 @@ export default function StudentPanel() {
         {/* Main Content */}
         <div className="flex-1 transition-all duration-300">
           {/* Header */}
-          <header className="bg-black/10 backdrop-blur-xl border-b border-white/10 p-6 relative">
+          <header className="backdrop-blur-xl border-b p-6 relative" style={{ 
+            background: 'linear-gradient(90deg, rgba(69, 152, 145, 0.20), rgba(69, 152, 145, 0.15))',
+            borderBottomColor: 'rgba(69, 152, 145, 0.3)'
+          }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Sidebar Toggle Button - Visible when sidebar is closed */}
@@ -336,7 +347,11 @@ export default function StudentPanel() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2 }}
                     onClick={() => setSidebarOpen(true)}
-                    className="p-3 bg-gradient-to-r from-cyan-500/20 to-purple-600/20 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 flex-shrink-0 border border-white/20"
+                    className="p-3 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 flex-shrink-0 border"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(69, 152, 145, 0.35), rgba(69, 152, 145, 0.20))',
+                      borderColor: 'rgba(69, 152, 145, 0.4)'
+                    }}
                     title="Navigasyon Menüsünü Aç"
                   >
                     <Menu size={20} />
@@ -351,11 +366,16 @@ export default function StudentPanel() {
 
               {/* Notification Button */}
               <div className="relative">
-                <button className="relative p-3 hover:bg-white/10 rounded-xl transition-colors">
+                <button 
+                  onClick={() => setActiveModule('notifications')}
+                  className="relative p-3 hover:bg-white/10 rounded-xl transition-colors"
+                >
                   <Bell size={20} className="text-white" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    3
-                  </span>
+                  {notifications > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {notifications}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -1789,10 +1809,289 @@ function CalendarModule() {
 }
 
 function MaterialsModule() {
+  const [activeTab, setActiveTab] = useState<'materials' | 'videos'>('materials');
+  
+  // Koçtan gelen örnek materyaller
+  const coachMaterials = [
+    {
+      id: 1,
+      name: 'Anatomi Ders Notları - Kas Sistemi.pdf',
+      type: 'pdf',
+      size: '2.3 MB',
+      uploadDate: new Date(2024, 10, 15),
+      coach: 'Dr. Eylül Büyükkaya',
+      description: 'Kas sistemi anatomisi ve fizyolojisi detaylı ders notları',
+      category: 'Anatomi'
+    },
+    {
+      id: 2,
+      name: 'Biyokimya Metabolizma Şemaları.png',
+      type: 'image',
+      size: '1.8 MB',
+      uploadDate: new Date(2024, 10, 14),
+      coach: 'Dr. Eylül Büyükkaya',
+      description: 'Metabolik yolakların görsel şemaları',
+      category: 'Biyokimya'
+    },
+    {
+      id: 3,
+      name: 'Fizyoloji Çalışma Rehberi.docx',
+      type: 'document',
+      size: '956 KB',
+      uploadDate: new Date(2024, 10, 12),
+      coach: 'Dr. Eylül Büyükkaya',
+      description: 'Fizyoloji dersi için kapsamlı çalışma rehberi',
+      category: 'Fizyoloji'
+    },
+    {
+      id: 4,
+      name: 'Sınav Öncesi Kontrol Listesi.xlsx',
+      type: 'spreadsheet',
+      size: '245 KB',
+      uploadDate: new Date(2024, 10, 10),
+      coach: 'Dr. Eylül Büyükkaya',
+      description: 'Sınav hazırlığı için önemli konular listesi',
+      category: 'Sınav Hazırlığı'
+    },
+    {
+      id: 5,
+      name: 'Patoloji Atlas.pdf',
+      type: 'pdf',
+      size: '15.2 MB',
+      uploadDate: new Date(2024, 10, 8),
+      coach: 'Dr. Eylül Büyükkaya',
+      description: 'Görsel patoloji atlası ve vaka örnekleri',
+      category: 'Patoloji'
+    }
+  ];
+
+  // Koçtan gelen örnek video dersler
+  const coachVideos = [
+    {
+      id: 1,
+      title: 'Kas Kontraksiyon Mekanizması',
+      description: 'Kas liflerinin moleküler düzeyde çalışma prensibi',
+      duration: '24:35',
+      uploadDate: new Date(2024, 10, 16),
+      coach: 'Dr. Eylül Büyükkaya',
+      category: 'Anatomi',
+      thumbnail: '/api/placeholder/300/200',
+      views: 45
+    },
+    {
+      id: 2,
+      title: 'Glikoliz ve Krebs Döngüsü',
+      description: 'Enerji metabolizmasının temel yolakları',
+      duration: '32:18',
+      uploadDate: new Date(2024, 10, 14),
+      coach: 'Dr. Eylül Büyükkaya',
+      category: 'Biyokimya',
+      thumbnail: '/api/placeholder/300/200',
+      views: 67
+    },
+    {
+      id: 3,
+      title: 'Kalp Fizyolojisi ve EKG',
+      description: 'Kardiyovasküler sistem ve elektrokardiyografi',
+      duration: '41:22',
+      uploadDate: new Date(2024, 10, 12),
+      coach: 'Dr. Eylül Büyükkaya',
+      category: 'Fizyoloji',
+      thumbnail: '/api/placeholder/300/200',
+      views: 89
+    },
+    {
+      id: 4,
+      title: 'Hücresel Patoloji Temelleri',
+      description: 'Hücre hasarı ve adaptasyon mekanizmaları',
+      duration: '28:47',
+      uploadDate: new Date(2024, 10, 9),
+      coach: 'Dr. Eylül Büyükkaya',
+      category: 'Patoloji',
+      thumbnail: '/api/placeholder/300/200',
+      views: 52
+    }
+  ];
+
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'pdf': return '📄';
+      case 'document': return '📝';
+      case 'image': return '🖼️';
+      case 'spreadsheet': return '📊';
+      default: return '📁';
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      'Anatomi': 'bg-red-500/20 text-red-300 border-red-500/30',
+      'Biyokimya': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      'Fizyoloji': 'bg-green-500/20 text-green-300 border-green-500/30',
+      'Patoloji': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+      'Sınav Hazırlığı': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+    };
+    return colors[category] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+  };
+
   return (
-    <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10">
-      <h2 className="text-2xl font-bold text-white mb-4">Materyaller</h2>
-      <p className="text-gray-400">Materyaller modülü yakında eklenecek...</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">Koçtan Gelenler</h2>
+            <p className="text-gray-300">Koçunuzun size özel hazırladığı materyaller ve video dersler</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-400">Toplam İçerik</div>
+            <div className="text-2xl font-bold text-white">{coachMaterials.length + coachVideos.length}</div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setActiveTab('materials')}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              activeTab === 'materials'
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+            }`}
+          >
+            📚 Materyaller ({coachMaterials.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('videos')}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              activeTab === 'videos'
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+            }`}
+          >
+            🎥 Video Dersler ({coachVideos.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {activeTab === 'materials' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {coachMaterials.map((material) => (
+            <motion.div
+              key={material.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-orange-500/30 transition-all duration-300"
+            >
+              <div className="flex items-start space-x-4 mb-4">
+                <div className="text-3xl">{getFileIcon(material.type)}</div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-white mb-1 line-clamp-2">
+                    {material.name}
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-2">{material.size}</p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getCategoryColor(material.category)}`}>
+                    {material.category}
+                  </span>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-300 mb-4 line-clamp-2">
+                {material.description}
+              </p>
+              
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                <span>👩‍⚕️ {material.coach}</span>
+                <span>{formatDate(material.uploadDate)}</span>
+              </div>
+              
+              <div className="flex space-x-2">
+                <button className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+                  📥 İndir
+                </button>
+                <button className="px-4 py-2 bg-white/10 text-gray-300 rounded-xl hover:bg-white/20 transition-colors">
+                  👁️
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {coachVideos.map((video) => (
+            <motion.div
+              key={video.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+              className="bg-black/20 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-purple-500/30 transition-all duration-300"
+            >
+              <div className="relative">
+                <div className="w-full h-48 bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="text-4xl mb-2">🎥</div>
+                    <div className="text-sm">Video Önizleme</div>
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                  {video.duration}
+                </div>
+                <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                  👁️ {video.views} görüntüleme
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border mb-3 ${getCategoryColor(video.category)}`}>
+                  {video.category}
+                </span>
+                
+                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
+                  {video.title}
+                </h3>
+                
+                <p className="text-sm text-gray-300 mb-4 line-clamp-2">
+                  {video.description}
+                </p>
+                
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                  <span>👩‍⚕️ {video.coach}</span>
+                  <span>{formatDate(video.uploadDate)}</span>
+                </div>
+                
+                <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                  <span>▶️</span>
+                  <span>Videoyu İzle</span>
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Info Message */}
+      <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-blue-500/30">
+        <div className="flex items-start space-x-4">
+          <div className="text-2xl">💡</div>
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-2">Bilgi</h3>
+            <p className="text-gray-300 text-sm">
+              Bu bölümde koçunuzun size özel hazırladığı tüm materyaller ve video dersler yer almaktadır. 
+              Yeni içerikler eklendiğinde bildirim alacaksınız. İndirdiğiniz materyalleri offline olarak da kullanabilirsiniz.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2162,7 +2461,7 @@ function MessagesModule({ studentData }: { studentData: StudentData }) {
               <div>
                 <h3 className="text-white font-semibold">{studentData.coach}</h3>
                 <p className="text-emerald-400 text-sm flex items-center gap-1">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full block"></span>
                   Aktif
                 </p>
               </div>

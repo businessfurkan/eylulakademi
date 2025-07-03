@@ -145,8 +145,8 @@ export default function CoachPanel() {
     },
     { 
       id: 'reports', 
-      name: 'İlerleme & Raporlar', 
-      icon: TrendingUp, 
+      name: 'Öğrenciye Gönder', 
+      icon: Send, 
       color: 'from-indigo-500 to-blue-600' 
     },
     { 
@@ -2580,98 +2580,7 @@ function StudentsModule() {
   const [chatStudent, setChatStudent] = useState<ExtendedStudent | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
-  const [showFileSend, setShowFileSend] = useState<ExtendedStudent | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
 
-  // Materials data (from MaterialsModule)
-  const materials = [
-    {
-      id: 1,
-      name: 'Anatomi Ders Notları.pdf',
-      type: 'pdf',
-      size: '2.4 MB',
-      category: 'Ders Notları',
-      uploadDate: new Date(2024, 10, 15),
-      downloads: 156,
-      description: 'İnsan anatomisi temel konuları'
-    },
-    {
-      id: 2,
-      name: 'Kalp Anatomisi Videosu.mp4',
-      type: 'video',
-      size: '15.7 MB',
-      category: 'Videolar',
-      uploadDate: new Date(2024, 10, 20),
-      downloads: 89,
-      description: 'Kalp anatomisi detaylı görsel anlatım'
-    },
-    {
-      id: 3,
-      name: 'Sınav Soruları 2024.xlsx',
-      type: 'excel',
-      size: '1.2 MB',
-      category: 'Sınavlar',
-      uploadDate: new Date(2024, 10, 25),
-      downloads: 234,
-      description: 'Genel tıp sınav soruları'
-    },
-    {
-      id: 4,
-      name: 'Tıbbi Terimler Sözlüğü.docx',
-      type: 'word',
-      size: '856 KB',
-      category: 'Kaynaklar',
-      uploadDate: new Date(2024, 11, 1),
-      downloads: 67,
-      description: 'Tıp fakültesi terim sözlüğü'
-    },
-    {
-      id: 5,
-      name: 'Fizyoloji Sunumu.pptx',
-      type: 'powerpoint',
-      size: '4.2 MB',
-      category: 'Sunumlar',
-      uploadDate: new Date(2024, 11, 5),
-      downloads: 42,
-      description: 'Temel fizyoloji konuları sunumu'
-    },
-    {
-      id: 6,
-      name: 'Hücre Biyolojisi Videosu.mp4',
-      type: 'video',
-      size: '12.8 MB',
-      category: 'Videolar',
-      uploadDate: new Date(2024, 11, 8),
-      downloads: 78,
-      description: 'Hücre yapısı ve işlevleri'
-    }
-  ];
-
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'pdf': return '📄';
-      case 'word': return '📝';
-      case 'excel': return '📊';
-      case 'powerpoint': return '📋';
-      case 'video': return '🎥';
-      case 'image': return '🖼️';
-      case 'audio': return '🎵';
-      default: return '📎';
-    }
-  };
-
-  const getFileColor = (type: string) => {
-    switch (type) {
-      case 'pdf': return 'bg-red-50 text-red-600 border-red-200';
-      case 'word': return 'bg-blue-50 text-blue-600 border-blue-200';
-      case 'excel': return 'bg-green-50 text-green-600 border-green-200';
-      case 'powerpoint': return 'bg-orange-50 text-orange-600 border-orange-200';
-      case 'video': return 'bg-purple-50 text-purple-600 border-purple-200';
-      case 'image': return 'bg-pink-50 text-pink-600 border-pink-200';
-      case 'audio': return 'bg-yellow-50 text-yellow-600 border-yellow-200';
-      default: return 'bg-gray-50 text-gray-600 border-gray-200';
-    }
-  };
 
   // Available tags
   const availableTags = [
@@ -2684,12 +2593,6 @@ function StudentsModule() {
     active: 'bg-green-100 text-green-800',
     inactive: 'bg-gray-100 text-gray-800', 
     suspended: 'bg-red-100 text-red-800'
-  };
-
-  const statusLabels = {
-    active: 'Aktif',
-    inactive: 'Pasif',
-    suspended: 'Askıya Alındı'
   };
 
   // Tag colors
@@ -2825,39 +2728,7 @@ function StudentsModule() {
     setNewChatMessage('');
   };
 
-  // File send functions
-  const openFileSend = (student: ExtendedStudent) => {
-    setShowFileSend(student);
-    setSelectedFiles([]);
-  };
 
-  const closeFileSend = () => {
-    setShowFileSend(null);
-    setSelectedFiles([]);
-  };
-
-  const toggleFileSelection = (file: any) => {
-    setSelectedFiles(prev => {
-      const isSelected = prev.some(f => f.id === file.id);
-      if (isSelected) {
-        return prev.filter(f => f.id !== file.id);
-      } else {
-        return [...prev, file];
-      }
-    });
-  };
-
-  const sendSelectedFiles = () => {
-    if (selectedFiles.length === 0 || !showFileSend) return;
-    
-    // Simulate sending files
-    const fileNames = selectedFiles.map(file => file.name).join(', ');
-    
-    // Here you would implement the actual file sending logic
-    alert(`${fileNames} dosyaları ${showFileSend.name} adlı öğrenciye gönderildi!`);
-    
-    closeFileSend();
-  };
 
   return (
     <motion.div
@@ -3094,15 +2965,6 @@ function StudentsModule() {
                    title="Mesaj Gönder"
                  >
                    <MessageCircle size={14} />
-                 </motion.button>
-                 <motion.button
-                   whileHover={{ scale: 1.1 }}
-                   whileTap={{ scale: 0.9 }}
-                   onClick={() => openFileSend(student)}
-                   className="p-2 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 transition-colors"
-                   title="Dosya Gönder"
-                 >
-                   <FileText size={14} />
                  </motion.button>
                </div>
             </div>
@@ -3677,158 +3539,7 @@ function StudentsModule() {
         )}
       </AnimatePresence>
 
-      {/* File Send Modal */}
-      <AnimatePresence>
-        {showFileSend && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={closeFileSend}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white rounded-xl max-w-4xl w-full max-h-[80vh] shadow-xl border border-gray-200 flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-blue-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-blue-500 rounded-xl flex items-center justify-center text-white">
-                    <FileText size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900">Dosya Gönder</h3>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">{showFileSend?.name}</span> adlı öğrenciye materyal gönder
-                    </p>
-                  </div>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={closeFileSend}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X size={20} className="text-gray-400" />
-                </motion.button>
-              </div>
 
-              {/* File Selection */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="mb-4">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                    Materyal Kütüphanesi 
-                    <span className="text-sm font-normal text-gray-500 ml-2">
-                      ({selectedFiles.length} dosya seçildi)
-                    </span>
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-4">
-                    Göndermek istediğiniz dosyaları seçin. Birden fazla dosya seçebilirsiniz.
-                  </p>
-                </div>
-
-                {/* Materials Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {materials.map((material) => {
-                    const isSelected = selectedFiles.some(f => f.id === material.id);
-                    return (
-                      <motion.div
-                        key={material.id}
-                        whileHover={{ y: -2, scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => toggleFileSelection(material)}
-                        className={`relative bg-white rounded-xl p-4 border-2 cursor-pointer transition-all duration-300 ${
-                          isSelected 
-                            ? 'border-teal-500 bg-teal-50 shadow-lg' 
-                            : 'border-gray-200 hover:border-teal-300 hover:shadow-md'
-                        }`}
-                      >
-                        {/* Selection Indicator */}
-                        <div className={`absolute top-3 right-3 w-5 h-5 rounded-full border-2 transition-all duration-300 ${
-                          isSelected 
-                            ? 'bg-teal-500 border-teal-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              className="w-full h-full flex items-center justify-center"
-                            >
-                              <CheckCircle size={12} className="text-white" />
-                            </motion.div>
-                          )}
-                        </div>
-
-                        {/* File Icon */}
-                        <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center mb-3 ${getFileColor(material.type)}`}>
-                          <span className="text-2xl">{getFileIcon(material.type)}</span>
-                        </div>
-
-                        {/* File Info */}
-                        <div>
-                          <h5 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
-                            {material.name}
-                          </h5>
-                          <p className="text-xs text-gray-500 mb-2 line-clamp-2">
-                            {material.description}
-                          </p>
-                          <div className="flex items-center justify-between text-xs text-gray-400">
-                            <span>{material.size}</span>
-                            <span className="px-2 py-1 bg-gray-100 rounded-lg text-gray-600 font-medium">
-                              {material.category}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-
-                {/* Empty State */}
-                {materials.length === 0 && (
-                  <div className="text-center py-12">
-                    <FileText size={48} className="mx-auto text-gray-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Henüz materyal bulunmuyor</h3>
-                    <p className="text-gray-500">Önce materyal kütüphanesine dosya yükleyin</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">{selectedFiles.length}</span> dosya seçildi
-                </div>
-                <div className="flex items-center gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={closeFileSend}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                  >
-                    İptal
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={sendSelectedFiles}
-                    disabled={selectedFiles.length === 0}
-                    className="px-6 py-2 bg-gradient-to-r from-teal-500 to-blue-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
-                  >
-                    <Send size={16} />
-                    Dosyaları Gönder ({selectedFiles.length})
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
@@ -4283,6 +3994,177 @@ function MaterialsModule() {
 
 // Reports Module  
 function ReportsModule() {
+  const [activeTab, setActiveTab] = useState<'materials' | 'videos'>('materials');
+  const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<number[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [sendingContent, setSendingContent] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+
+  // Örnek öğrenciler listesi
+  const students = [
+    { id: 1, name: 'Ahmet Yılmaz', email: 'ahmet@email.com', class: '3. Sınıf Tıp', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
+    { id: 2, name: 'Ayşe Kaya', email: 'ayse@email.com', class: '2. Sınıf Tıp', photo: 'https://images.unsplash.com/photo-1494790108755-2616b799fcb3?w=150&h=150&fit=crop&crop=face' },
+    { id: 3, name: 'Mehmet Özkan', email: 'mehmet@email.com', class: '4. Sınıf Tıp', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' },
+    { id: 4, name: 'Zehra Demir', email: 'zehra@email.com', class: '1. Sınıf Tıp', photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face' },
+    { id: 5, name: 'Can Arslan', email: 'can@email.com', class: '3. Sınıf Tıp', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face' },
+  ];
+
+  // Materyaller (Materials Module'den alınan örnek veriler)
+  const availableMaterials = [
+    { id: 1, name: 'Anatomi Ders Notları.pdf', type: 'pdf', size: '2.3 MB', category: 'Anatomi' },
+    { id: 2, name: 'Biyokimya Şemaları.png', type: 'image', size: '1.8 MB', category: 'Biyokimya' },
+    { id: 3, name: 'Fizyoloji Rehberi.docx', type: 'document', size: '956 KB', category: 'Fizyoloji' },
+    { id: 4, name: 'Sınav Kontrol Listesi.xlsx', type: 'spreadsheet', size: '245 KB', category: 'Sınav' },
+    { id: 5, name: 'Patoloji Atlası.pdf', type: 'pdf', size: '15.2 MB', category: 'Patoloji' },
+  ];
+
+  // Video dersler (Video Lectures Module'den alınan örnek veriler) 
+  const availableVideos = [
+    { id: '1', title: 'Kalp Anatomisi ve Fizyolojisi', duration: '45:30', category: 'Anatomi', description: 'Kalbin yapısı ve çalışma prensibi' },
+    { id: '2', title: 'Solunum Sistemi Temelleri', duration: '38:15', category: 'Fizyoloji', description: 'Akciğerler ve gaz değişimi' },
+    { id: '3', title: 'Kas Kontraksiyon Mekanizması', duration: '24:35', category: 'Anatomi', description: 'Kas liflerinin çalışma prensibi' },
+    { id: '4', title: 'Biyokimya Metabolizma', duration: '32:18', category: 'Biyokimya', description: 'Enerji metabolizması yolakları' },
+  ];
+
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'pdf': return '📄';
+      case 'document': return '📝';
+      case 'image': return '🖼️';
+      case 'spreadsheet': return '📊';
+      default: return '📁';
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      'Anatomi': 'bg-red-100 text-red-700 border-red-200',
+      'Biyokimya': 'bg-blue-100 text-blue-700 border-blue-200',
+      'Fizyoloji': 'bg-green-100 text-green-700 border-green-200',
+      'Patoloji': 'bg-purple-100 text-purple-700 border-purple-200',
+      'Sınav': 'bg-yellow-100 text-yellow-700 border-yellow-200'
+    };
+    return colors[category] || 'bg-gray-100 text-gray-700 border-gray-200';
+  };
+
+  // Materyal seçimi
+  const toggleMaterialSelection = (materialId: number) => {
+    setSelectedMaterials(prev => 
+      prev.includes(materialId) 
+        ? prev.filter(id => id !== materialId)
+        : [...prev, materialId]
+    );
+  };
+
+  // Video seçimi
+  const toggleVideoSelection = (videoId: string) => {
+    setSelectedVideos(prev => 
+      prev.includes(videoId) 
+        ? prev.filter(id => id !== videoId)
+        : [...prev, videoId]
+    );
+  };
+
+  // Öğrenci seçimi
+  const toggleStudentSelection = (studentId: number) => {
+    setSelectedStudents(prev => 
+      prev.includes(studentId) 
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  // Hepsini seç / hiçbirini seçme
+  const toggleSelectAllStudents = () => {
+    const filteredStudentIds = filteredStudents.map(s => s.id);
+    const allSelected = filteredStudentIds.every(id => selectedStudents.includes(id));
+    
+    if (allSelected) {
+      // Filtrelenmiş öğrencileri seçimden çıkar
+      setSelectedStudents(prev => prev.filter(id => !filteredStudentIds.includes(id)));
+    } else {
+      // Filtrelenmiş öğrencileri seçime ekle
+      setSelectedStudents(prev => {
+        const newIds = filteredStudentIds.filter(id => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
+    }
+  };
+
+  // Öğrenci filtreleme
+  const filteredStudents = students.filter(student =>
+    student.name.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+    student.email.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+    student.class.toLowerCase().includes(studentSearchQuery.toLowerCase())
+  );
+
+  // İçerik gönderme
+  const sendContentToStudents = () => {
+    if (selectedStudents.length === 0) {
+      alert('Lütfen en az bir öğrenci seçin!');
+      return;
+    }
+
+    if (selectedMaterials.length === 0 && selectedVideos.length === 0) {
+      alert('Lütfen göndermek istediğiniz içerikleri seçin!');
+      return;
+    }
+
+    setSendingContent(true);
+
+    // Seçilen materyalleri ve videoları hazırla
+    const materialsToSend = availableMaterials.filter(m => selectedMaterials.includes(m.id));
+    const videosToSend = availableVideos.filter(v => selectedVideos.includes(v.id));
+
+    // Her öğrenci için localStorage'a kaydet
+    selectedStudents.forEach(studentId => {
+      const existingData = JSON.parse(localStorage.getItem('studentMessages') || '{}');
+      
+      if (!existingData[studentId]) {
+        existingData[studentId] = [];
+      }
+
+      // Materyaller için mesajlar oluştur
+      materialsToSend.forEach(material => {
+        existingData[studentId].push({
+          id: Date.now() + Math.random(),
+          type: 'material',
+          message: `📎 Yeni materyal: ${material.name}`,
+          senderName: 'Dr. Eylül Büyükkaya',
+          timestamp: new Date().toISOString(),
+          read: false,
+          materialData: material
+        });
+      });
+
+      // Videolar için mesajlar oluştur
+      videosToSend.forEach(video => {
+        existingData[studentId].push({
+          id: Date.now() + Math.random(),
+          type: 'video',
+          message: `🎥 Yeni video ders: ${video.title}`,
+          senderName: 'Dr. Eylül Büyükkaya',
+          timestamp: new Date().toISOString(),
+          read: false,
+          videoData: video
+        });
+      });
+
+      localStorage.setItem('studentMessages', JSON.stringify(existingData));
+    });
+
+    setTimeout(() => {
+      setSendingContent(false);
+      setSelectedStudents([]);
+      setSelectedMaterials([]);
+      setSelectedVideos([]);
+      setShowStudentModal(false);
+      alert(`İçerikler ${selectedStudents.length} öğrenciye başarıyla gönderildi!`);
+    }, 2000);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -4291,14 +4173,327 @@ function ReportsModule() {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
+      {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">İlerleme & Raporlar</h2>
-        <div className="text-center py-8">
-          <TrendingUp size={48} className="mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-600">Raporlama modülü geliştiriliyor...</p>
-          <p className="text-sm text-gray-500 mt-2">Grafikler ve ilerleme takibi yakında!</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Öğrenciye Gönder</h2>
+            <p className="text-gray-600">Materyalleri ve video dersleri öğrencilerinize gönderin</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{selectedMaterials.length + selectedVideos.length}</div>
+              <div className="text-sm text-gray-500">Seçili İçerik</div>
+            </div>
+            <button
+              onClick={() => setShowStudentModal(true)}
+              disabled={selectedMaterials.length === 0 && selectedVideos.length === 0}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <Send size={20} />
+              <span>Öğrencilere Gönder</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setActiveTab('materials')}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              activeTab === 'materials'
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            📚 Materyaller ({selectedMaterials.length}/{availableMaterials.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('videos')}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              activeTab === 'videos'
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            🎥 Video Dersler ({selectedVideos.length}/{availableVideos.length})
+          </button>
         </div>
       </div>
+
+      {/* Content */}
+      {activeTab === 'materials' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {availableMaterials.map((material) => (
+            <motion.div
+              key={material.id}
+              className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                selectedMaterials.includes(material.id)
+                  ? 'border-blue-500 bg-blue-50 shadow-lg'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => toggleMaterialSelection(material.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-start space-x-3">
+                <div className="text-2xl">{getFileIcon(material.type)}</div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 truncate">{material.name}</h3>
+                  <p className="text-sm text-gray-500">{material.size}</p>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 border ${getCategoryColor(material.category)}`}>
+                    {material.category}
+                  </span>
+                </div>
+                {selectedMaterials.includes(material.id) && (
+                  <div className="text-blue-500">
+                    <CheckCircle size={20} />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {availableVideos.map((video) => (
+            <motion.div
+              key={video.id}
+              className={`bg-white rounded-xl p-4 border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                selectedVideos.includes(video.id)
+                  ? 'border-purple-500 bg-purple-50 shadow-lg'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => toggleVideoSelection(video.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="flex items-start space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xl">🎥</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 line-clamp-2">{video.title}</h3>
+                  <p className="text-sm text-gray-500">{video.duration}</p>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-2 border ${getCategoryColor(video.category)}`}>
+                    {video.category}
+                  </span>
+                </div>
+                {selectedVideos.includes(video.id) && (
+                  <div className="text-purple-500">
+                    <CheckCircle size={20} />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Student Selection Modal */}
+      <AnimatePresence>
+        {showStudentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={() => setShowStudentModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Öğrenci Seç</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {selectedStudents.length} / {students.length} öğrenci seçildi
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowStudentModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Arama ve Toplu Seçim */}
+              <div className="space-y-4 mb-6">
+                {/* Arama Çubuğu */}
+                <div className="relative">
+                  <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={studentSearchQuery}
+                    onChange={(e) => setStudentSearchQuery(e.target.value)}
+                    placeholder="Öğrenci ara (isim, email, sınıf)..."
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                  />
+                </div>
+
+                {/* Toplu Seçim Butonları */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={toggleSelectAllStudents}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center space-x-2"
+                    >
+                      <Users size={16} />
+                      <span>
+                        {filteredStudents.every(s => selectedStudents.includes(s.id)) && filteredStudents.length > 0
+                          ? 'Hiçbirini Seçme'
+                          : 'Hepsini Seç'
+                        }
+                      </span>
+                    </button>
+                    <span className="text-sm text-gray-500">
+                      {filteredStudents.length} öğrenci gösteriliyor
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium text-blue-600">{selectedStudents.length}</span> seçili
+                  </div>
+                </div>
+              </div>
+
+              {/* Öğrenci Listesi */}
+              <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
+                {filteredStudents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users size={24} className="text-gray-400" />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-700 mb-2">Öğrenci bulunamadı</h4>
+                    <p className="text-gray-500">Arama kriterlerinizi değiştirmeyi deneyin</p>
+                  </div>
+                ) : (
+                                     filteredStudents.map((student) => (
+                  <motion.div
+                    key={student.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`flex items-center space-x-4 p-4 rounded-xl cursor-pointer transition-all duration-300 shadow-sm ${
+                      selectedStudents.includes(student.id)
+                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 shadow-md'
+                        : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent hover:shadow-md'
+                    }`}
+                    onClick={() => toggleStudentSelection(student.id)}
+                  >
+                    {/* Avatar */}
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={student.photo}
+                        alt={student.name}
+                        className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                      {selectedStudents.includes(student.id) && (
+                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <CheckCircle size={14} className="text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Öğrenci Bilgileri */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-gray-900 truncate">{student.name}</h4>
+                        {selectedStudents.includes(student.id) && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Seçili
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600 flex items-center gap-1">
+                          <span>🎓</span>
+                          <span>{student.class}</span>
+                        </p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <span>📧</span>
+                          <span className="truncate">{student.email}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Seçim İndikatörü */}
+                    <div className="flex-shrink-0">
+                      {selectedStudents.includes(student.id) ? (
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <CheckCircle size={16} className="text-white" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+                      )}
+                    </div>
+                  </motion.div>
+                )))}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-6">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">{selectedStudents.length}</div>
+                      <div className="text-xs text-gray-500">Seçili Öğrenci</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-purple-600">{selectedMaterials.length + selectedVideos.length}</div>
+                      <div className="text-xs text-gray-500">Seçili İçerik</div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">
+                      {selectedStudents.length > 0 ? 
+                        `${selectedStudents.length} öğrenciye ${selectedMaterials.length + selectedVideos.length} içerik gönderilecek` :
+                        'Henüz öğrenci seçilmedi'
+                      }
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => {
+                      setShowStudentModal(false);
+                      setStudentSearchQuery('');
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={sendContentToStudents}
+                    disabled={selectedStudents.length === 0 || sendingContent}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    {sendingContent ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        />
+                        <span>Gönderiliyor...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send size={18} />
+                        <span>İçerikleri Gönder ({selectedStudents.length})</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

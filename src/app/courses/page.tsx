@@ -14,6 +14,7 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { useCourses, Course } from '../../contexts/CoursesContext';
+import Link from 'next/link';
 
 export default function CoursesPage() {
   const { courses, isLoading } = useCourses();
@@ -332,14 +333,16 @@ function CourseCard({ course, index, featured }: { course: Course; index: number
           <div className="text-2xl font-bold text-[#349e97]">
             ₺{course.price.toLocaleString()}
           </div>
-          <motion.button
-            className="flex items-center gap-2 bg-gradient-to-r from-[#349e97] to-[#2a7f77] text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="text-sm font-medium">Detaylar</span>
-            <ChevronRightIcon className="h-4 w-4" />
-          </motion.button>
+          <Link href={`/courses/${course.id}`}>
+            <motion.button
+              className="flex items-center gap-2 bg-gradient-to-r from-[#349e97] to-[#2a7f77] text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="text-sm font-medium">Detaylar</span>
+              <ChevronRightIcon className="h-4 w-4" />
+            </motion.button>
+          </Link>
         </div>
       </div>
     </motion.div>
