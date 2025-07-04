@@ -83,7 +83,7 @@ export default function HeroSection() {
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-gray-900 leading-tight">
               <span className="block text-slate-800 mb-2">
-                Tıpta Başarının
+                Tıp'ta Başarının
               </span>
                              <span 
                  className="block bg-clip-text text-transparent mb-2 relative"
@@ -103,7 +103,14 @@ export default function HeroSection() {
                   ⚕️
                 </motion.div>
               </span>
-              <span className="block text-slate-700 text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mt-4">
+              <span 
+                className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mt-4 bg-clip-text text-transparent drop-shadow-sm"
+                style={{
+                  background: 'linear-gradient(to right, #1a365d, #2d3748, #1a365d)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text'
+                }}
+              >
                 Eylül Büyükkaya Akademi
               </span>
             </h1>

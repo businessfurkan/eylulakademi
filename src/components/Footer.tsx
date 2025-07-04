@@ -8,11 +8,12 @@ import {
 
 const navigation = {
   products: [
-    { name: 'YKS Hazırlık', href: '#' },
-    { name: 'Tıp Eğitimi', href: '#' },
-    { name: 'AI Flashcard', href: '#' },
-    { name: 'Podcast Üretici', href: '#' },
-    { name: 'Koç Sistemi', href: '#' }
+    { name: 'YKS Öğrencileri', href: '/student-registration' },
+    { name: 'Tıp Öğrencileri', href: '/student-registration' },
+    { name: 'AI Flashcard', href: '/student-registration' },
+    { name: 'Podcast Üretici (Yakında)', href: '/student-registration' },
+    { name: 'Uzman Koç Görüşmeleri', href: '/student-registration' },
+    { name: 'Ortak Ders Çalışma', href: '/student-registration' }
   ],
   support: [
     { name: 'Yardım Merkezi', href: '/faq' },

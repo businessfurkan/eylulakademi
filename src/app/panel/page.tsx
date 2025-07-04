@@ -36,7 +36,9 @@ import {
   Menu,
   X,
   Save,
-  UserPlus
+  UserPlus,
+  Mail,
+  Info
 } from 'lucide-react';
 
 // Type Definitions
@@ -2580,6 +2582,10 @@ function StudentsModule() {
   const [chatStudent, setChatStudent] = useState<ExtendedStudent | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [addStudentLoading, setAddStudentLoading] = useState(false);
+  const [addStudentMessage, setAddStudentMessage] = useState('');
 
 
   // Available tags
@@ -2728,6 +2734,74 @@ function StudentsModule() {
     setNewChatMessage('');
   };
 
+  // Add student by email function
+  const handleAddStudentByEmail = async () => {
+    if (!newStudentEmail.trim()) {
+      setAddStudentMessage('Lütfen geçerli bir mail adresi girin');
+      return;
+    }
+
+    setAddStudentLoading(true);
+    setAddStudentMessage('');
+
+    try {
+      // Simulate API call to check if email exists in system
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Mock check - in real app, this would be an API call
+      const existingEmails = [
+        'ahmet@example.com',
+        'zeynep@example.com', 
+        'murat@example.com',
+        'elif@example.com',
+        'test@test.com',
+        'ogrenci@gmail.com'
+      ];
+      
+      if (existingEmails.includes(newStudentEmail.toLowerCase())) {
+        // Check if student is already added to this coach
+        const alreadyAdded = students.some(s => s.email.toLowerCase() === newStudentEmail.toLowerCase());
+        
+        if (alreadyAdded) {
+          setAddStudentMessage('Bu öğrenci zaten listenizde mevcut');
+        } else {
+          // Add student to coach's list
+          const newStudent: ExtendedStudent = {
+            id: students.length + 1,
+            name: newStudentEmail.split('@')[0].charAt(0).toUpperCase() + newStudentEmail.split('@')[0].slice(1),
+            email: newStudentEmail,
+            phone: '+90 5XX XXX XX XX',
+            class: 'Belirtilmemiş',
+            department: 'Tıp Fakültesi',
+            registrationDate: new Date(),
+            coach: 'Dr. Eylül Büyükkaya',
+            status: 'active',
+            tags: ['yeni'],
+            notes: 'Mail adresi ile eklendi. Bilgiler güncellenecek.',
+            totalMeetings: 0,
+            meetingHistory: []
+          };
+          
+          setStudents([...students, newStudent]);
+          setAddStudentMessage('✅ Öğrenci başarıyla eklendi! Öğrenciye bildirim gönderildi.');
+          setNewStudentEmail('');
+          
+          // Auto close modal after 2 seconds
+          setTimeout(() => {
+            setShowAddStudentModal(false);
+            setAddStudentMessage('');
+          }, 2000);
+        }
+      } else {
+        setAddStudentMessage('❌ Bu mail adresi sistemde kayıtlı değil. Öğrenci önce kayıt olmalı.');
+      }
+    } catch (error) {
+      setAddStudentMessage('❌ Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setAddStudentLoading(false);
+    }
+  };
+
 
 
   return (
@@ -2769,6 +2843,7 @@ function StudentsModule() {
               <motion.button 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setShowAddStudentModal(true)}
                 className="px-6 py-3 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-2xl hover:shadow-2xl transition-all duration-500 flex items-center gap-3 font-semibold"
               >
                 <Plus size={20} />
@@ -3533,6 +3608,134 @@ function StudentsModule() {
                     Gönder
                   </motion.button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Student by Email Modal */}
+      <AnimatePresence>
+        {showAddStudentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowAddStudentModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                      <Mail size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Öğrenci Ekle</h3>
+                      <p className="text-sm text-gray-600">Mail adresi ile öğrenci ekleyin</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowAddStudentModal(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <X size={18} className="text-gray-400" />
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Öğrenci Mail Adresi <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                      <Mail size={20} className="text-gray-400" />
+                    </div>
+                    <input
+                      type="email"
+                      value={newStudentEmail}
+                      onChange={(e) => setNewStudentEmail(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !addStudentLoading && handleAddStudentByEmail()}
+                      placeholder="ornek@email.com"
+                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:ring-3 focus:border-green-500 transition-all duration-300 hover:bg-gray-100 text-gray-900 placeholder-gray-500"
+                      disabled={addStudentLoading}
+                    />
+                  </div>
+                </div>
+
+                {/* Message Area */}
+                {addStudentMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl text-sm font-medium ${
+                      addStudentMessage.includes('✅') 
+                        ? 'bg-green-50 text-green-800 border border-green-200' 
+                        : 'bg-red-50 text-red-800 border border-red-200'
+                    }`}
+                  >
+                    {addStudentMessage}
+                  </motion.div>
+                )}
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Info size={16} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-1">Nasıl Çalışır?</h4>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>• Öğrencinin mail adresini girin</li>
+                        <li>• Sistem mail adresini kontrol eder</li>
+                        <li>• Kayıtlı ise öğrenci listenize eklenir</li>
+                        <li>• Öğrenciye bildirim gönderilir</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
+                <button
+                  onClick={() => setShowAddStudentModal(false)}
+                  disabled={addStudentLoading}
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleAddStudentByEmail}
+                  disabled={!newStudentEmail.trim() || addStudentLoading}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {addStudentLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Kontrol Ediliyor...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={18} />
+                      <span>Öğrenci Ekle</span>
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           </motion.div>

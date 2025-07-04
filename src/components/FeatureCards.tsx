@@ -16,8 +16,8 @@ const features = [
     id: 1,
     icon: VideoCameraIcon,
     title: 'Video Ders Kütüphanesi',
-    description: 'TYT ve AYT konularında uzman eğitmenlerden hazırlanmış 500+ detaylı video ders ile interaktif öğrenme deneyimi',
-    stats: '500+ Video Ders',
+    description: 'Koçlarınızın hazırlamış olduğu 100+ detaylı video ders ile interaktif öğrenme deneyimi',
+    stats: '100+ Video Ders',
     gradient: 'from-teal-50 to-cyan-50',
     hoverGradient: 'from-teal-100 to-cyan-100',
     iconColor: 'text-teal-600'
@@ -25,9 +25,9 @@ const features = [
   {
     id: 2,
     icon: SparklesIcon,
-    title: 'AI Flashcard Üretici',
-    description: 'Yapay zeka ile tıp terimlerinizi otomatik flashcard sistemine dönüştürün ve akıllı tekrar algoritması ile öğrenin',
-    stats: '10,000+ Tıp Terimi',
+    title: 'Flashcard Üretici',
+    description: 'Tıp terimlerini kartlıklarla ve akıllı tekrar algoritması ile öğrenin',
+    stats: '200+ Tıp Terimi',
     gradient: 'from-pink-50 to-rose-50',
     hoverGradient: 'from-pink-100 to-rose-100',
     iconColor: 'text-pink-600'
@@ -36,8 +36,8 @@ const features = [
     id: 3,
     icon: SpeakerWaveIcon,
     title: 'Podcast Oluşturucu',
-    description: 'Ders notlarınızı AI destekli sesli podcast formatına çevirin ve hareket halindeyken öğrenmeye devam edin',
-    stats: 'Sınırsız Podcast',
+    description: 'Ders notlarınızı Al sesli podcast formatına çevirin ve müzik dinler gibi öğrenmeye devam edin',
+    stats: 'Yakında',
     gradient: 'from-purple-50 to-violet-50',
     hoverGradient: 'from-purple-100 to-violet-100',
     iconColor: 'text-purple-600'
@@ -56,7 +56,7 @@ const features = [
     id: 5,
     icon: ChatBubbleBottomCenterTextIcon,
     title: 'Uzman Koç Görüşmeleri',
-    description: 'Deneyimli doktor ve akademisyenlerle bire bir mentorluk seansları ile kariyer planlaması yapın',
+    description: 'Deneyimli koçlarla bire bir mentorluk seansları ile hem okul hem kariyer planlaması yapın',
     stats: 'Kişisel Mentorluk',
     gradient: 'from-indigo-50 to-blue-50',
     hoverGradient: 'from-indigo-100 to-blue-100',
@@ -65,8 +65,8 @@ const features = [
   {
     id: 6,
     icon: ChartBarIcon,
-    title: 'İlerleme Takibi',
-    description: 'Detaylı performans analitiği ile güçlü ve zayıf yönlerinizi keşfedin ve gelişim planınızı optimize edin',
+    title: 'Detaylı Takip',
+    description: 'Koçlar ve Öğrencilere özel panel ile sorunsuz iletişim ve kaçınılmaz gelişim',
     stats: 'Detaylı Analytics',
     gradient: 'from-orange-50 to-amber-50',
     hoverGradient: 'from-orange-100 to-amber-100',
@@ -146,10 +146,12 @@ export default function FeatureCards() {
                   {/* Simple Action Button - responsive */}
                   <div className="pt-3 sm:pt-4">
                     <button className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-800 hover:text-gray-900 transition-colors duration-200">
-                      <span>Detayları İncele</span>
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      <span>{feature.id === 3 ? 'Yakında' : 'Kullanmak için kayıt ol'}</span>
+                      {feature.id !== 3 && (
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
