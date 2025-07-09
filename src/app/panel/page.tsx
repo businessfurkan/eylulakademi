@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -74,7 +74,7 @@ type ActiveModule =
   | 'videolectures'
   | 'notifications';
 
-export default function CoachPanel() {
+function CoachPanelContent() {
   const searchParams = useSearchParams();
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -2466,6 +2466,18 @@ function StudentsModule() {
     lastMeeting?: Date;
     totalMeetings: number;
     meetingHistory: MeetingHistory[];
+    // Profil detayları (koç eşleşmesi için)
+    goal?: string;
+    targetExam?: string;
+    studyHabits?: string;
+    communicationStyle?: string;
+    coachExpectations?: string;
+    emotionalSupport?: string;
+    programAdaptability?: string;
+    examHistory?: string;
+    preferredPlatforms?: string;
+    learningType?: string;
+    previousCoachingExperience?: string;
   };
 
   type MeetingHistory = {
@@ -2510,7 +2522,19 @@ function StudentsModule() {
           notes: 'Anatomi dersi. Kas sistemi tekrarı yapıldı.',
           status: 'completed'
         }
-      ]
+      ],
+      // Profil detayları
+      goal: 'Tıp Fakültesi 4. sınıfta başarılı olmak ve gelecekte iyi bir doktor olmak. Özellikle anatomi ve fizyoloji konularında kendimi geliştirmek istiyorum.',
+      targetExam: 'TUS',
+      studyHabits: 'Sabah erken kalkıp 2-3 saat çalışırım. Öğleden sonra da kütüphanede grup çalışması yaparım. Günde ortalama 6-7 saat çalışıyorum.',
+      communicationStyle: 'Samimi',
+      coachExpectations: 'Koçumdan düzenli motivasyon desteği ve çalışma planı bekliyorum. Zor konularda rehberlik etmesini istiyorum.',
+      emotionalSupport: 'Var',
+      programAdaptability: 'Yüksek',
+      examHistory: 'Geçen dönem final sınavlarından AA aldım. Anatomide çok başarılıyım ama fizyolojide zorlanıyorum.',
+      preferredPlatforms: 'WhatsApp, Instagram, Discord',
+      learningType: 'Görsel',
+      previousCoachingExperience: 'Daha önce hiç koçluk almadım. İlk deneyimim olacak.'
     },
     {
       id: 2,
@@ -2535,7 +2559,19 @@ function StudentsModule() {
           notes: 'İlk görüşme. Hedef belirleme konuşması.',
           status: 'completed'
         }
-      ]
+      ],
+      // Profil detayları
+      goal: 'Henüz net hedeflerim yok. Tıp fakültesinde başarılı olmak istiyorum ama hangi alana yöneleceğim konusunda kararsızım.',
+      targetExam: 'TUS',
+      studyHabits: 'Düzensiz çalışıyorum. Bazen çok motive olup uzun saatler çalışıyorum, bazen hiç çalışamıyorum.',
+      communicationStyle: 'Eğlenceli',
+      coachExpectations: 'Hedef belirleme konusunda yardım bekliyorum. Motivasyonumu artıracak stratejiler öğrenmek istiyorum.',
+      emotionalSupport: 'Var',
+      programAdaptability: 'Orta',
+      examHistory: 'Vize sınavlarında ortalama performans gösteriyorum. Bazen çok iyi, bazen kötü sonuçlar alıyorum.',
+      preferredPlatforms: 'Instagram, TikTok, WhatsApp',
+      learningType: 'Karma',
+      previousCoachingExperience: 'Lisede matematik özel dersi aldım. Çok faydalı olmuştu.'
     },
     {
       id: 3,
@@ -2550,7 +2586,19 @@ function StudentsModule() {
       tags: ['düşük motivasyon', 'potansiyel yüksek'],
       notes: 'Çok yetenekli ama motivasyon sorunu yaşıyor. Ailevşi destek gerekli.',
       totalMeetings: 8,
-      meetingHistory: []
+      meetingHistory: [],
+      // Profil detayları
+      goal: 'Tıp fakültesini başarıyla bitirmek istiyorum ama son zamanlarda motivasyon sorunları yaşıyorum. Kendimi toparlayıp potansiyelimi ortaya çıkarmak istiyorum.',
+      targetExam: 'TUS',
+      studyHabits: 'Eskiden çok düzenliydi ama artık çalışma motivasyonum düştü. Günde 2-3 saat çalışmaya çalışıyorum.',
+      communicationStyle: 'Resmi',
+      coachExpectations: 'Motivasyon desteği ve disiplin kazandıracak stratejiler bekliyorum. Kendime güvenimi geri kazanmak istiyorum.',
+      emotionalSupport: 'Var',
+      programAdaptability: 'Yükseğe yakın',
+      examHistory: 'Önceki dönemlerde çok başarılıydım. Son dönemde notlarım düştü. Potansiyelim var ama kullanamıyorum.',
+      preferredPlatforms: 'WhatsApp, Discord',
+      learningType: 'İşitsel',
+      previousCoachingExperience: 'Daha önce kısa süreli mentorluk aldım. Faydalı olmuştu.'
     },
     {
       id: 4,
@@ -2565,7 +2613,19 @@ function StudentsModule() {
       tags: ['ödeme sorunu'],
       notes: 'Geçici olarak askıya alındı. Ödeme planı görüşülecek.',
       totalMeetings: 1,
-      meetingHistory: []
+      meetingHistory: [],
+      // Profil detayları
+      goal: 'Tıp fakültesinde başarılı olmak ve ailemle gurur duymalarını sağlamak istiyorum. Finansal zorluklar yaşıyorum ama vazgeçmek istemiyorum.',
+      targetExam: 'TUS',
+      studyHabits: 'Çok düzenli çalışıyorum. Ekonomik durumumuz kötü olduğu için part-time çalışıyorum, kalan zamanlarda çalışıyorum.',
+      communicationStyle: 'Profesyonel',
+      coachExpectations: 'Zaman yönetimi konusunda yardım bekliyorum. Hem çalışıp hem okumanın yollarını öğrenmek istiyorum.',
+      emotionalSupport: 'Var',
+      programAdaptability: 'Yüksek',
+      examHistory: 'İlk yılda çok başarılıydım. Şimdi çalışma saatlerim azaldı ama hala iyi notlar alıyorum.',
+      preferredPlatforms: 'WhatsApp, E-mail',
+      learningType: 'Deneyimsel',
+      previousCoachingExperience: 'Hiç koçluk almadım. Çok ihtiyacım var.'
     }
   ]);
 
@@ -3084,347 +3144,745 @@ function StudentsModule() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setShowStudentDetail(false)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-lg border border-gray-200"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white rounded-3xl max-w-6xl w-full max-h-[95vh] overflow-hidden shadow-2xl border border-gray-200/50"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modern Modal Header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50/30 border-b border-gray-100">
-                {/* Subtle background elements */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-0 left-0 w-20 h-20 bg-purple-500/5 rounded-full blur-xl"></div>
+              {/* Enhanced Modal Header */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-b border-gray-200/50">
+                {/* Animated background elements */}
+                <div className="absolute inset-0">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-400/10 to-pink-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-gradient-to-r from-cyan-400/5 to-blue-400/5 rounded-full blur-3xl"></div>
+                </div>
                 
-                <div className="relative z-10 p-6">
+                <div className="relative z-10 p-8">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      {/* Modern Avatar */}
-                      <div className="relative">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                    <div className="flex items-center gap-6">
+                      {/* Enhanced Avatar */}
+                      <div className="relative group">
+                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center text-white font-bold text-xl shadow-2xl transform group-hover:scale-105 transition-transform duration-300">
                           {selectedStudent.name.split(' ').map((n: string) => n[0]).join('')}
                         </div>
-                        {/* Status dot */}
-                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-3 border-white shadow-lg ${
+                        {/* Enhanced Status indicator */}
+                        <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-4 border-white shadow-lg flex items-center justify-center ${
                           selectedStudent.status === 'active' ? 'bg-green-500' :
                           selectedStudent.status === 'inactive' ? 'bg-gray-400' :
                           'bg-red-500'
-                        }`}></div>
+                        }`}>
+                          {selectedStudent.status === 'active' && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
+                        </div>
                       </div>
                       
-                      {/* Student Info */}
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-1">{selectedStudent.name}</h3>
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="text-sm text-gray-600 font-medium">{selectedStudent.department}</span>
-                          <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                          <span className="text-sm text-gray-600 font-medium">{selectedStudent.class}</span>
+                      {/* Enhanced Student Info */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                            {selectedStudent.name}
+                          </h3>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                            selectedStudent.status === 'active' ? 'bg-green-100 text-green-800 border border-green-200' :
+                            selectedStudent.status === 'inactive' ? 'bg-gray-100 text-gray-800 border border-gray-200' :
+                            'bg-red-100 text-red-800 border border-red-200'
+                          }`}>
+                            {selectedStudent.status === 'active' ? '✓ Aktif' :
+                             selectedStudent.status === 'inactive' ? '⏸ Pasif' : '⚠ Askıda'}
+                          </span>
                         </div>
-                        <p className="text-gray-500 text-sm">{selectedStudent.email}</p>
+                        
+                        <div className="flex items-center gap-4 text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span className="font-medium">{selectedStudent.department}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <span className="font-medium">{selectedStudent.class}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <Mail size={14} />
+                          <span className="text-sm">{selectedStudent.email}</span>
+                        </div>
+                        
+                        {/* Quick Stats */}
+                        <div className="flex items-center gap-4 mt-3">
+                          <div className="flex items-center gap-2 px-3 py-1 bg-white/60 rounded-lg border border-white/40">
+                            <Calendar size={14} className="text-blue-500" />
+                            <span className="text-xs font-medium text-gray-700">{selectedStudent.totalMeetings} Görüşme</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1 bg-white/60 rounded-lg border border-white/40">
+                            <Clock size={14} className="text-green-500" />
+                            <span className="text-xs font-medium text-gray-700">
+                              {selectedStudent.lastMeeting 
+                                ? `${Math.floor((new Date().getTime() - selectedStudent.lastMeeting.getTime()) / (1000 * 60 * 60 * 24))} gün önce`
+                                : 'Henüz görüşme yok'
+                              }
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
-                    {/* Close button */}
+                    {/* Enhanced close button */}
                     <motion.button
-                      whileHover={{ scale: 1.1 }}
+                      whileHover={{ scale: 1.1, rotate: 90 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setShowStudentDetail(false)}
-                      className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                      className="p-3 hover:bg-white/60 rounded-2xl transition-all duration-300 backdrop-blur-sm"
                     >
-                      <X size={20} className="text-gray-400" />
+                      <X size={24} className="text-gray-500" />
                     </motion.button>
                   </div>
                 </div>
               </div>
 
-              {/* Modern Modal Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] bg-gray-50/30">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Left Column - Basic Info */}
-                  <div className="space-y-4">
-                    {/* İletişim Bilgileri */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <User size={16} className="text-blue-500" />
-                        İletişim Bilgileri
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">📧</span>
-                          <div className="min-w-0 flex-1">
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">E-posta</label>
-                            {editMode ? (
-                              <input
-                                type="email"
-                                value={editData?.email || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, email: e.target.value} : null)}
-                                className="w-full text-gray-900 font-medium text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            ) : (
-                              <p className="text-gray-900 font-medium text-sm truncate">{selectedStudent.email}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">📱</span>
-                          <div className="min-w-0 flex-1">
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Telefon</label>
-                            {editMode ? (
-                              <input
-                                type="tel"
-                                value={editData?.phone || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, phone: e.target.value} : null)}
-                                className="w-full text-gray-900 font-medium text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            ) : (
-                              <p className="text-gray-900 font-medium text-sm">{selectedStudent.phone}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">🏫</span>
-                          <div className="min-w-0 flex-1">
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Bölüm</label>
-                            {editMode ? (
-                              <input
-                                type="text"
-                                value={editData?.department || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, department: e.target.value} : null)}
-                                className="w-full text-gray-900 font-medium text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            ) : (
-                              <p className="text-gray-900 font-medium text-sm">{selectedStudent.department}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">📚</span>
-                          <div className="min-w-0 flex-1">
-                            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sınıf</label>
-                            {editMode ? (
-                              <input
-                                type="text"
-                                value={editData?.class || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, class: e.target.value} : null)}
-                                className="w-full text-gray-900 font-medium text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              />
-                            ) : (
-                              <p className="text-gray-900 font-medium text-sm">{selectedStudent.class}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              {/* Enhanced Modal Content */}
+              <div className="p-8 overflow-y-auto max-h-[calc(95vh-200px)] bg-gradient-to-br from-gray-50/30 to-blue-50/20">
+                {/* Navigation Tabs */}
+                <div className="flex items-center gap-2 mb-8 p-1 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/40">
+                  <motion.div 
+                    className="flex-1 text-center py-3 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold text-sm shadow-lg"
+                    layoutId="activeTab"
+                  >
+                    📋 Genel Bilgiler
+                  </motion.div>
+                  <div className="flex-1 text-center py-3 px-4 rounded-xl text-gray-600 font-medium text-sm hover:bg-white/40 transition-colors cursor-pointer">
+                    🎯 Profil Detayları
+                  </div>
+                </div>
 
-                    {/* Durum */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <AlertCircle size={16} className="text-green-500" />
-                        Durum Yönetimi
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Mevcut Durum</label>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${statusColors[selectedStudent.status]}`}>
-                            {selectedStudent.status === 'active' ? 'Aktif' :
-                             selectedStudent.status === 'inactive' ? 'Pasif' : 'Askıda'}
-                          </span>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column - Contact & Status */}
+                  <div className="space-y-6">
+                    {/* İletişim Bilgileri */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/60 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                          <User size={18} className="text-white" />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => updateStudentStatus(selectedStudent.id, 'active')}
-                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                              selectedStudent.status === 'active' 
-                                ? 'bg-green-500 text-white' 
-                                : 'bg-gray-100 text-gray-700 hover:bg-green-50'
-                            }`}
-                          >
-                            Aktif
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => updateStudentStatus(selectedStudent.id, 'inactive')}
-                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                              selectedStudent.status === 'inactive' 
-                                ? 'bg-gray-500 text-white' 
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            Pasif
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => updateStudentStatus(selectedStudent.id, 'suspended')}
-                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                              selectedStudent.status === 'suspended' 
-                                ? 'bg-red-500 text-white' 
-                                : 'bg-gray-100 text-gray-700 hover:bg-red-50'
-                            }`}
-                          >
-                            Askıya Al
-                          </motion.button>
+                        <h4 className="font-bold text-gray-900 text-lg">İletişim</h4>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="group">
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 group-hover:from-blue-100 group-hover:to-indigo-100 transition-colors">
+                            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                              <Mail size={14} className="text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="text-xs font-semibold text-blue-700 uppercase tracking-wide">E-posta</label>
+                              {editMode ? (
+                                <input
+                                  type="email"
+                                  value={editData?.email || ''}
+                                  onChange={(e) => setEditData(prev => prev ? {...prev, email: e.target.value} : null)}
+                                  className="w-full text-gray-900 font-medium text-sm bg-white/80 border border-blue-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-1"
+                                />
+                              ) : (
+                                <p className="text-gray-900 font-semibold text-sm truncate mt-1">{selectedStudent.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group">
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 group-hover:from-green-100 group-hover:to-emerald-100 transition-colors">
+                            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                              <span className="text-white text-sm font-bold">📱</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="text-xs font-semibold text-green-700 uppercase tracking-wide">Telefon</label>
+                              {editMode ? (
+                                <input
+                                  type="tel"
+                                  value={editData?.phone || ''}
+                                  onChange={(e) => setEditData(prev => prev ? {...prev, phone: e.target.value} : null)}
+                                  className="w-full text-gray-900 font-medium text-sm bg-white/80 border border-green-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 mt-1"
+                                />
+                              ) : (
+                                <p className="text-gray-900 font-semibold text-sm mt-1">{selectedStudent.phone}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group">
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 group-hover:from-purple-100 group-hover:to-pink-100 transition-colors">
+                            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                              <span className="text-white text-sm font-bold">🏫</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Bölüm</label>
+                              {editMode ? (
+                                <input
+                                  type="text"
+                                  value={editData?.department || ''}
+                                  onChange={(e) => setEditData(prev => prev ? {...prev, department: e.target.value} : null)}
+                                  className="w-full text-gray-900 font-medium text-sm bg-white/80 border border-purple-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 mt-1"
+                                />
+                              ) : (
+                                <p className="text-gray-900 font-semibold text-sm mt-1">{selectedStudent.department}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group">
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 group-hover:from-orange-100 group-hover:to-amber-100 transition-colors">
+                            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                              <span className="text-white text-sm font-bold">📚</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="text-xs font-semibold text-orange-700 uppercase tracking-wide">Sınıf</label>
+                              {editMode ? (
+                                <input
+                                  type="text"
+                                  value={editData?.class || ''}
+                                  onChange={(e) => setEditData(prev => prev ? {...prev, class: e.target.value} : null)}
+                                  className="w-full text-gray-900 font-medium text-sm bg-white/80 border border-orange-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 mt-1"
+                                />
+                              ) : (
+                                <p className="text-gray-900 font-semibold text-sm mt-1">{selectedStudent.class}</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
+
+                    {/* Durum Yönetimi */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/60 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center">
+                          <AlertCircle size={18} className="text-white" />
+                        </div>
+                        <h4 className="font-bold text-gray-900 text-lg">Durum</h4>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200">
+                          <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3 block">Mevcut Durum</label>
+                          <div className="flex justify-center">
+                            <span className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold shadow-sm ${
+                              selectedStudent.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
+                              selectedStudent.status === 'inactive' ? 'bg-gradient-to-r from-gray-500 to-slate-500 text-white' :
+                              'bg-gradient-to-r from-red-500 to-rose-500 text-white'
+                            }`}>
+                              {selectedStudent.status === 'active' ? '✓ Aktif' :
+                               selectedStudent.status === 'inactive' ? '⏸ Pasif' : '⚠ Askıda'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Durum Değiştir</label>
+                          <div className="grid grid-cols-1 gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.02, y: -1 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => updateStudentStatus(selectedStudent.id, 'active')}
+                              className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                                selectedStudent.status === 'active' 
+                                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg' 
+                                  : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                              }`}
+                            >
+                              <CheckCircle size={16} />
+                              Aktif Yap
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02, y: -1 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => updateStudentStatus(selectedStudent.id, 'inactive')}
+                              className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                                selectedStudent.status === 'inactive' 
+                                  ? 'bg-gradient-to-r from-gray-500 to-slate-500 text-white shadow-lg' 
+                                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                              }`}
+                            >
+                              <Clock size={16} />
+                              Pasif Yap
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02, y: -1 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => updateStudentStatus(selectedStudent.id, 'suspended')}
+                              className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                                selectedStudent.status === 'suspended' 
+                                  ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg' 
+                                  : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                              }`}
+                            >
+                              <AlertCircle size={16} />
+                              Askıya Al
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
 
                     {/* Etiketler */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <span className="text-purple-500">🏷️</span>
-                        Etiketler
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedStudent.tags.map((tag: string) => (
-                          <span 
-                            key={tag} 
-                            className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium ${tagColors[tag as keyof typeof tagColors] || 'bg-gray-100 text-gray-800'}`}
-                          >
-                            {tag === 'yeni' ? '🆕' : 
-                             tag === 'sınava hazır' ? '📚' :
-                             tag === 'motivasyonlu' ? '💪' :
-                             tag === 'düşük motivasyon' ? '📉' :
-                             tag === 'kararsız' ? '🤔' :
-                             tag === 'potansiyel yüksek' ? '⭐' :
-                             tag === 'ödeme sorunu' ? '💳' :
-                             tag === 'düzenli' ? '📅' : '🏷️'} {tag}
-                          </span>
-                        ))}
-                        {selectedStudent.tags.length === 0 && (
-                          <div className="flex items-center gap-2 text-gray-500 text-sm">
-                            <span>🏷️</span>
-                            <span>Henüz etiket eklenmemiş</span>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/60 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                          <span className="text-white text-lg">🏷️</span>
+                        </div>
+                        <h4 className="font-bold text-gray-900 text-lg">Etiketler</h4>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {selectedStudent.tags.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedStudent.tags.map((tag: string, index: number) => (
+                              <motion.span 
+                                key={tag}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.4 + (index * 0.1) }}
+                                className={`inline-flex items-center px-3 py-2 rounded-xl text-xs font-bold shadow-sm hover:shadow-md transition-all duration-300 ${
+                                  tag === 'yeni' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' :
+                                  tag === 'sınava hazır' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
+                                  tag === 'motivasyonlu' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' :
+                                  tag === 'düşük motivasyon' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' :
+                                  tag === 'kararsız' ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white' :
+                                  tag === 'potansiyel yüksek' ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white' :
+                                  tag === 'ödeme sorunu' ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white' :
+                                  tag === 'düzenli' ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white' :
+                                  'bg-gradient-to-r from-gray-500 to-slate-500 text-white'
+                                }`}
+                              >
+                                <span className="mr-1">
+                                  {tag === 'yeni' ? '🆕' : 
+                                   tag === 'sınava hazır' ? '📚' :
+                                   tag === 'motivasyonlu' ? '💪' :
+                                   tag === 'düşük motivasyon' ? '📉' :
+                                   tag === 'kararsız' ? '🤔' :
+                                   tag === 'potansiyel yüksek' ? '⭐' :
+                                   tag === 'ödeme sorunu' ? '💳' :
+                                   tag === 'düzenli' ? '📅' : '🏷️'}
+                                </span>
+                                {tag}
+                              </motion.span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-3 p-6 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200">
+                            <div className="w-8 h-8 bg-gray-300 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-600">🏷️</span>
+                            </div>
+                            <span className="text-gray-600 font-medium">Henüz etiket eklenmemiş</span>
                           </div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
 
-                  {/* Right Column - Notes & History */}
-                  <div className="space-y-4">
+                  {/* Middle Column - Statistics */}
+                  <div className="space-y-6">
                     {/* Görüşme İstatistikleri */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <BarChart3 size={16} className="text-indigo-500" />
-                        Görüşme İstatistikleri
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-blue-50 rounded-lg p-4 text-center">
-                          <div className="flex items-center justify-center gap-1 mb-2">
-                            <span className="text-lg">📊</span>
-                            <span className="text-xs font-medium text-blue-700">TOPLAM</span>
-                          </div>
-                          <p className="text-2xl font-bold text-gray-900">{selectedStudent.totalMeetings}</p>
-                          <p className="text-blue-600 text-xs">Görüşme</p>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/60 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                          <BarChart3 size={18} className="text-white" />
                         </div>
-                        <div className="bg-green-50 rounded-lg p-4 text-center">
-                          <div className="flex items-center justify-center gap-1 mb-2">
-                            <span className="text-lg">✅</span>
-                            <span className="text-xs font-medium text-green-700">BAŞARILI</span>
-                          </div>
-                          <p className="text-2xl font-bold text-gray-900">{selectedStudent.meetingHistory.filter(m => m.status === 'completed').length}</p>
-                          <p className="text-green-600 text-xs">Tamamlanan</p>
-                        </div>
+                        <h4 className="font-bold text-gray-900 text-lg">İstatistikler</h4>
                       </div>
-                    </div>
+                      
+                      <div className="grid grid-cols-1 gap-4">
+                        <motion.div 
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          className="bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl p-5 text-white shadow-lg"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                                <span className="text-lg">📊</span>
+                              </div>
+                              <span className="text-xs font-bold uppercase tracking-wide">Toplam</span>
+                            </div>
+                          </div>
+                          <p className="text-3xl font-bold mb-1">{selectedStudent.totalMeetings}</p>
+                          <p className="text-blue-100 text-sm font-medium">Görüşme Yapıldı</p>
+                        </motion.div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-5 text-white shadow-lg"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                                <span className="text-lg">✅</span>
+                              </div>
+                              <span className="text-xs font-bold uppercase tracking-wide">Başarılı</span>
+                            </div>
+                          </div>
+                          <p className="text-3xl font-bold mb-1">{selectedStudent.meetingHistory.filter(m => m.status === 'completed').length}</p>
+                          <p className="text-green-100 text-sm font-medium">Tamamlanan</p>
+                        </motion.div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-5 text-white shadow-lg"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                                <Clock size={16} />
+                              </div>
+                              <span className="text-xs font-bold uppercase tracking-wide">Son Görüşme</span>
+                            </div>
+                          </div>
+                          <p className="text-lg font-bold mb-1">
+                            {selectedStudent.lastMeeting 
+                              ? `${Math.floor((new Date().getTime() - selectedStudent.lastMeeting.getTime()) / (1000 * 60 * 60 * 24))} gün`
+                              : 'Henüz yok'
+                            }
+                          </p>
+                          <p className="text-purple-100 text-sm font-medium">Önce</p>
+                        </motion.div>
+                      </div>
+                    </motion.div>
 
                     {/* Notlar */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200/60">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                          <FileText size={16} className="text-orange-500" />
-                          Koç Notları
-                        </h4>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/60 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center">
+                            <FileText size={18} className="text-white" />
+                          </div>
+                          <h4 className="font-bold text-gray-900 text-lg">Koç Notları</h4>
+                        </div>
                         <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.05, y: -1 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => setShowAddNote(true)}
-                          className="px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-xs flex items-center gap-1 font-medium"
+                          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 text-sm flex items-center gap-2 font-semibold"
                         >
-                          <Plus size={12} />
+                          <Plus size={14} />
                           Not Ekle
                         </motion.button>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-4 min-h-[100px] max-h-[150px] overflow-y-auto">
+                      
+                      <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-5 min-h-[120px] max-h-[180px] overflow-y-auto border border-orange-100">
                         {selectedStudent.notes ? (
-                          <p className="text-gray-700 text-sm leading-relaxed">{selectedStudent.notes}</p>
+                          <div className="space-y-3">
+                            {selectedStudent.notes.split('\n\n').map((note, index) => (
+                              <motion.div 
+                                key={index}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 + (index * 0.1) }}
+                                className="bg-white/80 rounded-lg p-3 border border-orange-200/50 shadow-sm"
+                              >
+                                <p className="text-gray-800 text-sm leading-relaxed font-medium">{note}</p>
+                              </motion.div>
+                            ))}
+                          </div>
                         ) : (
-                          <div className="flex items-center gap-2 text-gray-500">
-                            <span>📝</span>
-                            <span className="text-sm">Henüz not eklenmemiş</span>
+                          <div className="flex flex-col items-center justify-center gap-3 h-full text-center">
+                            <div className="w-12 h-12 bg-orange-200 rounded-xl flex items-center justify-center">
+                              <span className="text-orange-600 text-xl">📝</span>
+                            </div>
+                            <div>
+                              <p className="text-orange-700 font-semibold text-sm">Henüz not eklenmemiş</p>
+                              <p className="text-orange-600 text-xs mt-1">Bu öğrenci hakkında notlarınızı ekleyin</p>
+                            </div>
                           </div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
 
-                    {/* Son Görüşmeler */}
-                    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Clock size={16} className="text-teal-500" />
-                        Görüşme Geçmişi
-                      </h4>
-                      <div className="space-y-3 max-h-[200px] overflow-y-auto">
+                    {/* Görüşme Geçmişi */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/60 hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                          <Clock size={18} className="text-white" />
+                        </div>
+                        <h4 className="font-bold text-gray-900 text-lg">Görüşme Geçmişi</h4>
+                      </div>
+                      
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto">
                         {selectedStudent.meetingHistory.length > 0 ? (
-                          selectedStudent.meetingHistory.map((meeting: MeetingHistory) => (
-                            <div 
-                              key={meeting.id} 
-                              className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                          selectedStudent.meetingHistory.map((meeting: MeetingHistory, index: number) => (
+                            <motion.div 
+                              key={meeting.id}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.4 + (index * 0.1) }}
+                              className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-100 hover:shadow-md transition-all duration-300"
                             >
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center text-white font-semibold text-xs">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">
                                     {meeting.date.getDate()}
                                   </div>
                                   <div>
-                                    <span className="font-medium text-gray-900 text-sm">
+                                    <span className="font-bold text-gray-900 text-sm">
                                       {meeting.date.toLocaleDateString('tr-TR')}
                                     </span>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-teal-600 font-medium">
                                       {meeting.date.toLocaleDateString('tr-TR', { weekday: 'long' })}
                                     </p>
                                   </div>
                                 </div>
-                                <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                                  meeting.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                  meeting.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                  'bg-yellow-100 text-yellow-700'
+                                <span className={`px-3 py-1 rounded-xl text-xs font-bold shadow-sm ${
+                                  meeting.status === 'completed' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
+                                  meeting.status === 'cancelled' ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white' :
+                                  'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'
                                 }`}>
-                                  {meeting.status === 'completed' ? 'Tamamlandı' :
-                                   meeting.status === 'cancelled' ? 'İptal' : 'Gelmedi'}
+                                  {meeting.status === 'completed' ? '✓ Tamamlandı' :
+                                   meeting.status === 'cancelled' ? '✗ İptal' : '⚠ Gelmedi'}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-sm">
-                                  {meeting.type === 'consultation' ? '💬' :
-                                   meeting.type === 'lesson' ? '📚' : '📝'}
-                                </span>
-                                <span className="text-xs text-gray-700">
-                                  {meeting.type === 'consultation' ? 'Danışmanlık' :
-                                   meeting.type === 'lesson' ? 'Ders' : 'Sınav Hazırlığı'}
-                                </span>
-                                <span className="text-xs text-gray-400">•</span>
-                                <span className="text-xs text-gray-500">{meeting.duration} dk</span>
+                              
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                  meeting.type === 'consultation' ? 'bg-blue-500' :
+                                  meeting.type === 'lesson' ? 'bg-green-500' : 'bg-purple-500'
+                                }`}>
+                                  <span className="text-white text-sm">
+                                    {meeting.type === 'consultation' ? '💬' :
+                                     meeting.type === 'lesson' ? '📚' : '📝'}
+                                  </span>
+                                </div>
+                                <div className="flex-1">
+                                  <span className="text-sm font-semibold text-gray-800">
+                                    {meeting.type === 'consultation' ? 'Danışmanlık Görüşmesi' :
+                                     meeting.type === 'lesson' ? 'Ders Seansı' : 'Sınav Hazırlığı'}
+                                  </span>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs bg-white/60 px-2 py-1 rounded-lg font-semibold text-gray-700">
+                                      {meeting.duration} dakika
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
+                              
                               {meeting.notes && (
-                                <div className="mt-2 p-2 bg-white rounded-lg">
-                                  <p className="text-xs text-gray-600">{meeting.notes}</p>
+                                <div className="bg-white/80 rounded-lg p-3 border border-teal-200/50">
+                                  <p className="text-sm text-gray-700 leading-relaxed font-medium">
+                                    {meeting.notes}
+                                  </p>
                                 </div>
                               )}
-                            </div>
+                            </motion.div>
                           ))
                         ) : (
-                          <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg text-gray-500 text-sm">
-                            <span>📅</span>
-                            <span>Henüz görüşme geçmişi yok</span>
+                          <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+                            <div className="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center">
+                              <span className="text-teal-600 text-2xl">📅</span>
+                            </div>
+                            <div>
+                              <p className="text-teal-700 font-semibold">Henüz görüşme yapılmamış</p>
+                              <p className="text-teal-600 text-sm mt-1">İlk görüşmeyi planlamak için öğrenci ile iletişime geçin</p>
+                            </div>
                           </div>
                         )}
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Öğrenci Profil Detayları - Koç Eşleşmesi İçin */}
+                <div className="mt-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200/60">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                      <User size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Öğrenci Profil Detayları</h3>
+                      <p className="text-gray-600 text-sm">Koç eşleşmesi için öğrenci tarafından doldurulan bilgiler</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Hedef ve Motivasyon */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        🎯 Hedefim ve Motivasyonum
+                      </label>
+                      <div className="bg-white rounded-lg p-4 border border-gray-200/60">
+                        <p className="text-gray-800 text-sm leading-relaxed">
+                          {selectedStudent.goal || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Hedef Sınav */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        📚 Hangi Sınava Hazırlanıyor
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 font-medium">
+                          {selectedStudent.targetExam || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Çalışma Alışkanlıkları */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        ⏰ Günlük Çalışma Alışkanlıkları
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 text-sm">
+                          {selectedStudent.studyHabits || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* İletişim Tarzı */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        💬 İletişim Tarzı
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 font-medium">
+                          {selectedStudent.communicationStyle || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Koç Beklentileri */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        🎓 Koçtan Beklentileri
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 text-sm">
+                          {selectedStudent.coachExpectations || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Duygusal Destek */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        ❤️ Duygusal Destek İhtiyacı
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          selectedStudent.emotionalSupport === 'Var' ? 'bg-green-100 text-green-800' :
+                          selectedStudent.emotionalSupport === 'Yok' ? 'bg-gray-100 text-gray-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {selectedStudent.emotionalSupport || 'Henüz belirtilmemiş'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Program Uyum Kapasitesi */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        📊 Programlara Uyum Kapasitesi
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          selectedStudent.programAdaptability === 'Yüksek' ? 'bg-green-100 text-green-800' :
+                          selectedStudent.programAdaptability === 'Yükseğe yakın' ? 'bg-blue-100 text-blue-800' :
+                          selectedStudent.programAdaptability === 'Orta' ? 'bg-yellow-100 text-yellow-800' :
+                          selectedStudent.programAdaptability === 'Genel olarak düşük' ? 'bg-orange-100 text-orange-800' :
+                          selectedStudent.programAdaptability === 'Şuan düşük' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedStudent.programAdaptability || 'Henüz belirtilmemiş'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Sınav Geçmişi */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        📝 Sınav Geçmişi
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 text-sm">
+                          {selectedStudent.examHistory || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tercih Edilen Platformlar */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        📱 Tercih Edilen Platformlar
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 text-sm">
+                          {selectedStudent.preferredPlatforms || 'Henüz belirtilmemiş'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Öğrenme Tipi */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        🧠 Öğrenme Tipi
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          selectedStudent.learningType === 'Görsel' ? 'bg-blue-100 text-blue-800' :
+                          selectedStudent.learningType === 'İşitsel' ? 'bg-green-100 text-green-800' :
+                          selectedStudent.learningType === 'Deneyimsel' ? 'bg-purple-100 text-purple-800' :
+                          selectedStudent.learningType === 'Karma' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedStudent.learningType || 'Henüz belirtilmemiş'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Önceki Koçluk Deneyimi */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        🎯 Önceki Koçluk Deneyimi
+                      </label>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200/60">
+                        <p className="text-gray-800 text-sm">
+                          {selectedStudent.previousCoachingExperience || 'Henüz belirtilmemiş'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -5935,3 +6393,18 @@ function NotificationsModule() {
     </motion.div>
   );
 } 
+
+export default function CoachPanel() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Yükleniyor...</p>
+        </div>
+      </div>
+    }>
+      <CoachPanelContent />
+    </Suspense>
+  );
+}

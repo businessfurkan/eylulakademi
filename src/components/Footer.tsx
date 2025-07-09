@@ -30,7 +30,7 @@ const navigation = {
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
             fillRule="evenodd"
-            d="M12.017 0C8.396 0 7.896.011 6.689.058 5.484.104 4.632.291 3.892.558c-.785.306-1.45.717-2.114 1.381C1.114 2.603.703 3.268.397 4.053.129 4.793-.058 5.645-.009 6.851c.047 1.207.058 1.707.058 5.328s-.011 4.121-.058 5.328c-.049 1.206.138 2.058.406 2.798.306.785.717 1.45 1.381 2.114C2.603 22.886 3.268 23.297 4.053 23.603c.74.268 1.592.455 2.798.406 1.207-.047 1.707-.058 5.328-.058s4.121.011 5.328.058c1.206.049 2.058-.138 2.798-.406.785-.306 1.45-.717 2.114-1.381.664-.664 1.075-1.329 1.381-2.114.268-.74.455-1.592.406-2.798-.047-1.207-.058-1.707-.058-5.328s.011-4.121.058-5.328c.049-1.206-.138-2.058-.406-2.798-.306-.785-.717-1.45-1.381-2.114C21.397 1.114 20.732.703 19.947.397 19.207.129 18.355-.058 17.149-.009 15.942.038 15.442.049 12.017.049zm0 2.163c3.259 0 3.667.011 4.947.055 1.206.055 1.86.244 2.297.406.578.225.99.494 1.423.927.433.433.702.845.927 1.423.162.437.351 1.091.406 2.297.044 1.28.055 1.688.055 4.947s-.011 3.667-.055 4.947c-.055 1.206-.244 1.86-.406 2.297-.225.578-.494.99-.927 1.423-.433.433-.845.702-1.423.927-.437.162-1.091.351-2.297.406-1.28.044-1.688.055-4.947.055s-3.667-.011-4.947-.055c-1.206-.055-1.86-.244-2.297-.406-.578-.225-.99-.494-1.423-.927-.433-.433-.702-.845-.927-1.423-.162-.437-.351-1.091-.406-2.297-.044-1.28-.055-1.688-.055-4.947s.011-3.667.055-4.947c.055-1.206.244-1.86.406-2.297.225-.578.494-.99.927-1.423.433-.433.845-.702 1.423-.927.437-.162 1.091-.351 2.297-.406 1.28-.044 1.688-.055 4.947-.055zm0 3.678c-3.405 0-6.162 2.757-6.162 6.162S8.612 18.162 12.017 18.162s6.162-2.757 6.162-6.162S15.422 5.838 12.017 5.838zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"
+            d="M12.017 0C8.396 0 7.896.011 6.689.058 5.484.104 4.632.291 3.892.558c-.785.306-1.45.717-2.114 1.381C1.114 2.603.703 3.268.397 4.053.129 4.793-.058 5.645-.009 6.851c.047 1.207.058 1.707.058 5.328s-.011 4.121-.058 5.328c-.049 1.206.138 2.058.406 2.798.306.785.717 1.45 1.381 2.114C2.603 22.886 3.268 23.297 4.053 23.603c.74.268 1.592.455 2.798.406 1.207-.047 1.707-.058 5.328-.058s4.121.011 5.328.058c1.206.049 2.058-.138 2.798-.406.785-.306 1.45-.717 2.114-1.381.664-.664 1.075-1.329 1.381-2.114.268-.74.455-1.592.406-2.798-.047-1.207-.058-1.707-.058-5.328s.011-4.121.058-5.328c.049-1.206-.138-2.058-.406-2.798-.306-.785-.717-1.45-1.381-2.114C21.397 1.114 20.732.703 19.947.397 19.207.129 18.355-.058 17.149-.009 15.942.038 15.442.049zm0 2.163c3.259 0 3.667.011 4.947.055 1.206.055 1.86.244 2.297.406.578.225.99.494 1.423.927.433.433.702.845.927 1.423.162.437.351 1.091.406 2.297.044 1.28.055 1.688.055 4.947s-.011 3.667-.055 4.947c-.055 1.206-.244 1.86-.406 2.297-.225.578-.494.99-.927 1.423-.433.433-.845.702-1.423.927-.437.162-1.091.351-2.297.406-1.28.044-1.688.055-4.947.055s-3.667-.011-4.947-.055c-1.206-.055-1.86-.244-2.297-.406-.578-.225-.99-.494-1.423-.927-.433-.433-.702-.845-.927-1.423-.162-.437-.351-1.091-.406-2.297-.044-1.28-.055-1.688-.055-4.947s.011-3.667.055-4.947c.055-1.206.244-1.86.406-2.297.225-.578.494-.99.927-1.423.433-.433.845-.702 1.423-.927.437-.162 1.091-.351 2.297-.406 1.28-.044 1.688-.055 4.947-.055zm0 3.678c-3.405 0-6.162 2.757-6.162 6.162S8.612 18.162 12.017 18.162s6.162-2.757 6.162-6.162S15.422 5.838 12.017 5.838zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"
             clipRule="evenodd"
           />
         </svg>
@@ -68,7 +68,7 @@ const navigation = {
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 relative overflow-hidden" aria-labelledby="footer-heading">
+    <footer className="relative overflow-hidden bg-black" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
       
       {/* Background pattern */}
@@ -85,57 +85,61 @@ export default function Footer() {
         </div>
       </div>
       
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 pt-12 sm:pt-16 lg:pt-24 xl:pt-32 relative">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-6 sm:space-y-8 text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start space-x-2 sm:space-x-3">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-12">
+          <div className="space-y-8 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start space-x-3">
               <div className="relative">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 via-cyan-500 to-teal-600 flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-base sm:text-lg font-poppins">E</span>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#af2e3d] to-[#d63384] flex items-center justify-center shadow-2xl">
+                  <span className="text-white font-bold text-lg sm:text-xl font-['Inter']">E</span>
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-cyan-400 to-teal-400 rounded-full opacity-75 animate-pulse"></div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-[#af2e3d] to-[#d63384] rounded-full opacity-80 animate-pulse"></div>
               </div>
-              <span className="font-poppins font-bold text-lg sm:text-xl text-white leading-tight">
-                Eylül Büyükkaya Akademisi
-              </span>
+              <div>
+                <span className="font-['Inter'] font-bold text-xl sm:text-2xl text-white leading-tight">
+                  Eylül Büyükkaya Akademisi
+                </span>
+                <div className="text-sm text-gray-400 font-medium mt-1">Tıp Eğitimi Platformu</div>
+              </div>
             </div>
-            <p className="text-xs sm:text-sm leading-5 sm:leading-6 text-gray-300 max-w-sm mx-auto sm:mx-0">
+            <p className="text-sm sm:text-base leading-relaxed text-gray-300 max-w-md mx-auto sm:mx-0">
               Yapay zeka destekli eğitim çözümleriyle YKS'den tıp fakültesine, 
               tıp fakültesinden başarılı bir hekimliğe kadar yanınızdayız.
             </p>
-            <div className="flex justify-center sm:justify-start space-x-4 sm:space-x-6">
+            <div className="flex justify-center sm:justify-start space-x-6">
               {navigation.social.map((item) => (
                 <a 
                   key={item.name} 
                   href={item.href} 
-                  className="text-gray-400 hover:text-teal-400 transition-all duration-300 hover:scale-110"
+                  className="text-gray-400 hover:text-[#af2e3d] transition-all duration-300 hover:scale-110 group"
                 >
                   <span className="sr-only">{item.name}</span>
-                  <item.icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+                  <item.icon className="h-6 w-6 group-hover:drop-shadow-lg" aria-hidden="true" />
                 </a>
               ))}
             </div>
           </div>
-          <div className="mt-12 sm:mt-16 xl:mt-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-8 xl:col-span-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-8 col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-1">
+          
+          <div className="mt-16 sm:mt-20 lg:mt-0 xl:mt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-10 xl:gap-12">
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white mb-4 sm:mb-6 text-center sm:text-left">Ürünler</h3>
-                <ul role="list" className="space-y-3 sm:space-y-4">
+                <h3 className="text-base font-bold leading-6 text-white mb-6 tracking-wide">ÜRÜNLER</h3>
+                <ul role="list" className="space-y-4">
                   {navigation.products.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm leading-6 text-gray-300 hover:text-teal-400 transition-colors duration-300 block text-center sm:text-left">
+                      <a href={item.href} className="text-sm leading-6 text-gray-300 hover:text-white transition-colors duration-300 block hover:translate-x-1">
                         {item.name}
                       </a>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="mt-8 sm:mt-10 lg:mt-0 xl:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white mb-4 sm:mb-6 text-center sm:text-left">Destek</h3>
-                <ul role="list" className="space-y-3 sm:space-y-4">
+              <div>
+                <h3 className="text-base font-bold leading-6 text-white mb-6 tracking-wide">DESTEK</h3>
+                <ul role="list" className="space-y-4">
                   {navigation.support.map((item) => (
                     <li key={item.name}>
-                      <a href={item.href} className="text-sm leading-6 text-gray-300 hover:text-teal-400 transition-colors duration-300 block text-center sm:text-left">
+                      <a href={item.href} className="text-sm leading-6 text-gray-300 hover:text-white transition-colors duration-300 block hover:translate-x-1">
                         {item.name}
                       </a>
                     </li>
@@ -143,25 +147,26 @@ export default function Footer() {
                 </ul>
               </div>
             </div>
-            <div className="col-span-1 sm:col-span-2 lg:col-span-1 xl:col-span-1">
+            
+            <div className="mt-12 sm:mt-16 lg:mt-0 xl:mt-0">
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white mb-4 sm:mb-6 text-center sm:text-left">İletişim</h3>
-                <ul role="list" className="space-y-3 sm:space-y-4">
+                <h3 className="text-base font-bold leading-6 text-white mb-6 tracking-wide">İLETİŞİM</h3>
+                <ul role="list" className="space-y-4">
                   <li className="flex items-center justify-center sm:justify-start group">
-                    <EnvelopeIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2 sm:mr-3 group-hover:text-teal-400 transition-colors flex-shrink-0" />
-                    <a href="mailto:info@eylulakademi.com" className="text-xs sm:text-sm leading-5 sm:leading-6 text-gray-300 hover:text-teal-400 transition-colors duration-300 break-all">
+                    <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-3 group-hover:text-[#af2e3d] transition-colors flex-shrink-0" />
+                    <a href="mailto:info@eylulakademi.com" className="text-sm leading-6 text-gray-300 hover:text-white transition-colors duration-300">
                       info@eylulakademi.com
                     </a>
                   </li>
                   <li className="flex items-center justify-center sm:justify-start group">
-                    <PhoneIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2 sm:mr-3 group-hover:text-teal-400 transition-colors flex-shrink-0" />
-                    <a href="tel:+905551234567" className="text-xs sm:text-sm leading-5 sm:leading-6 text-gray-300 hover:text-teal-400 transition-colors duration-300">
+                    <PhoneIcon className="h-5 w-5 text-gray-400 mr-3 group-hover:text-[#af2e3d] transition-colors flex-shrink-0" />
+                    <a href="tel:+905551234567" className="text-sm leading-6 text-gray-300 hover:text-white transition-colors duration-300">
                       +90 555 123 45 67
                     </a>
                   </li>
                   <li className="flex items-center justify-center sm:justify-start group">
-                    <MapPinIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 mr-2 sm:mr-3 mt-0.5 group-hover:text-teal-400 transition-colors flex-shrink-0" />
-                    <span className="text-xs sm:text-sm leading-5 sm:leading-6 text-gray-300">
+                    <MapPinIcon className="h-5 w-5 text-gray-400 mr-3 mt-0.5 group-hover:text-[#af2e3d] transition-colors flex-shrink-0" />
+                    <span className="text-sm leading-6 text-gray-300">
                       İstanbul, Türkiye
                     </span>
                   </li>
@@ -170,10 +175,13 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-12 sm:mt-16 lg:mt-20 xl:mt-24 border-t border-gray-700/50 pt-6 sm:pt-8">
-          <p className="text-xs leading-5 text-gray-400 text-center">
-            &copy; 2025 Eylül Büyükkaya Akademisi. Tüm hakları saklıdır.
-          </p>
+        
+        <div className="mt-16 sm:mt-20 border-t border-gray-800 pt-8 sm:pt-10">
+          <div className="bg-gradient-to-r from-[#af2e3d] via-white to-[#d63384] rounded-xl p-4 sm:p-6">
+            <p className="text-xs leading-5 text-[#af2e3d] text-center font-semibold">
+              &copy; 2025 Eylül Büyükkaya Akademisi. Tüm hakları saklıdır.
+            </p>
+          </div>
         </div>
       </div>
     </footer>

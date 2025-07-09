@@ -18,9 +18,9 @@ const features = [
     title: 'Video Ders Kütüphanesi',
     description: 'Koçlarınızın hazırlamış olduğu 100+ detaylı video ders ile interaktif öğrenme deneyimi',
     stats: '100+ Video Ders',
-    gradient: 'from-teal-50 to-cyan-50',
-    hoverGradient: 'from-teal-100 to-cyan-100',
-    iconColor: 'text-teal-600'
+    gradient: 'from-white via-red-50/30 to-rose-50/50',
+    hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
+    iconColor: 'text-[#af2e3d]'
   },
   {
     id: 2,
@@ -28,9 +28,9 @@ const features = [
     title: 'Flashcard Üretici',
     description: 'Tıp terimlerini kartlıklarla ve akıllı tekrar algoritması ile öğrenin',
     stats: '200+ Tıp Terimi',
-    gradient: 'from-pink-50 to-rose-50',
-    hoverGradient: 'from-pink-100 to-rose-100',
-    iconColor: 'text-pink-600'
+    gradient: 'from-white via-red-50/30 to-rose-50/50',
+    hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
+    iconColor: 'text-[#af2e3d]'
   },
   {
     id: 3,
@@ -38,9 +38,9 @@ const features = [
     title: 'Podcast Oluşturucu',
     description: 'Ders notlarınızı Al sesli podcast formatına çevirin ve müzik dinler gibi öğrenmeye devam edin',
     stats: 'Yakında',
-    gradient: 'from-purple-50 to-violet-50',
-    hoverGradient: 'from-purple-100 to-violet-100',
-    iconColor: 'text-purple-600'
+    gradient: 'from-white via-red-50/30 to-rose-50/50',
+    hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
+    iconColor: 'text-[#af2e3d]'
   },
   {
     id: 4,
@@ -48,9 +48,9 @@ const features = [
     title: 'Ortak Ders Çalışma',
     description: 'Türkiye genelinden tıp öğrencileriyle canlı çalışma odalarında buluşun ve birlikte öğrenin',
     stats: '7/24 Canlı Odalar',
-    gradient: 'from-emerald-50 to-green-50',
-    hoverGradient: 'from-emerald-100 to-green-100',
-    iconColor: 'text-emerald-600'
+    gradient: 'from-white via-red-50/30 to-rose-50/50',
+    hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
+    iconColor: 'text-[#af2e3d]'
   },
   {
     id: 5,
@@ -58,9 +58,9 @@ const features = [
     title: 'Uzman Koç Görüşmeleri',
     description: 'Deneyimli koçlarla bire bir mentorluk seansları ile hem okul hem kariyer planlaması yapın',
     stats: 'Kişisel Mentorluk',
-    gradient: 'from-indigo-50 to-blue-50',
-    hoverGradient: 'from-indigo-100 to-blue-100',
-    iconColor: 'text-indigo-600'
+    gradient: 'from-white via-red-50/30 to-rose-50/50',
+    hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
+    iconColor: 'text-[#af2e3d]'
   },
   {
     id: 6,
@@ -68,9 +68,9 @@ const features = [
     title: 'Detaylı Takip',
     description: 'Koçlar ve Öğrencilere özel panel ile sorunsuz iletişim ve kaçınılmaz gelişim',
     stats: 'Detaylı Analytics',
-    gradient: 'from-orange-50 to-amber-50',
-    hoverGradient: 'from-orange-100 to-amber-100',
-    iconColor: 'text-orange-600'
+    gradient: 'from-white via-red-50/30 to-rose-50/50',
+    hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
+    iconColor: 'text-[#af2e3d]'
   }
 ];
 
@@ -78,11 +78,11 @@ export default function FeatureCards() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   return (
-    <section id="features" className="py-12 sm:py-16 lg:py-24 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(143, 219, 214, 0.9) 0%, rgba(143, 219, 214, 0.95) 50%, rgba(143, 219, 214, 0.85) 100%)' }}>
+    <section id="features" className="py-12 sm:py-16 lg:py-24 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #af2e3d 0%, #af2e3d 50%, #af2e3d 100%)' }}>
       {/* Clean Background Pattern - responsive */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 sm:top-20 left-5 sm:left-10 w-32 h-32 sm:w-64 sm:h-64 bg-gradient-to-br from-teal-200 to-cyan-200 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-10 sm:bottom-20 right-5 sm:right-10 w-40 h-40 sm:w-80 sm:h-80 bg-gradient-to-bl from-cyan-200 to-teal-200 rounded-full blur-3xl"></div>
+        <div className="absolute top-10 sm:top-20 left-5 sm:left-10 w-32 h-32 sm:w-64 sm:h-64 bg-gradient-to-br from-red-200 to-rose-200 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-10 sm:bottom-20 right-5 sm:right-10 w-40 h-40 sm:w-80 sm:h-80 bg-gradient-to-bl from-rose-200 to-red-200 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -93,14 +93,14 @@ export default function FeatureCards() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-gray-900 font-['Poppins'] mb-4 sm:mb-6">
-              <span className="bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 bg-clip-text text-transparent">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-white font-['Poppins'] mb-4 sm:mb-6">
+              <span className="bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                 Yapay Zeka Destekli
               </span>
               <br />
-              <span className="text-gray-800">Özelliklerimiz</span>
+              <span className="text-white">Özelliklerimiz</span>
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed px-4 sm:px-0">
+            <p className="text-base sm:text-lg lg:text-xl text-white/90 leading-relaxed px-4 sm:px-0">
               Modern teknoloji ile tıp eğitimini buluşturan yenilikçi çözümlerimizi keşfedin
             </p>
           </motion.div>
@@ -148,9 +148,9 @@ export default function FeatureCards() {
                     <button className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-800 hover:text-gray-900 transition-colors duration-200">
                       <span>{feature.id === 3 ? 'Yakında' : 'Kullanmak için kayıt ol'}</span>
                       {feature.id !== 3 && (
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                       )}
                     </button>
                   </div>
@@ -171,7 +171,7 @@ export default function FeatureCards() {
           viewport={{ once: true }}
           className="mt-12 sm:mt-16 lg:mt-20 text-center px-4 sm:px-0"
         >
-          <button className="inline-flex items-center gap-2 sm:gap-4 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 text-white rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 w-full sm:w-auto">
+          <button className="inline-flex items-center gap-2 sm:gap-4 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-white text-[#af2e3d] rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 w-full sm:w-auto border-2 border-white/50 hover:bg-gray-50">
             <SparklesIcon className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
             <span className="font-semibold text-sm sm:text-base lg:text-lg whitespace-nowrap">Tüm özellikleri ücretsiz keşfedin</span>
             <SparklesIcon className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />

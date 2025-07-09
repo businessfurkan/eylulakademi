@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  BookOpen, Calendar, MessageCircle, FileText, User, Award,
-  Bell, ChevronLeft, ChevronRight, Plus, Download, Clock,
-  Star, TrendingUp, Target, CheckCircle, AlertCircle,
-  Play, Pause, RotateCcw, Send, Paperclip, Search,
-  Filter, Grid, List, Eye, X, Menu, Home, Users,
-  GraduationCap, Library, Trophy, Settings, Video,
-  Bookmark, Heart, Share2, RefreshCw, BarChart3,
-  Zap, Brain, Coffee, Sparkles, Check, Trash2
+import ComingSoon from '../../components/ComingSoon';
+  import {
+  BookOpen, Calendar, MessageCircle, FileText, User, Bell,
+  ChevronLeft, ChevronRight, Plus, Download, Clock,
+  Star, Target, CheckCircle, AlertCircle,
+  RotateCcw, Send, Paperclip, Search,
+  List, X, Menu, Home, Users,
+  GraduationCap, Library, Trophy, Video,
+  BarChart3,
+  Zap, Coffee, Sparkles, Check, Trash2, LogOut
 } from 'lucide-react';
 
 // Types
@@ -27,6 +28,18 @@ type StudentData = {
   totalLessons: number;
   averageGrade: number;
   nextMeeting?: Date;
+  // Profil detayları
+  goal?: string;
+  targetExam?: string;
+  studyHabits?: string;
+  communicationStyle?: string;
+  coachExpectations?: string;
+  emotionalSupport?: string;
+  programAdaptability?: string;
+  examHistory?: string;
+  preferredPlatforms?: string;
+  learningType?: string;
+  previousCoachingExperience?: string;
 };
 
 type NavigationItem = {
@@ -42,37 +55,34 @@ type ActiveModule =
   | 'lessons' 
   | 'calendar' 
   | 'materials' 
-  | 'messages' 
-  | 'exams' 
-  | 'aiflashcards'
-  | 'notifications'
-  | 'profile';
+  | 'messages'
+  | 'studyroom';
 
 export default function StudentPanel() {
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Örnek öğrenci verisi
-  const studentData: StudentData = {
-    id: 1,
-    name: 'Ahmet Yılmaz',
-    email: 'ahmet.yilmaz@email.com',
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    class: '3. Sınıf',
-    department: 'Tıp Fakültesi',
-    coach: 'Dr. Eylül Büyükkaya',
-    enrollmentDate: new Date(2022, 8, 15),
-    completedLessons: 28,
-    totalLessons: 35,
-    averageGrade: 87.5,
-    nextMeeting: new Date(2024, 11, 18, 14, 0)
-  };
-
-  // Bildirim state'i ekle
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState(0);
 
-  // Bildirim sayısını kontrol et (sadece öğrenciye gelen bildirimler)
+  // Dropdown'ları kapatmak için outside click handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showNotifications && !target.closest('.notification-dropdown')) {
+        setShowNotifications(false);
+      }
+      if (showProfile && !target.closest('.profile-modal')) {
+        setShowProfile(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications, showProfile]);
+
+  // Bildirim sayısını kontrol et
   useEffect(() => {
     const checkNotifications = () => {
       const studentNotifications = JSON.parse(localStorage.getItem('student_notifications') || '[]');
@@ -97,16 +107,64 @@ export default function StudentPanel() {
     };
   }, []);
 
+  // Authentication check
+  useEffect(() => {
+    const currentStudent = localStorage.getItem('currentStudent');
+    
+    if (!currentStudent) {
+      // Not logged in, redirect to auth page
+      window.location.href = '/auth?mode=login&message=login-required';
+      return;
+    }
+    
+    try {
+      const student = JSON.parse(currentStudent);
+      
+      if (!student.loggedIn || student.userType !== 'student') {
+        // Invalid session, redirect to auth
+        localStorage.removeItem('currentStudent');
+        window.location.href = '/auth?mode=login&message=session-expired';
+        return;
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      localStorage.removeItem('currentStudent');
+      window.location.href = '/auth?mode=login&message=session-error';
+    }
+  }, []);
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem('currentStudent');
+    window.location.href = '/auth?mode=login&message=logged-out';
+  };
+
+  // Örnek öğrenci verisi
+  const studentData: StudentData = {
+    id: 1,
+    name: 'Ahmet Yılmaz',
+    email: 'ahmet.yilmaz@email.com',
+    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    class: '3. Sınıf',
+    department: 'Tıp Fakültesi',
+    coach: 'Henüz eşleşmedi',
+    enrollmentDate: new Date(2022, 8, 15),
+    completedLessons: 0,
+    totalLessons: 35,
+    averageGrade: 0,
+    nextMeeting: undefined
+  };
+
+
+
   // Navigation items
   const navigationItems: NavigationItem[] = [
     { id: 'dashboard', name: 'Dashboard', icon: Home, color: 'text-cyan-400', badge: 0 },
-    { id: 'lessons', name: 'Derslerim', icon: BookOpen, color: 'text-emerald-400', badge: 3 },
+    { id: 'lessons', name: 'Derslerim', icon: BookOpen, color: 'text-emerald-400', badge: 0 },
     { id: 'calendar', name: 'Takvim', icon: Calendar, color: 'text-violet-400', badge: 0 },
-    { id: 'materials', name: 'Koçtan Gelenler', icon: Library, color: 'text-orange-400', badge: 5 },
-    { id: 'messages', name: 'Mesajlar', icon: MessageCircle, color: 'text-pink-400', badge: 2 },
-    { id: 'exams', name: 'Sınavlarım', icon: Trophy, color: 'text-yellow-400', badge: 1 },
-    { id: 'aiflashcards', name: 'AI Flashcard', icon: Brain, color: 'text-indigo-400', badge: 0 },
-    { id: 'profile', name: 'Profil', icon: User, color: 'text-gray-400', badge: 0 }
+    { id: 'materials', name: 'Koçtan Gelenler', icon: Library, color: 'text-orange-400', badge: 0 },
+    { id: 'messages', name: 'Koç Mesajları', icon: MessageCircle, color: 'text-pink-400', badge: 0 },
+    { id: 'studyroom', name: 'Çalışma Odası', icon: Users, color: 'text-purple-400', badge: 0 }
   ];
 
   // Responsive sidebar handling
@@ -137,62 +195,15 @@ export default function StudentPanel() {
         return <MaterialsModule />;
       case 'messages':
         return <MessagesModule studentData={studentData} />;
-      case 'exams':
-        return <ExamsModule />;
-      case 'aiflashcards':
-        return <AIFlashcardsModule />;
-      case 'notifications':
-        return <NotificationsModule setNotifications={setNotifications} />;
-      case 'profile':
-        return <ProfileModule studentData={studentData} />;
+      case 'studyroom':
+        return <StudyRoomModule studentData={studentData} />;
       default:
         return <DashboardModule studentData={studentData} setActiveModule={setActiveModule} />;
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #046961 0%, #19827a 100%)' }}>
-             {/* Modern Background Elements */}
-       <div 
-         className="absolute inset-0"
-         style={{
-           background: 'radial-gradient(ellipse at top, rgba(4, 105, 97, 0.4), rgba(4, 105, 97, 0.3), rgba(25, 130, 122, 0.2))'
-         }}
-       ></div>
-       <div 
-         className="absolute inset-0 opacity-50"
-         style={{
-           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23046961' fill-opacity='0.12'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-         }}
-       ></div>
-      
-      {/* Floating Orbs */}
-      <motion.div
-        className="absolute top-20 left-20 w-72 h-72 rounded-full blur-3xl"
-        style={{ background: 'linear-gradient(45deg, rgba(4, 105, 97, 0.35), rgba(25, 130, 122, 0.20))' }}
-        animate={{
-          x: [0, 100, 0],
-          y: [0, -50, 0],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl"
-        style={{ background: 'linear-gradient(135deg, rgba(4, 105, 97, 0.4), rgba(25, 130, 122, 0.25))' }}
-        animate={{
-          x: [0, -100, 0],
-          y: [0, 50, 0],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+    <div className="min-h-screen bg-white">{/* Clean white background */}
 
       <div className="flex h-screen relative">
         {/* Sidebar */}
@@ -200,14 +211,13 @@ export default function StudentPanel() {
           initial={{ x: -288 }}
           animate={{ x: sidebarOpen ? 0 : -288 }}
           transition={{ duration: 0.3 }}
-          className={`${sidebarOpen ? 'fixed lg:relative' : 'fixed'} backdrop-blur-xl border-r h-screen top-0 z-50 w-72`}
+          className={`${sidebarOpen ? 'fixed lg:relative' : 'fixed'} border-r h-screen top-0 z-50 w-72 bg-gradient-to-b from-slate-800 to-slate-900 shadow-xl`}
           style={{ 
-            background: 'linear-gradient(180deg, rgba(69, 152, 145, 0.90) 0%, rgba(69, 152, 145, 0.80) 50%, rgba(103, 181, 175, 0.75) 100%)',
-            borderRightColor: 'rgba(69, 152, 145, 0.4)'
+            borderRightColor: 'rgba(148, 163, 184, 0.2)'
           }}
         >
           {/* Sidebar Glass Effect */}
-          <div className="absolute inset-0 rounded-r-3xl" style={{ background: 'linear-gradient(135deg, rgba(69, 152, 145, 0.15) 0%, rgba(69, 152, 145, 0.08) 100%)' }}></div>
+          <div className="absolute inset-0 rounded-r-3xl bg-gradient-to-br from-slate-700/20 to-slate-800/10"></div>
           
           {/* Sidebar Header */}
           <div className="p-6 border-b border-white/10 relative">
@@ -218,10 +228,10 @@ export default function StudentPanel() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-200 via-teal-300 to-cyan-200 bg-clip-text text-transparent">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 bg-clip-text text-transparent">
                     Öğrenci Paneli
                   </h1>
-                  <p className="text-sm text-gray-400 mt-1">Eylül Büyükkaya Akademi</p>
+                  <p className="text-sm text-slate-400 mt-1">Eylül Büyükkaya Akademi</p>
                 </motion.div>
               )}
               
@@ -254,15 +264,12 @@ export default function StudentPanel() {
                 whileTap={{ scale: 0.98 }}
                 className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group ${
                   activeModule === item.id
-                    ? 'text-white shadow-lg'
-                    : 'hover:bg-white/5 text-gray-300'
+                    ? 'text-white shadow-lg bg-gradient-to-r from-slate-600 to-slate-700'
+                    : 'hover:bg-slate-700/50 text-slate-300'
                 }`}
-                style={activeModule === item.id ? { 
-                  background: 'linear-gradient(135deg, rgba(69, 152, 145, 0.35), rgba(69, 152, 145, 0.20))'
-                } : {}}
               >
                 <div className={`p-2 rounded-lg ${
-                  activeModule === item.id ? 'bg-white/20' : 'bg-white/5 group-hover:bg-white/10'
+                  activeModule === item.id ? 'bg-white/20' : 'bg-slate-700/30 group-hover:bg-slate-600/30'
                 }`}>
                   <item.icon 
                     size={20} 
@@ -277,7 +284,7 @@ export default function StudentPanel() {
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                         activeModule === item.id 
                           ? 'bg-white/20 text-white' 
-                          : 'bg-red-500/20 text-red-400'
+                          : 'bg-slate-500/20 text-slate-400'
                       }`}>
                         {item.badge}
                       </span>
@@ -288,7 +295,7 @@ export default function StudentPanel() {
             ))}
           </nav>
 
-          {/* Student Info in Sidebar */}
+          {/* Coming Soon for Coach Features */}
           {sidebarOpen && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -296,27 +303,15 @@ export default function StudentPanel() {
               transition={{ delay: 0.5 }}
               className="absolute bottom-4 left-4 right-4"
             >
-              <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={studentData.photo}
-                      alt={studentData.name}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-teal-300/60"
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-black/20"></div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white truncate">
-                      {studentData.name}
-                    </p>
-                    <p className="text-sm text-gray-300 truncate">
-                      {studentData.class}
-                    </p>
-                    <p className="text-xs font-medium" style={{ color: '#459891' }}>
-                      Koç: {studentData.coach}
-                    </p>
-                  </div>
+              <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/20 backdrop-blur-md rounded-2xl p-4 border border-slate-600/30">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🎓</div>
+                  <p className="text-sm text-slate-300 font-medium">
+                    Koç Eşleştirme Sistemi
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Yakında açılacak
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -334,10 +329,7 @@ export default function StudentPanel() {
         {/* Main Content */}
         <div className="flex-1 transition-all duration-300">
           {/* Header */}
-          <header className="backdrop-blur-xl border-b p-6 relative" style={{ 
-            background: 'linear-gradient(90deg, rgba(69, 152, 145, 0.20), rgba(69, 152, 145, 0.15))',
-            borderBottomColor: 'rgba(69, 152, 145, 0.3)'
-          }}>
+          <header className="bg-white border-b border-slate-200 p-6 relative shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {/* Sidebar Toggle Button - Visible when sidebar is closed */}
@@ -347,42 +339,112 @@ export default function StudentPanel() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2 }}
                     onClick={() => setSidebarOpen(true)}
-                    className="p-3 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 flex-shrink-0 border"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(69, 152, 145, 0.35), rgba(69, 152, 145, 0.20))',
-                      borderColor: 'rgba(69, 152, 145, 0.4)'
-                    }}
+                    className="p-3 text-slate-600 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 flex-shrink-0 border border-slate-200 bg-slate-50 hover:bg-slate-100"
                     title="Navigasyon Menüsünü Aç"
                   >
                     <Menu size={20} />
                   </motion.button>
                 )}
                 <div>
-                  <h1 className="text-2xl font-bold text-white mb-1">
+                  <h1 className="text-2xl font-bold text-slate-800 mb-1">
                     {navigationItems.find(item => item.id === activeModule)?.name || 'Dashboard'}
                   </h1>
                 </div>
               </div>
 
-              {/* Notification Button */}
-              <div className="relative">
-                <button 
-                  onClick={() => setActiveModule('notifications')}
-                  className="relative p-3 hover:bg-white/10 rounded-xl transition-colors"
+              {/* Right Side - Notification and Profile */}
+              <div className="flex items-center gap-4">
+                {/* Notification Button */}
+                <div className="relative">
+                  <motion.button 
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className="relative p-3 hover:bg-slate-100 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Bell size={20} className="text-slate-600" />
+                    {notifications > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {notifications}
+                      </span>
+                    )}
+                  </motion.button>
+                </div>
+
+                {/* Profile Button */}
+                <motion.button
+                  onClick={() => setShowProfile(!showProfile)}
+                  className="relative flex items-center gap-3 p-2 hover:bg-slate-100 rounded-xl transition-all duration-300 group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <Bell size={20} className="text-white" />
-                  {notifications > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {notifications}
-                    </span>
-                  )}
-                </button>
+                  <div className="relative">
+                    <img
+                      src={studentData.photo}
+                      alt={studentData.name}
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-300 group-hover:ring-slate-400 transition-all duration-300"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <p className="text-slate-800 font-medium text-sm">
+                      {studentData.name}
+                    </p>
+                    <p className="text-slate-500 text-xs">
+                      {studentData.class}
+                    </p>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+                </motion.button>
+
+                {/* Logout Button */}
+                <motion.button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-red-50 rounded-xl transition-all duration-300 group border border-red-200"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Çıkış Yap"
+                >
+                  <LogOut size={20} className="text-red-500 group-hover:text-red-600" />
+                </motion.button>
               </div>
             </div>
           </header>
 
+          {/* Notifications Dropdown */}
+          {showNotifications && (
+            <div className="absolute top-16 right-6 z-50 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden notification-dropdown">
+              <NotificationsDropdown 
+                setNotifications={setNotifications} 
+                onClose={() => setShowNotifications(false)} 
+              />
+            </div>
+          )}
+
+          {/* Profile Modal */}
+          {showProfile && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto profile-modal">
+                <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-slate-800">Profil</h2>
+                  <motion.button
+                    onClick={() => setShowProfile(false)}
+                    className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <X size={20} className="text-slate-600" />
+                  </motion.button>
+                </div>
+                <div className="p-6">
+                  <ProfileModule studentData={studentData} />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Content Area */}
-          <main className="p-6 lg:p-8">
+          <main className="p-6 lg:p-8 overflow-y-auto max-h-[calc(100vh-120px)] bg-slate-50">
             <motion.div
               key={activeModule}
               initial={{ opacity: 0, y: 20 }}
@@ -468,10 +530,10 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-xl border border-white/10 p-8"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 p-8 shadow-2xl border border-cyan-200"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-purple-400/10 to-pink-400/10"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-l from-white/5 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/90 via-purple-600/90 to-pink-600/90"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-l from-white/20 to-transparent rounded-full blur-3xl"></div>
         
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -510,15 +572,15 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
               transition={{ delay: 0.4 }}
               className="flex flex-wrap gap-6 text-sm"
             >
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-                <Clock size={16} className="text-cyan-400" />
-                <span className="text-white">
-                  Sonraki ders: {studentData.nextMeeting?.toLocaleDateString('tr-TR')} - {studentData.nextMeeting?.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                <GraduationCap size={16} className="text-yellow-300" />
+                <span className="text-white font-medium">
+                  Koç eşleştirme yakında
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
-                <Star size={16} className="text-yellow-400" />
-                <span className="text-white">Ortalama: {studentData.averageGrade}/100</span>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+                <Star size={16} className="text-yellow-300" />
+                <span className="text-white font-medium">Tüm özellikler aktif olacak</span>
               </div>
             </motion.div>
           </div>
@@ -544,37 +606,45 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
-            title: 'Tamamlanan Dersler',
-            value: `${studentData.completedLessons}/${studentData.totalLessons}`,
-            subtitle: `%${progressPercentage.toFixed(1)} tamamlandı`,
+            title: 'Kişisel Gelişim',
+            value: '0/35',
+            subtitle: 'Koç eşleştirmesi sonrası',
             icon: BookOpen,
-            gradient: 'from-emerald-400 to-cyan-600',
-            bgGradient: 'from-emerald-500/20 to-cyan-500/20',
-            progress: progressPercentage
+            gradient: 'from-emerald-400 to-emerald-600',
+            bgGradient: 'from-emerald-100 to-emerald-200',
+            borderColor: 'border-emerald-300',
+            shadowColor: 'shadow-emerald-200/50',
+            progress: 0
           },
           {
-            title: 'Ortalama Not',
-            value: `${studentData.averageGrade}/100`,
-            subtitle: 'Son 30 gün',
+            title: 'Hedef Takibi',
+            value: 'Yakında',
+            subtitle: 'Koçunuzla birlikte',
             icon: Star,
-            gradient: 'from-yellow-400 to-orange-500',
-            bgGradient: 'from-yellow-500/20 to-orange-500/20'
+            gradient: 'from-yellow-400 to-amber-500',
+            bgGradient: 'from-yellow-100 to-amber-200',
+            borderColor: 'border-amber-300',
+            shadowColor: 'shadow-amber-200/50'
           },
           {
-            title: 'Bu Hafta',
-            value: '3',
-            subtitle: 'Yaklaşan dersler',
+            title: 'Ders Programı',
+            value: 'Planlama',
+            subtitle: 'Koç eşleştirme sonrası',
             icon: Calendar,
             gradient: 'from-violet-400 to-purple-600',
-            bgGradient: 'from-violet-500/20 to-purple-500/20'
+            bgGradient: 'from-violet-100 to-purple-200',
+            borderColor: 'border-purple-300',
+            shadowColor: 'shadow-purple-200/50'
           },
           {
-            title: 'Başarı Rozetleri',
-            value: '12',
-            subtitle: 'Toplamda kazanılan',
+            title: 'Motivasyon',
+            value: '💪',
+            subtitle: 'Başlamaya hazır!',
             icon: Trophy,
-            gradient: 'from-pink-400 to-red-500',
-            bgGradient: 'from-pink-500/20 to-red-500/20'
+            gradient: 'from-pink-400 to-rose-500',
+            bgGradient: 'from-pink-100 to-rose-200',
+            borderColor: 'border-rose-300',
+            shadowColor: 'shadow-rose-200/50'
           }
         ].map((stat, index) => (
           <motion.div
@@ -585,30 +655,32 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
             whileHover={{ y: -8, scale: 1.02 }}
             className="relative group"
           >
-            <div className={`bg-gradient-to-br ${stat.bgGradient} backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 relative overflow-hidden`}>
+            <div className={`bg-gradient-to-br ${stat.bgGradient} rounded-2xl p-6 border-2 ${stat.borderColor} ${stat.shadowColor} shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden bg-white`}>
               {/* Animated background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
               
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <div className={`p-3 bg-gradient-to-r ${stat.gradient} rounded-xl group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                   <stat.icon size={24} className="text-white" />
                 </div>
-                <TrendingUp size={20} className="text-emerald-400" />
+                <Sparkles size={20} className={stat.gradient.includes('emerald') ? 'text-emerald-500' : 
+                                              stat.gradient.includes('yellow') ? 'text-amber-500' :
+                                              stat.gradient.includes('violet') ? 'text-purple-500' : 'text-rose-500'} />
               </div>
               
-              <h3 className="text-3xl font-bold text-white mb-1 relative z-10">
+              <h3 className="text-3xl font-bold text-slate-800 mb-1 relative z-10">
                 {stat.value}
               </h3>
-              <p className="text-gray-300 font-medium mb-1 relative z-10">{stat.title}</p>
-              <p className="text-sm text-gray-400 relative z-10">{stat.subtitle}</p>
+              <p className="text-slate-700 font-medium mb-1 relative z-10">{stat.title}</p>
+              <p className="text-sm text-slate-500 relative z-10">{stat.subtitle}</p>
               
-              {stat.progress && (
-                <div className="w-full bg-white/10 rounded-full h-2 mt-4 relative z-10">
+              {stat.progress !== undefined && (
+                <div className="w-full bg-slate-200 rounded-full h-3 mt-4 relative z-10 shadow-inner">
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${stat.progress}%` }}
                     transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
-                    className={`bg-gradient-to-r ${stat.gradient} h-2 rounded-full`}
+                    className={`bg-gradient-to-r ${stat.gradient} h-3 rounded-full shadow-sm`}
                   />
                 </div>
               )}
@@ -624,14 +696,14 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300"
+          className="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-xl hover:shadow-2xl transition-all duration-300"
         >
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Zap className="text-yellow-400" size={24} />
+              <Zap className="text-yellow-500" size={24} />
             </motion.div>
             Hızlı İşlemler
           </h3>
@@ -640,44 +712,41 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
             {[
               { 
                 icon: MessageCircle, 
-                label: 'Koçla İletişim', 
+                label: 'Koç Mesajları', 
                 action: () => setActiveModule('messages'),
-                bgColor: 'from-cyan-500/15 to-blue-500/15',
-                hoverColor: 'from-cyan-500/25 to-blue-500/25',
-                iconColor: 'text-cyan-400',
-                description: 'Koçunuzla sohbet edin',
+                bgColor: 'from-cyan-100 to-blue-200',
+                hoverColor: 'from-cyan-200 to-blue-300',
+                iconColor: 'text-cyan-600',
+                description: 'Koç eşleştirme sonrası',
+                borderColor: 'border-cyan-300',
+                shadowColor: 'shadow-cyan-200/50',
                 activeColor: 'cyan'
               },
               { 
                 icon: Plus, 
-                label: 'Ders Planla', 
+                label: 'Takvim', 
                 action: () => setActiveModule('calendar'),
-                bgColor: 'from-emerald-500/15 to-teal-500/15',
-                hoverColor: 'from-emerald-500/25 to-teal-500/25',
-                iconColor: 'text-emerald-400',
-                description: 'Yeni ders programlayın',
+                bgColor: 'from-emerald-100 to-teal-200',
+                hoverColor: 'from-emerald-200 to-teal-300',
+                iconColor: 'text-emerald-600',
+                description: 'Kişisel takvim yönetimi',
+                borderColor: 'border-emerald-300',
+                shadowColor: 'shadow-emerald-200/50',
                 activeColor: 'emerald'
               },
               { 
                 icon: Library, 
-                label: 'Materyaller', 
+                label: 'Koçtan Gelenler', 
                 action: () => setActiveModule('materials'),
-                bgColor: 'from-violet-500/15 to-purple-500/15',
-                hoverColor: 'from-violet-500/25 to-purple-500/25',
-                iconColor: 'text-violet-400',
-                description: 'Ders materyallerinize erişin',
+                bgColor: 'from-violet-100 to-purple-200',
+                hoverColor: 'from-violet-200 to-purple-300',
+                iconColor: 'text-violet-600',
+                description: 'Koçtan gelen materyaller',
+                borderColor: 'border-violet-300',
+                shadowColor: 'shadow-violet-200/50',
                 activeColor: 'violet'
               },
-              { 
-                icon: Trophy, 
-                label: 'Sınavlarım', 
-                action: () => setActiveModule('exams'),
-                bgColor: 'from-orange-500/15 to-red-500/15',
-                hoverColor: 'from-orange-500/25 to-red-500/25',
-                iconColor: 'text-orange-400',
-                description: 'Sınav programınızı görün',
-                activeColor: 'orange'
-              }
+
             ].map((action, index) => (
               <motion.button
                 key={index}
@@ -687,7 +756,7 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 + index * 0.1 }}
-                className={`relative p-6 bg-gradient-to-br ${action.bgColor} hover:${action.hoverColor} rounded-2xl border border-white/20 hover:border-white/40 transition-all duration-300 group overflow-hidden min-h-[120px] flex flex-col justify-center items-center text-center`}
+                className={`relative p-6 bg-gradient-to-br ${action.bgColor} hover:${action.hoverColor} rounded-2xl border-2 ${action.borderColor} ${action.shadowColor} shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden min-h-[120px] flex flex-col justify-center items-center text-center`}
               >
                 {/* Enhanced background glow */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${action.hoverColor} opacity-0 group-hover:opacity-50 transition-opacity duration-500 blur-xl`} />
@@ -717,7 +786,7 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
                   ))}
                 </div>
                 
-                {/* Content Container */}
+                                  {/* Content Container */}
                 <div className="relative z-10 flex flex-col items-center justify-center space-y-3">
                   {/* Icon Container - Perfectly Centered */}
                   <motion.div
@@ -726,20 +795,20 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
                       scale: 1.1 
                     }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
-                    className="flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl group-hover:bg-white/20 transition-all duration-300"
+                    className="flex items-center justify-center w-12 h-12 bg-white/50 rounded-xl group-hover:bg-white/70 transition-all duration-300 shadow-sm"
                   >
                     <action.icon 
                       size={24} 
-                      className={`${action.iconColor} group-hover:text-white transition-colors duration-300`} 
+                      className={`${action.iconColor} transition-colors duration-300`} 
                     />
                   </motion.div>
                   
                   {/* Text Content - Centered */}
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-white tracking-wide">
+                    <h4 className="text-sm font-bold text-slate-800 tracking-wide">
                       {action.label}
                     </h4>
-                    <p className="text-xs text-gray-300 group-hover:text-gray-100 transition-colors duration-300 opacity-90 leading-relaxed">
+                    <p className="text-xs text-slate-600 group-hover:text-slate-700 transition-colors duration-300 opacity-90 leading-relaxed">
                       {action.description}
                     </p>
                   </div>
@@ -765,71 +834,70 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
           </div>
         </motion.div>
 
-        {/* Modern Upcoming Lessons */}
+        {/* Modern Coming Soon Features */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="lg:col-span-2 bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10"
+          className="lg:col-span-2 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 border-2 border-slate-200 shadow-xl"
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Calendar className="text-violet-400" size={24} />
-              Yaklaşan Dersler
+            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Calendar className="text-violet-500" size={24} />
+              Koç Eşleştirme Sonrası
             </h3>
-            <button className="text-cyan-400 hover:text-cyan-300 font-medium text-sm transition-colors">
-              Tümünü Gör
-            </button>
+            <span className="px-3 py-1 bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 text-sm font-medium rounded-full border border-violet-200">
+              Yakında
+            </span>
           </div>
           
           <div className="space-y-4">
-            {upcomingLessons.map((lesson, index) => (
+            {[
+              {
+                icon: BookOpen,
+                title: 'Kişiselleştirilmiş Ders Programı',
+                description: 'Koçunuz sizin ihtiyaçlarınıza göre özel ders programı hazırlayacak',
+                color: 'from-cyan-100 to-blue-100',
+                borderColor: 'border-cyan-200',
+                iconColor: 'text-cyan-600'
+              },
+              {
+                icon: MessageCircle,
+                title: 'Birebir Mentorluk Seansları',
+                description: 'Hedeflerinize ulaşmak için koçunuzla özel görüşmeler',
+                color: 'from-emerald-100 to-teal-100',
+                borderColor: 'border-emerald-200',
+                iconColor: 'text-emerald-600'
+              },
+              {
+                icon: Target,
+                title: 'Hedef Odaklı Çalışma Planı',
+                description: 'Başarı için adım adım takip edilebilir hedefler',
+                color: 'from-orange-100 to-red-100',
+                borderColor: 'border-orange-200',
+                iconColor: 'text-orange-600'
+              }
+            ].map((feature, index) => (
               <motion.div
-                key={lesson.id}
+                key={index}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 + index * 0.1 }}
                 whileHover={{ x: 8, scale: 1.01 }}
-                className="flex items-center gap-4 p-4 bg-white/5 hover:bg-white/10 rounded-xl transition-all duration-300 border border-white/5 hover:border-white/10 group"
+                className={`flex items-center gap-4 p-4 bg-gradient-to-r ${feature.color} rounded-xl transition-all duration-300 border-2 ${feature.borderColor} group shadow-sm hover:shadow-md`}
               >
-                <div className={`p-3 rounded-xl ${
-                  lesson.type === 'lesson' ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30' :
-                  lesson.type === 'consultation' ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30' :
-                  'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30'
-                } group-hover:scale-110 transition-transform duration-300`}>
-                  {lesson.type === 'lesson' ? <BookOpen size={20} className="text-cyan-400" /> :
-                   lesson.type === 'consultation' ? <MessageCircle size={20} className="text-emerald-400" /> :
-                   <Target size={20} className="text-orange-400" />}
+                <div className={`p-3 rounded-xl bg-white/60 group-hover:bg-white/80 transition-all duration-300 shadow-sm`}>
+                  <feature.icon size={20} className={feature.iconColor} />
                 </div>
                 
                 <div className="flex-1">
-                  <h4 className="font-semibold text-white group-hover:text-cyan-400 transition-colors">{lesson.title}</h4>
-                  <div className="flex items-center gap-4 text-sm text-gray-400 mt-1">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} />
-                      {lesson.date.toLocaleDateString('tr-TR')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={14} />
-                      {lesson.date.toLocaleTimeString('tr-TR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <BookOpen size={14} />
-                      {lesson.duration}
-                    </span>
-                  </div>
+                  <h4 className="font-semibold text-slate-800 group-hover:text-slate-900 transition-colors">{feature.title}</h4>
+                  <p className="text-sm text-slate-600 mt-1">{feature.description}</p>
                 </div>
                 
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 text-sm font-medium"
-                >
-                  Katıl
-                </motion.button>
+                <div className="px-3 py-1 bg-white/60 text-slate-600 rounded-lg text-xs font-medium">
+                  Yakında
+                </div>
               </motion.div>
             ))}
           </div>
@@ -841,35 +909,59 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10"
+        className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 border-2 border-slate-200 shadow-xl"
       >
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <BarChart3 className="text-emerald-400" size={24} />
-          Son Aktiviteler
+        <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <BarChart3 className="text-emerald-500" size={24} />
+          Sistem Bilgileri
         </h3>
         
         <div className="space-y-4">
-          {recentActivities.map((activity, index) => (
+          {[
+            {
+              icon: CheckCircle,
+              title: 'Öğrenci hesabı başarıyla oluşturuldu',
+              description: 'Sisteme giriş yapabilir ve özellikleri kullanabilirsiniz',
+              color: 'text-emerald-500',
+              bgColor: 'from-emerald-50 to-emerald-100',
+              borderColor: 'border-emerald-200'
+            },
+            {
+              icon: Users,
+              title: 'Koç eşleştirme sistemi geliştiriliyor',
+              description: 'Yakında size en uygun koç eşleştirilecek',
+              color: 'text-blue-500',
+              bgColor: 'from-blue-50 to-blue-100',
+              borderColor: 'border-blue-200'
+            },
+
+            {
+              icon: Calendar,
+              title: 'Kişisel takvim özelliği hazır',
+              description: 'Görevlerinizi ve planlarınızı takip edebilirsiniz',
+              color: 'text-orange-500',
+              bgColor: 'from-orange-50 to-orange-100',
+              borderColor: 'border-orange-200'
+            }
+          ].map((info, index) => (
             <motion.div
-              key={activity.id}
+              key={index}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.9 + index * 0.1 }}
-              whileHover={{ x: 8, backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-              className="flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer border border-transparent hover:border-white/10"
+              whileHover={{ x: 8, scale: 1.01 }}
+              className={`flex items-center gap-4 p-4 bg-gradient-to-r ${info.bgColor} rounded-xl transition-all duration-300 border-2 ${info.borderColor} shadow-sm hover:shadow-md`}
             >
-              <div className="p-2 bg-white/5 rounded-lg">
-                <activity.icon size={16} className={activity.color} />
+              <div className="p-2 bg-white/60 rounded-lg shadow-sm">
+                <info.icon size={16} className={info.color} />
               </div>
               
               <div className="flex-1">
-                <p className="font-medium text-white">{activity.title}</p>
-                <p className="text-sm text-gray-400">
-                  {activity.timestamp.toLocaleDateString('tr-TR')} - {activity.timestamp.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                </p>
+                <p className="font-medium text-slate-800">{info.title}</p>
+                <p className="text-sm text-slate-600 mt-1">{info.description}</p>
               </div>
               
-              <ChevronRight size={16} className="text-gray-500" />
+              <ChevronRight size={16} className="text-slate-400" />
             </motion.div>
           ))}
         </div>
@@ -894,6 +986,17 @@ type Lesson = {
 
 // Lessons Module with Weekly Schedule
 function LessonsModule({ studentData }: { studentData: StudentData }) {
+  return (
+    <ComingSoon
+      title="Koç Dersleri"
+      description="Koçunuzla birebir dersler, canlı eğitim seansları ve kişiselleştirilmiş ders programları yakında başlayacak!"
+      icon={<BookOpen size={40} className="text-emerald-600" />}
+      theme="coach"
+    />
+  );
+}
+
+function OriginalLessonsModule({ studentData }: { studentData: StudentData }) {
   // Haftalık ders programı verisi
   const [weeklySchedule, setWeeklySchedule] = useState({
     'Pazartesi': [
@@ -1247,8 +1350,14 @@ type Task = {
   description: string;
   date: Date;
   time: string;
+  endTime?: string;
   completed: boolean;
   createdAt: Date;
+  category: 'study' | 'meeting' | 'reminder' | 'exam' | 'assignment' | 'personal' | 'break';
+  color: string;
+  priority: 'low' | 'medium' | 'high';
+  link?: string;
+  isRecurring?: boolean;
 };
 
 function CalendarModule() {
@@ -1258,11 +1367,17 @@ function CalendarModule() {
   const [showAddTask, setShowAddTask] = useState(false);
   const [clickedDate, setClickedDate] = useState<Date | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
   
   // Form states
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskTime, setNewTaskTime] = useState('09:00');
+  const [newTaskEndTime, setNewTaskEndTime] = useState('10:00');
+  const [newTaskCategory, setNewTaskCategory] = useState<Task['category']>('study');
+  const [newTaskPriority, setNewTaskPriority] = useState<Task['priority']>('medium');
+  const [newTaskLink, setNewTaskLink] = useState('');
+  const [newTaskRecurring, setNewTaskRecurring] = useState(false);
   
   // Türkçe ay ve gün isimleri
   const months = [
@@ -1271,6 +1386,48 @@ function CalendarModule() {
   ];
   
   const daysOfWeek = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+  // Event kategorisi için renk döndür
+  const getCategoryColor = (category: Task['category']) => {
+    switch (category) {
+      case 'study': return '#3B82F6'; // Blue
+      case 'meeting': return '#10B981'; // Green
+      case 'reminder': return '#F59E0B'; // Yellow
+      case 'exam': return '#EF4444'; // Red
+      case 'assignment': return '#8B5CF6'; // Purple
+      case 'personal': return '#EC4899'; // Pink
+      case 'break': return '#6B7280'; // Gray
+      default: return '#3B82F6';
+    }
+  };
+
+  // Kategori Türkçe isimler
+  const getCategoryLabel = (category: Task['category']) => {
+    switch (category) {
+      case 'study': return 'Çalışma';
+      case 'meeting': return 'Toplantı';
+      case 'reminder': return 'Hatırlatma';
+      case 'exam': return 'Sınav';
+      case 'assignment': return 'Ödev';
+      case 'personal': return 'Kişisel';
+      case 'break': return 'Mola';
+      default: return 'Çalışma';
+    }
+  };
+
+  // Kategori ikonu
+  const getCategoryIcon = (category: Task['category']) => {
+    switch (category) {
+      case 'study': return BookOpen;
+      case 'meeting': return Users;
+      case 'reminder': return Bell;
+      case 'exam': return Target;
+      case 'assignment': return FileText;
+      case 'personal': return User;
+      case 'break': return Coffee;
+      default: return BookOpen;
+    }
+  };
 
   // LocalStorage'dan görevleri yükle
   useEffect(() => {
@@ -1357,8 +1514,14 @@ function CalendarModule() {
       description: newTaskDescription.trim(),
       date: clickedDate,
       time: newTaskTime,
+      endTime: newTaskEndTime,
       completed: false,
-      createdAt: new Date()
+      createdAt: new Date(),
+      category: newTaskCategory,
+      color: getCategoryColor(newTaskCategory),
+      priority: newTaskPriority,
+      link: newTaskLink.trim() || undefined,
+      isRecurring: newTaskRecurring
     };
 
     setTasks(prev => [...prev, newTask]);
@@ -1367,6 +1530,11 @@ function CalendarModule() {
     setNewTaskTitle('');
     setNewTaskDescription('');
     setNewTaskTime('09:00');
+    setNewTaskEndTime('10:00');
+    setNewTaskCategory('study');
+    setNewTaskPriority('medium');
+    setNewTaskLink('');
+    setNewTaskRecurring(false);
     setShowAddTask(false);
     setClickedDate(null);
   };
@@ -1403,11 +1571,11 @@ function CalendarModule() {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      {/* Header */}
+      {/* Modern Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10"
+        className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 shadow-xl"
       >
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -1416,170 +1584,167 @@ function CalendarModule() {
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Calendar className="text-cyan-400" size={28} />
+                <Calendar className="text-white" size={28} />
               </motion.div>
-              Görev Takvimi
+              Kişisel Takvim
             </h2>
-            <p className="text-gray-300">
-              Kişisel görevlerinizi planlayın ve takip edin
+            <p className="text-blue-100">
+              Google Calendar benzeri akıllı planlama sistemi
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-400">Bu Ay</div>
-            <div className="text-lg font-bold text-white">
-              {tasks.filter(t => t.date.getMonth() === selectedDate.getMonth()).length} Görev
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-sm text-blue-100">Bu Ay</div>
+              <div className="text-lg font-bold text-white">
+                {tasks.filter(t => t.date.getMonth() === selectedDate.getMonth()).length} Etkinlik
+              </div>
             </div>
+
           </div>
         </div>
 
-        {/* Açıklama */}
-        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <Plus size={20} className="text-cyan-400" />
-            <div>
-              <p className="text-white font-medium">Görev Ekleme</p>
-              <p className="text-gray-300 text-sm">Takvimde herhangi bir tarihe tıklayarak yeni görev ekleyebilirsiniz</p>
-            </div>
-          </div>
+        {/* View Mode Selector */}
+        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg p-1">
+          {(['month', 'week', 'day'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                viewMode === mode
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              {mode === 'month' ? 'Ay' : mode === 'week' ? 'Hafta' : 'Gün'}
+            </button>
+          ))}
         </div>
       </motion.div>
 
-             {/* Calendar */}
-       <motion.div
-         initial={{ opacity: 0, y: 20 }}
-         animate={{ opacity: 1, y: 0 }}
-         transition={{ delay: 0.2 }}
-         className="bg-black/20 backdrop-blur-xl rounded-2xl p-4 border border-white/10"
-       >
-         {/* Month Navigation */}
-         <div className="flex items-center justify-between mb-4">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => changeMonth(-1)}
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+      {/* Modern Calendar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-2xl shadow-xl border border-gray-200"
+      >
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => changeMonth(-1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft size={20} className="text-gray-600" />
+            </motion.button>
+            
+            <h3 className="text-xl font-bold text-gray-800">
+              {months[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+            </h3>
+            
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => changeMonth(1)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronRight size={20} className="text-gray-600" />
+            </motion.button>
+          </div>
+
+          <button
+            onClick={() => setSelectedDate(new Date())}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            <ChevronLeft size={20} className="text-gray-400" />
-          </motion.button>
-          
-          <h3 className="text-xl font-semibold text-white">
-            {months[selectedDate.getMonth()]} {selectedDate.getFullYear()}
-          </h3>
-          
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => changeMonth(1)}
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-          >
-            <ChevronRight size={20} className="text-gray-400" />
-          </motion.button>
+            Bugün
+          </button>
         </div>
 
-                 {/* Calendar Grid */}
-         <div className="space-y-2">
-                      {/* Days Header */}
-           <div className="grid grid-cols-7 gap-0">
-             {daysOfWeek.map((day) => (
-               <div key={day} className="text-center text-xs font-medium text-gray-400 py-1">
-                 {day}
-               </div>
-             ))}
-           </div>
+        {/* Calendar Grid */}
+        <div className="p-6">
+          {/* Days Header */}
+          <div className="grid grid-cols-7 gap-0 mb-4">
+            {daysOfWeek.map((day) => (
+              <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+                {day}
+              </div>
+            ))}
+          </div>
 
-           {/* Calendar Days */}
-           <div className="grid grid-cols-7 gap-0">
-             {generateCalendarDays().map((day, index) => {
-               const dayTasks = getTasksForDay(day.date);
-               const dayStyle = getDayTaskStyle(day.date);
-               const todayClass = isToday(day.date) ? 'ring-1 ring-cyan-400' : '';
-               
-               return (
-                 <motion.div
-                   key={index}
-                   initial={{ opacity: 0, scale: 0.8 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   transition={{ delay: index * 0.01 }}
-                   className={`
-                     relative min-h-[92px] p-1 rounded-sm border transition-all duration-200 cursor-pointer
-                     ${day.isCurrentMonth 
-                       ? 'border-white/20 hover:border-white/40 bg-white/5' 
-                       : 'border-white/10 bg-white/2 opacity-50'
-                     }
-                     ${dayStyle || ''}
-                     ${todayClass}
-                   `}
-                  onClick={() => {
-                    if (dayTasks.length > 0) {
-                      setSelectedTask(dayTasks[0]);
-                      setShowTaskDetail(true);
-                    } else {
-                      // Yeni görev ekleme modalını aç
-                      setClickedDate(day.date);
-                      setShowAddTask(true);
+          {/* Calendar Days */}
+          <div className="grid grid-cols-7 gap-1">
+            {generateCalendarDays().map((day, index) => {
+              const dayTasks = getTasksForDay(day.date);
+              const todayClass = isToday(day.date) ? 'ring-2 ring-blue-500' : '';
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.01 }}
+                  className={`
+                    relative min-h-[100px] p-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 cursor-pointer bg-white hover:bg-gray-50
+                    ${day.isCurrentMonth 
+                      ? 'text-gray-900' 
+                      : 'text-gray-400 bg-gray-50'
                     }
+                    ${todayClass}
+                  `}
+                  onClick={() => {
+                    setClickedDate(day.date);
+                    setShowAddTask(true);
                   }}
                 >
-                   {/* Day Number */}
-                   <div className={`
-                     text-xs font-medium mb-1
-                     ${day.isCurrentMonth ? 'text-white' : 'text-gray-500'}
-                     ${isToday(day.date) ? 'text-cyan-400 font-bold' : ''}
-                   `}>
-                     {day.date.getDate()}
-                   </div>
+                  {/* Day Number */}
+                  <div className={`
+                    text-sm font-medium mb-1 flex items-center justify-between
+                    ${isToday(day.date) ? 'text-blue-600 font-bold' : ''}
+                  `}>
+                    <span>{day.date.getDate()}</span>
+                    {isToday(day.date) && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    )}
+                  </div>
 
-                   {/* Today Indicator */}
-                   {isToday(day.date) && (
-                     <div className="absolute top-0.5 right-0.5">
-                       <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
-                     </div>
-                   )}
-
-                   {/* Tasks */}
-                   <div className="space-y-0.5">
-                     {dayTasks.slice(0, 2).map((task, idx) => (
-                       <motion.div
-                         key={task.id}
-                         initial={{ opacity: 0, y: 10 }}
-                         animate={{ opacity: 1, y: 0 }}
-                         transition={{ delay: idx * 0.1 }}
-                         className={`
-                           text-[10px] p-0.5 rounded border cursor-pointer transition-all
-                           ${task.completed 
-                             ? 'bg-emerald-500/20 border-emerald-400/30 opacity-70' 
-                             : 'bg-blue-500/20 border-blue-400/30 hover:scale-105'
-                           }
-                         `}
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           setSelectedTask(task);
-                           setShowTaskDetail(true);
-                         }}
-                       >
-                         <div className="flex items-center gap-0.5">
-                           {task.completed ? (
-                             <CheckCircle size={8} className="text-emerald-400" />
-                           ) : (
-                             <Clock size={8} className="text-blue-400" />
-                           )}
-                           <span className={`font-medium truncate text-[10px] ${
-                             task.completed ? 'text-emerald-300 line-through' : 'text-white'
-                           }`}>
-                             {task.title}
-                           </span>
-                         </div>
-                         <div className="text-gray-300 text-[8px]">
-                           {task.time}
-                         </div>
-                       </motion.div>
-                     ))}
-                                         
-                     {dayTasks.length > 2 && (
-                       <div className="text-[8px] text-gray-400 text-center">
-                         +{dayTasks.length - 2} daha
-                       </div>
-                     )}
+                  {/* Tasks */}
+                  <div className="space-y-1">
+                    {dayTasks.slice(0, 3).map((task, idx) => {
+                      const IconComponent = getCategoryIcon(task.category);
+                      return (
+                        <motion.div
+                          key={task.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="text-xs p-1 rounded-md cursor-pointer transition-all hover:scale-105"
+                          style={{ backgroundColor: task.color + '20', borderLeft: `3px solid ${task.color}` }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTask(task);
+                            setShowTaskDetail(true);
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            <IconComponent size={10} style={{ color: task.color }} />
+                            <span className="font-medium truncate" style={{ color: task.color }}>
+                              {task.title}
+                            </span>
+                          </div>
+                          <div className="text-gray-500 text-xs mt-0.5">
+                            {task.time} {task.endTime && `- ${task.endTime}`}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                    
+                    {dayTasks.length > 3 && (
+                      <div className="text-xs text-gray-500 text-center py-1">
+                        +{dayTasks.length - 3} daha
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -1588,9 +1753,9 @@ function CalendarModule() {
         </div>
       </motion.div>
 
-      {/* Görev Ekleme Modal */}
+      {/* Modern Add Task Modal */}
       <AnimatePresence>
-        {showAddTask && clickedDate && (
+        {showAddTask && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1603,24 +1768,24 @@ function CalendarModule() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-lg w-full"
+              className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <Plus size={28} className="text-cyan-400" />
-                  Yeni Görev
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                  <Plus size={28} className="text-blue-500" />
+                  Yeni Etkinlik
                 </h2>
                 <button
                   onClick={() => setShowAddTask(false)}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <X size={20} className="text-gray-400" />
+                  <X size={20} className="text-gray-600" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div className="text-center p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
-                  <p className="text-cyan-300 font-medium">
+              {clickedDate && (
+                <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+                  <p className="text-blue-700 font-medium">
                     {clickedDate.toLocaleDateString('tr-TR', { 
                       weekday: 'long',
                       year: 'numeric', 
@@ -1629,51 +1794,121 @@ function CalendarModule() {
                     })}
                   </p>
                 </div>
+              )}
 
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-white font-medium mb-2">Görev Başlığı</label>
+                  <label className="block text-gray-700 font-medium mb-2">Etkinlik Başlığı</label>
                   <input
                     type="text"
                     value={newTaskTitle}
                     onChange={(e) => setNewTaskTitle(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none"
-                    placeholder="Görev başlığını girin..."
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    placeholder="Etkinlik başlığını girin..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">Kategori</label>
+                    <select
+                      value={newTaskCategory}
+                      onChange={(e) => setNewTaskCategory(e.target.value as Task['category'])}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="study">🎓 Çalışma</option>
+                      <option value="meeting">👥 Toplantı</option>
+                      <option value="reminder">🔔 Hatırlatma</option>
+                      <option value="exam">🎯 Sınav</option>
+                      <option value="assignment">📝 Ödev</option>
+                      <option value="personal">👤 Kişisel</option>
+                      <option value="break">☕ Mola</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">Öncelik</label>
+                    <select
+                      value={newTaskPriority}
+                      onChange={(e) => setNewTaskPriority(e.target.value as Task['priority'])}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="low">🟢 Düşük</option>
+                      <option value="medium">🟡 Orta</option>
+                      <option value="high">🔴 Yüksek</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">Başlangıç Saati</label>
+                    <input
+                      type="time"
+                      value={newTaskTime}
+                      onChange={(e) => setNewTaskTime(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">Bitiş Saati</label>
+                    <input
+                      type="time"
+                      value={newTaskEndTime}
+                      onChange={(e) => setNewTaskEndTime(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">Link (İsteğe bağlı)</label>
+                  <input
+                    type="text"
+                    value={newTaskLink}
+                    onChange={(e) => setNewTaskLink(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    placeholder="Link belirtin..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-white font-medium mb-2">Açıklama (İsteğe bağlı)</label>
+                  <label className="block text-gray-700 font-medium mb-2">Açıklama (İsteğe bağlı)</label>
                   <textarea
                     value={newTaskDescription}
                     onChange={(e) => setNewTaskDescription(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none h-20"
-                    placeholder="Görev açıklamasını girin..."
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none h-20"
+                    placeholder="Etkinlik açıklamasını girin..."
                   />
                 </div>
 
-                <div>
-                  <label className="block text-white font-medium mb-2">Saat</label>
+                <div className="flex items-center gap-3">
                   <input
-                    type="time"
-                    value={newTaskTime}
-                    onChange={(e) => setNewTaskTime(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:border-cyan-400 focus:outline-none"
+                    type="checkbox"
+                    id="recurring"
+                    checked={newTaskRecurring}
+                    onChange={(e) => setNewTaskRecurring(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                   />
+                  <label htmlFor="recurring" className="text-gray-700 font-medium">
+                    Tekrarlanan etkinlik
+                  </label>
                 </div>
 
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setShowAddTask(false)}
-                    className="flex-1 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300"
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-lg transition-all duration-300"
                   >
                     İptal
                   </button>
                   <button
                     onClick={addTask}
                     disabled={!newTaskTitle.trim()}
-                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 disabled:from-gray-500 disabled:to-gray-600 text-white font-medium py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 disabled:cursor-not-allowed"
                   >
-                    Görev Ekle
+                    Etkinlik Ekle
                   </button>
                 </div>
               </div>
@@ -1682,7 +1917,7 @@ function CalendarModule() {
         )}
       </AnimatePresence>
 
-      {/* Görev Detay Modal */}
+      {/* Modern Task Detail Modal */}
       <AnimatePresence>
         {showTaskDetail && selectedTask && (
           <motion.div
@@ -1697,30 +1932,30 @@ function CalendarModule() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-lg w-full"
+              className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
                   {selectedTask.completed ? (
-                    <CheckCircle size={28} className="text-emerald-400" />
+                    <CheckCircle size={28} className="text-green-500" />
                   ) : (
-                    <Clock size={28} className="text-blue-400" />
+                    <Clock size={28} style={{ color: selectedTask.color }} />
                   )}
                   {selectedTask.title}
                 </h2>
                 <button
                   onClick={() => setShowTaskDetail(false)}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <X size={20} className="text-gray-400" />
+                  <X size={20} className="text-gray-600" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                  <Calendar size={20} className="text-cyan-400" />
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <Calendar size={20} className="text-gray-600" />
                   <div>
-                    <p className="text-white font-medium">
+                    <p className="text-gray-800 font-medium">
                       {selectedTask.date.toLocaleDateString('tr-TR', { 
                         weekday: 'long',
                         year: 'numeric', 
@@ -1728,40 +1963,69 @@ function CalendarModule() {
                         day: 'numeric' 
                       })}
                     </p>
-                    <p className="text-gray-400 text-sm">
-                      {selectedTask.time}
+                    <p className="text-gray-600 text-sm">
+                      {selectedTask.time} {selectedTask.endTime && `- ${selectedTask.endTime}`}
                     </p>
                   </div>
                 </div>
 
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: selectedTask.color }}
+                    ></div>
+                    <span className="text-gray-800 font-medium">
+                      {getCategoryLabel(selectedTask.category)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedTask.priority === 'high' ? 'bg-red-500' :
+                      selectedTask.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}></div>
+                    <span className="text-gray-600 text-sm">
+                      {selectedTask.priority === 'high' ? 'Yüksek' :
+                       selectedTask.priority === 'medium' ? 'Orta' : 'Düşük'} Öncelik
+                    </span>
+                  </div>
+                </div>
+
+                {selectedTask.link && (
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                    <Target size={20} className="text-gray-600" />
+                    <span className="text-gray-800">{selectedTask.link}</span>
+                  </div>
+                )}
+
                 {selectedTask.description && (
-                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <h3 className="text-white font-medium mb-2 flex items-center gap-2">
-                      <FileText size={16} className="text-purple-400" />
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h3 className="text-gray-800 font-medium mb-2 flex items-center gap-2">
+                      <FileText size={16} className="text-gray-600" />
                       Açıklama
                     </h3>
-                    <p className="text-gray-300 text-sm leading-relaxed">
+                    <p className="text-gray-700 text-sm leading-relaxed">
                       {selectedTask.description}
                     </p>
                   </div>
                 )}
 
                 <div className={`
-                  p-4 rounded-xl border
+                  p-4 rounded-lg border-2
                   ${selectedTask.completed 
-                    ? 'bg-emerald-500/20 border-emerald-400/30' 
-                    : 'bg-blue-500/20 border-blue-400/30'
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-blue-50 border-blue-200'
                   }
                 `}>
                   <div className="flex items-center gap-2">
                     {selectedTask.completed ? (
-                      <CheckCircle size={16} className="text-emerald-400" />
+                      <CheckCircle size={16} className="text-green-600" />
                     ) : (
-                      <Clock size={16} className="text-blue-400" />
+                      <Clock size={16} className="text-blue-600" />
                     )}
                     <span className={`
                       font-medium
-                      ${selectedTask.completed ? 'text-emerald-400' : 'text-blue-400'}
+                      ${selectedTask.completed ? 'text-green-600' : 'text-blue-600'}
                     `}>
                       {selectedTask.completed ? 'Tamamlandı' : 'Beklemede'}
                     </span>
@@ -1771,7 +2035,7 @@ function CalendarModule() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => deleteTask(selectedTask.id)}
-                    className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+                    className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Trash2 size={16} />
                     Sil
@@ -1779,10 +2043,10 @@ function CalendarModule() {
                   <button
                     onClick={() => toggleTaskComplete(selectedTask.id)}
                     className={`
-                      flex-1 font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2
+                      flex-1 font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2
                       ${selectedTask.completed 
-                        ? 'bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 text-yellow-300' 
-                        : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300'
+                        ? 'bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 text-yellow-600' 
+                        : 'bg-green-50 hover:bg-green-100 border border-green-200 text-green-600'
                       }
                     `}
                   >
@@ -1809,6 +2073,17 @@ function CalendarModule() {
 }
 
 function MaterialsModule() {
+  return (
+    <ComingSoon
+      title="Koçtan Gelenler"
+      description="Koç eşleştirmesi sonrasında koçunuzun size özel hazırladığı video dersler, çalışma materyalleri, ders programları ve kişiselleştirilmiş içerikler burada yer alacak!"
+      icon={<Library size={40} className="text-emerald-600" />}
+      theme="coach"
+    />
+  );
+}
+
+function OriginalMaterialsModule() {
   const [activeTab, setActiveTab] = useState<'materials' | 'videos'>('materials');
   
   // Koçtan gelen örnek materyaller
@@ -1984,94 +2259,92 @@ function MaterialsModule() {
 
       {/* Content */}
       {activeTab === 'materials' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {coachMaterials.map((material) => (
             <motion.div
               key={material.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-orange-500/30 transition-all duration-300"
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-black/20 backdrop-blur-xl rounded-xl p-4 border border-white/10 hover:border-red-400/30 transition-all duration-300"
             >
-              <div className="flex items-start space-x-4 mb-4">
-                <div className="text-3xl">{getFileIcon(material.type)}</div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white mb-1 line-clamp-2">
-                    {material.name}
-                  </h3>
-                  <p className="text-sm text-gray-400 mb-2">{material.size}</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getCategoryColor(material.category)}`}>
-                    {material.category}
-                  </span>
-                </div>
+              <div className="flex flex-col items-center text-center mb-3">
+                <div className="text-2xl mb-2">{getFileIcon(material.type)}</div>
+                <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2 leading-tight">
+                  {material.name}
+                </h3>
+                <p className="text-xs text-gray-400 mb-2">{material.size}</p>
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(material.category)}`}>
+                  {material.category}
+                </span>
               </div>
               
-              <p className="text-sm text-gray-300 mb-4 line-clamp-2">
+              <p className="text-xs text-gray-300 mb-3 line-clamp-2 leading-relaxed">
                 {material.description}
               </p>
               
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                <span>👩‍⚕️ {material.coach}</span>
-                <span>{formatDate(material.uploadDate)}</span>
+              <div className="text-xs text-gray-500 mb-3 space-y-1">
+                <div className="truncate">👩‍⚕️ {material.coach}</div>
+                <div>{formatDate(material.uploadDate)}</div>
               </div>
               
-              <div className="flex space-x-2">
-                <button className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+              <div className="flex flex-col space-y-2">
+                <button className="w-full bg-gradient-to-r from-red-400 to-rose-400 text-white py-2 px-3 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300">
                   📥 İndir
                 </button>
-                <button className="px-4 py-2 bg-white/10 text-gray-300 rounded-xl hover:bg-white/20 transition-colors">
-                  👁️
+                <button className="w-full py-1.5 px-3 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 transition-colors text-xs">
+                  👁️ Görüntüle
                 </button>
               </div>
             </motion.div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {coachVideos.map((video) => (
             <motion.div
               key={video.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-black/20 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-purple-500/30 transition-all duration-300"
+              whileHover={{ scale: 1.02, y: -2 }}
+              className="bg-black/20 backdrop-blur-xl rounded-xl overflow-hidden border border-white/10 hover:border-red-400/30 transition-all duration-300"
             >
               <div className="relative">
-                <div className="w-full h-48 bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                <div className="w-full h-24 bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center">
                   <div className="text-white text-center">
-                    <div className="text-4xl mb-2">🎥</div>
-                    <div className="text-sm">Video Önizleme</div>
+                    <div className="text-2xl mb-1">🎥</div>
+                    <div className="text-xs">Video</div>
                   </div>
                 </div>
-                <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                <div className="absolute top-1 right-1 bg-black/70 text-white px-1.5 py-0.5 rounded text-xs">
                   {video.duration}
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  👁️ {video.views} görüntüleme
+                <div className="absolute bottom-1 left-1 bg-black/70 text-white px-1.5 py-0.5 rounded text-xs">
+                  👁️ {video.views}
                 </div>
               </div>
               
-              <div className="p-6">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border mb-3 ${getCategoryColor(video.category)}`}>
+              <div className="p-3">
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border mb-2 ${getCategoryColor(video.category)}`}>
                   {video.category}
                 </span>
                 
-                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">
+                <h3 className="text-sm font-semibold text-white mb-2 line-clamp-2 leading-tight">
                   {video.title}
                 </h3>
                 
-                <p className="text-sm text-gray-300 mb-4 line-clamp-2">
+                <p className="text-xs text-gray-300 mb-3 line-clamp-2 leading-relaxed">
                   {video.description}
                 </p>
                 
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                  <span>👩‍⚕️ {video.coach}</span>
-                  <span>{formatDate(video.uploadDate)}</span>
+                <div className="text-xs text-gray-500 mb-3 space-y-1">
+                  <div className="truncate">👩‍⚕️ {video.coach}</div>
+                  <div>{formatDate(video.uploadDate)}</div>
                 </div>
                 
-                <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2">
+                <button className="w-full bg-gradient-to-r from-red-400 to-rose-400 text-white py-2 px-3 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-1">
                   <span>▶️</span>
-                  <span>Videoyu İzle</span>
+                  <span>İzle</span>
                 </button>
               </div>
             </motion.div>
@@ -2114,6 +2387,17 @@ type Message = {
 };
 
 function MessagesModule({ studentData }: { studentData: StudentData }) {
+  return (
+    <ComingSoon
+      title="Koç Mesajları"
+      description="Koçunuzla birebir mesajlaşma, randevu talepleri ve özel danışmanlık hizmetleri yakında aktif olacak!"
+      icon={<MessageCircle size={40} className="text-emerald-600" />}
+      theme="coach"
+    />
+  );
+}
+
+function OriginalMessagesModule({ studentData }: { studentData: StudentData }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -2739,7 +3023,403 @@ function MessagesModule({ studentData }: { studentData: StudentData }) {
    );
 }
 
-function NotificationsModule({ setNotifications }: { setNotifications: (count: number) => void }) {
+
+
+
+
+
+
+
+type StudyRoom = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  onlineCount: number;
+};
+
+type ChatMessage = {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhoto: string;
+  message: string;
+  timestamp: Date;
+  roomId: string;
+};
+
+function StudyRoomModule({ studentData }: { studentData: StudentData }) {
+  const [selectedRoom, setSelectedRoom] = useState<string>('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const studyRooms: StudyRoom[] = [
+    {
+      id: 'yks',
+      name: 'YKS',
+      description: 'Üniversite sınavına hazırlanan öğrenciler',
+      icon: '🎓',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      onlineCount: 12
+    },
+    {
+      id: 'lgs',
+      name: 'LGS',
+      description: 'Lise giriş sınavına hazırlanan öğrenciler',
+      icon: '📚',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      onlineCount: 15
+    },
+    {
+      id: 'preklinik',
+      name: 'PRE KLİNİK',
+      description: 'Preklinik dönem tıp öğrencileri',
+      icon: '🩺',
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      onlineCount: 8
+    },
+    {
+      id: 'klinik',
+      name: 'KLİNİK',
+      description: 'Klinik dönem tıp öğrencileri',
+      icon: '🏥',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      onlineCount: 6
+    }
+  ];
+
+  // Mesajları localStorage'dan yükle
+  useEffect(() => {
+    if (selectedRoom) {
+      const savedMessages = localStorage.getItem(`chat_messages_${selectedRoom}`);
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(parsedMessages);
+      } else {
+        setMessages([]);
+      }
+    }
+  }, [selectedRoom]);
+
+  // Mesajları localStorage'a kaydet
+  useEffect(() => {
+    if (selectedRoom && messages.length > 0) {
+      localStorage.setItem(`chat_messages_${selectedRoom}`, JSON.stringify(messages));
+    }
+  }, [messages, selectedRoom]);
+
+  const sendMessage = () => {
+    if (!newMessage.trim() || !selectedRoom) return;
+
+    const message: ChatMessage = {
+      id: Date.now().toString(),
+      userId: studentData.id.toString(),
+      userName: studentData.name,
+      userPhoto: studentData.photo || '',
+      message: newMessage.trim(),
+      timestamp: new Date(),
+      roomId: selectedRoom
+    };
+
+    setMessages(prev => [...prev, message]);
+    setNewMessage('');
+
+    // Simüle edilmiş otomatik yanıt
+    setTimeout(() => {
+      const autoReply: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        userId: 'bot',
+        userName: 'Study Bot',
+        userPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
+        message: getAutoReply(newMessage),
+        timestamp: new Date(),
+        roomId: selectedRoom
+      };
+      setMessages(prev => [...prev, autoReply]);
+    }, 1500);
+  };
+
+  const getAutoReply = (userMessage: string): string => {
+    const message = userMessage.toLowerCase();
+    if (message.includes('merhaba') || message.includes('selam')) {
+      return 'Merhaba! Çalışma odamıza hoş geldin! 👋';
+    } else if (message.includes('soru') || message.includes('yardım')) {
+      return 'Tabii ki yardım edebilirim! Hangi konuda desteğe ihtiyacın var? 🤔';
+    } else if (message.includes('sınav') || message.includes('test')) {
+      return 'Sınav hazırlığı konusunda deneyimli arkadaşlarımız var. Hangi ders için çalışıyorsun? 📖';
+    } else if (message.includes('teşekkür')) {
+      return 'Rica ederim! Birlikte daha güçlüyüz! 💪';
+    } else {
+      return 'Harika bir soru! Diğer arkadaşların da fikrini alalım. 💭';
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('tr-TR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Bugün';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Dün';
+    } else {
+      return date.toLocaleDateString('tr-TR', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl">
+                <Users className="text-white" size={24} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">Çalışma Odası</h1>
+                <p className="text-gray-600">Birlikte çalış, birlikte öğren</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-full">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-green-700 text-sm font-medium">
+                {studyRooms.reduce((total, room) => total + room.onlineCount, 0)} aktif üye
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+          {/* Odalar Listesi */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100"
+          >
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Çalışma Odaları</h2>
+            <div className="space-y-3">
+              {studyRooms.map((room, index) => (
+                <motion.button
+                  key={room.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => setSelectedRoom(room.id)}
+                  className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 ${
+                    selectedRoom === room.id
+                      ? `${room.bgColor} ${room.borderColor} shadow-lg`
+                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">{room.icon}</div>
+                    <div className="flex-1 text-left">
+                      <h3 className={`font-semibold ${selectedRoom === room.id ? room.color : 'text-gray-700'}`}>
+                        {room.name}
+                      </h3>
+                      <p className="text-sm text-gray-500">{room.description}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-xs text-gray-600">{room.onlineCount} aktif</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Kurallar */}
+            <div className="mt-6 p-4 bg-yellow-50 rounded-2xl border border-yellow-200">
+              <h4 className="font-semibold text-yellow-800 mb-2">📋 Oda Kuralları</h4>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• Saygılı ve nazik ol</li>
+                <li>• Konuyla ilgili paylaşımlar yap</li>
+                <li>• Spam ve reklam yasak</li>
+                <li>• Birbirinize yardım edin</li>
+              </ul>
+            </div>
+          </motion.div>
+
+          {/* Chat Alanı */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col"
+          >
+            {selectedRoom ? (
+              <>
+                {/* Chat Header */}
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">
+                      {studyRooms.find(room => room.id === selectedRoom)?.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">
+                        {studyRooms.find(room => room.id === selectedRoom)?.name}
+                      </h3>
+                      <p className="text-gray-500 text-sm">
+                        {studyRooms.find(room => room.id === selectedRoom)?.onlineCount} aktif üye
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mesajlar */}
+                <div className="flex-1 p-6 overflow-y-auto space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-4xl mb-4">💬</div>
+                      <p className="text-gray-500 text-lg">İlk mesajı sen at!</p>
+                      <p className="text-gray-400 text-sm mt-1">Bu odadaki ilk kişi sen olabilirsin</p>
+                    </div>
+                  ) : (
+                    messages.map((message, index) => {
+                      const showDateHeader = index === 0 || 
+                        formatDate(message.timestamp) !== formatDate(messages[index - 1].timestamp);
+                      
+                      return (
+                        <div key={message.id}>
+                          {showDateHeader && (
+                            <div className="text-center my-4">
+                              <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                                {formatDate(message.timestamp)}
+                              </span>
+                            </div>
+                          )}
+                          
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex gap-3 ${
+                              message.userId === studentData.id.toString() ? 'justify-end' : 'justify-start'
+                            }`}
+                          >
+                            {message.userId !== studentData.id.toString() && (
+                              <img
+                                src={message.userPhoto}
+                                alt={message.userName}
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                              />
+                            )}
+                            
+                            <div className={`max-w-xs lg:max-w-md ${
+                              message.userId === studentData.id.toString() ? 'order-first' : ''
+                            }`}>
+                              {message.userId !== studentData.id.toString() && (
+                                <p className="text-sm text-gray-600 mb-1">{message.userName}</p>
+                              )}
+                              <div className={`p-3 rounded-2xl ${
+                                message.userId === studentData.id.toString()
+                                  ? 'bg-blue-500 text-white'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                <p className="text-sm">{message.message}</p>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {formatTime(message.timestamp)}
+                              </p>
+                            </div>
+
+                            {message.userId === studentData.id.toString() && (
+                              <img
+                                src={message.userPhoto}
+                                alt={message.userName}
+                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                              />
+                            )}
+                          </motion.div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Mesaj Gönderme */}
+                <div className="p-6 border-t border-gray-100">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                      placeholder="Mesajını yaz..."
+                      className="flex-1 p-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <motion.button
+                      onClick={sendMessage}
+                      disabled={!newMessage.trim()}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="p-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Send size={20} />
+                    </motion.button>
+                  </div>
+                  
+                  {isTyping && (
+                    <div className="mt-2 text-sm text-gray-500">
+                      <span className="inline-flex items-center gap-1">
+                        Birisi yazıyor
+                        <div className="flex gap-1">
+                          <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🏠</div>
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">Bir oda seç</h3>
+                  <p className="text-gray-500">Sol taraftan katılmak istediğin çalışma odasını seç</p>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NotificationsDropdown({ setNotifications, onClose }: { setNotifications: (count: number) => void; onClose: () => void }) {
   const [notifications, setLocalNotifications] = useState<any[]>([]);
 
   useEffect(() => {
@@ -2778,2365 +3458,837 @@ function NotificationsModule({ setNotifications }: { setNotifications: (count: n
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10"
-    >
+    <div className="max-h-96 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Bell className="text-red-400" size={24} />
-          <h2 className="text-2xl font-bold text-white">Bildirimler</h2>
+      <div className="p-4 border-b border-slate-200 bg-slate-50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Bell className="text-slate-600" size={20} />
+            <h3 className="text-lg font-semibold text-slate-800">Bildirimler</h3>
+            {notifications.length > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {notifications.filter(n => !n.isRead).length}
+              </span>
+            )}
+          </div>
+          
           {notifications.length > 0 && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              {notifications.filter(n => !n.isRead).length}
-            </span>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={clearAllNotifications}
+              className="text-red-500 hover:text-red-600 text-sm font-medium"
+            >
+              Tümünü Temizle
+            </motion.button>
           )}
         </div>
-        
-        {notifications.length > 0 && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={clearAllNotifications}
-            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl border border-red-500/30 transition-colors text-sm"
-          >
-            Tümünü Temizle
-          </motion.button>
-        )}
       </div>
 
       {/* Notifications List */}
-      <div className="space-y-4">
+      <div className="p-4">
         {notifications.length === 0 ? (
-          <div className="text-center py-12">
-            <Bell className="mx-auto text-gray-500 mb-4" size={48} />
-            <p className="text-gray-400 text-lg">Henüz bildirim yok</p>
-            <p className="text-gray-500 text-sm mt-2">Koçunuzdan gelen bildirimler burada görünecek</p>
+          <div className="text-center py-8">
+            <Bell className="mx-auto text-slate-300 mb-3" size={32} />
+            <p className="text-slate-500 text-sm">Henüz bildirim yok</p>
+            <p className="text-slate-400 text-xs mt-1">Koçunuzdan gelen bildirimler burada görünecek</p>
           </div>
         ) : (
-          notifications.map((notification, index) => (
-            <motion.div
-              key={notification.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                notification.isRead 
-                  ? 'bg-white/5 border-white/10' 
-                  : 'bg-blue-500/10 border-blue-500/30 shadow-lg'
-              }`}
-              onClick={() => markAsRead(notification.id)}
-            >
-              <div className="flex items-start gap-3">
-                                 <div className={`p-2 rounded-lg ${
-                   notification.type === 'appointment_request' 
-                     ? 'bg-yellow-500/20 text-yellow-400' 
-                     : notification.type === 'appointment_confirmed'
-                     ? 'bg-emerald-500/20 text-emerald-400'
-                     : 'bg-blue-500/20 text-blue-400'
-                 }`}>
-                   {notification.type === 'appointment_request' ? (
-                     <Calendar size={16} />
-                   ) : notification.type === 'appointment_confirmed' ? (
-                     <CheckCircle size={16} />
-                   ) : (
-                     <Bell size={16} />
-                   )}
-                 </div>
-                
-                <div className="flex-1">
-                                     <div className="flex items-center justify-between mb-1">
-                     <h4 className="font-semibold text-white text-sm">
-                       {notification.type === 'appointment_request' 
-                         ? 'Randevu Talebi' 
-                         : notification.type === 'appointment_confirmed'
-                         ? 'Randevu Onaylandı'
-                         : 'Bildirim'}
-                     </h4>
-                    <span className="text-xs text-gray-400">
-                      {formatNotificationTime(notification.timestamp)}
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    {notification.message}
-                  </p>
-                  
-                  {notification.appointmentDetails && (
-                    <div className="mt-2 p-2 bg-white/5 rounded-lg text-xs text-gray-400">
-                      <div>📅 {notification.appointmentDetails.date}</div>
-                      <div>⏰ {notification.appointmentDetails.time}</div>
-                      {notification.appointmentDetails.description && (
-                        <div>📝 {notification.appointmentDetails.description}</div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {!notification.isRead && (
-                    <div className="mt-2">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-function ExamsModule() {
-  return (
-    <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10">
-      <h2 className="text-2xl font-bold text-white mb-4">Sınavlarım</h2>
-      <p className="text-gray-400">Sınavlar modülü yakında eklenecek...</p>
-    </div>
-  );
-}
-
-// Akıllı Flashcard Sistemi için Type'lar
-type UserProgress = {
-  [termId: string]: {
-    level: 'beginner' | 'intermediate' | 'advanced' | 'mastered';
-    correctCount: number;
-    incorrectCount: number;
-    lastSeen: string;
-    nextReview: string;
-    difficulty: number; // 1-5 arası
-    spacedRepetitionCount: number;
-  }
-};
-
-
-
-type GameStats = {
-  totalLearned: number;
-  weeklyGoal: number;
-  currentStreak: number;
-  longestStreak: number;
-  level: number;
-  experience: number;
-  achievements: string[];
-  lastLoginDate: string;
-};
-
-function AIFlashcardsModule() {
-  // Ana State'ler
-  const [selectedTerm, setSelectedTerm] = useState<string>('');
-  const [showFlashcard, setShowFlashcard] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showLearnedCards, setShowLearnedCards] = useState(false);
-  
-  // Akıllı Sistem State'leri
-  const [userProgress, setUserProgress] = useState<UserProgress>({});
-  const [gameStats, setGameStats] = useState<GameStats>({
-    totalLearned: 0,
-    weeklyGoal: 50,
-    currentStreak: 0,
-    longestStreak: 0,
-    level: 1,
-    experience: 0,
-    achievements: [],
-    lastLoginDate: new Date().toDateString()
-  });
-  
-  // Tıp terimleri - 200+ terim içeren kapsamlı veritabanı
-  const medicalTerms = [
-    // Temel Bilimler
-    {
-      term: "Anatomiya",
-      definition: "Vücudun yapısını ve organların yerlerini inceleyen tıp dalı",
-      example: "Kalbin anatomik yapısı",
-      category: "Temel Bilimler"
-    },
-    {
-      term: "Fizyoloji", 
-      definition: "Vücut organlarının işlevlerini inceleyen bilim dalı",
-      example: "Kalp fizyolojisi",
-      category: "Temel Bilimler"
-    },
-    {
-      term: "Patoloji",
-      definition: "Hastalıkların nedenlerini ve gelişim süreçlerini inceleyen bilim",
-      example: "Kanser patolojisi",
-      category: "Temel Bilimler"
-    },
-    {
-      term: "Farmakoloji",
-      definition: "İlaçların etkilerini ve mekanizmalarını inceleyen bilim",
-      example: "Antibiyotik farmakolojisi",
-      category: "Temel Bilimler"
-    },
-
-    // Klinik Dallar
-    {
-      term: "Kardiyoloji",
-      definition: "Kalp ve damar hastalıklarıyla ilgilenen tıp dalı",
-      example: "Miyokard infarktüsü tedavisi",
-      category: "Klinik Dallar"
-    },
-    {
-      term: "Nöroloji",
-      definition: "Sinir sistemi hastalıklarını inceleyen tıp dalı",
-      example: "Alzheimer hastalığı",
-      category: "Klinik Dallar"
-    },
-    {
-      term: "Onkoloji",
-      definition: "Kanser hastalıklarının tanı ve tedavisiyle ilgilenen dal",
-      example: "Akciğer kanseri tedavisi",
-      category: "Klinik Dallar"
-    },
-    {
-      term: "Pediatri",
-      definition: "Çocuk hastalıklarını inceleyen tıp dalı",
-      example: "Bebek gelişim takibi",
-      category: "Klinik Dallar"
-    },
-
-    // Kan ve Dolaşım Sistemi
-    {
-      term: "Anemi",
-      definition: "Kanda yeterli sağlıklı kırmızı hücre olmaması",
-      example: "Demir eksikliği anemisi",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "Hipertansiyon",
-      definition: "Yüksek tansiyon",
-      example: "Sistolik basınç 140 mmHg üzerinde",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "Aritmi",
-      definition: "Kalp ritim bozukluğu",
-      example: "Atriyal fibrilasyon",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "DVT",
-      definition: "Derin ven trombozu",
-      example: "Bacak damarlarında pıhtı oluşumu",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "İnme",
-      definition: "Beyin kan akışının kesilmesi",
-      example: "İskemik inme tedavisi",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "Varis",
-      definition: "Toplardamar genişlemesi",
-      example: "Bacak varis cerrahisi",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "Aneurizma",
-      definition: "Damar genişlemesi",
-      example: "Aort anevrizması",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-    {
-      term: "Tromboz",
-      definition: "Damar içinde pıhtı oluşması",
-      example: "Pulmoner emboli riski",
-      category: "Kan ve Dolaşım Sistemi"
-    },
-
-    // Endokrin Sistem
-    {
-      term: "Diabet",
-      definition: "Kan şekeri seviyesinin yüksek olması",
-      example: "Tip 2 diabetes mellitus",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Hipoglisemi",
-      definition: "Düşük kan şekeri",
-      example: "İnsülin dozajı fazlalığı",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Hipotiroidi",
-      definition: "Tiroid bezinin az çalışması",
-      example: "Hashimoto tiroiditi",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Graves Hastalığı",
-      definition: "Tiroid hormon fazlalığı",
-      example: "Hipertiroidinin yaygın nedeni",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Guatr",
-      definition: "Tiroid bezinin büyümesi",
-      example: "İyot eksikliği guatrı",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Addison Hastalığı",
-      definition: "Adrenal bez yetmezliği",
-      example: "Kortizol eksikliği sendromu",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Cushing Sendromu",
-      definition: "Kortizol fazlalığı",
-      example: "Adrenal korteks hiperfonksiyonu",
-      category: "Endokrin Sistem"
-    },
-    {
-      term: "Akromegali",
-      definition: "Büyüme hormonu fazlalığı",
-      example: "Hipofiz adenomu sonucu",
-      category: "Endokrin Sistem"
-    },
-
-    // Kas-İskelet Sistemi
-    {
-      term: "Osteoporoz",
-      definition: "Kemik yoğunluğunun azalması",
-      example: "Menopoz sonrası kadınlarda",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Fibromiyalji",
-      definition: "Kaslarda yaygın ağrı ve hassasiyet",
-      example: "Kronik kas ağrısı sendromu",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Skolyoz",
-      definition: "Omurganın yana eğilmesi",
-      example: "S şeklinde omurga deformitesi",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Osteoartrit",
-      definition: "Eklemlerde aşınma",
-      example: "Diz osteoartriti",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Romatoid Artrit",
-      definition: "İltihaplı eklem hastalığı",
-      example: "Otoimmün eklem iltihabı",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Osteomiyelit",
-      definition: "Kemik iltihabı",
-      example: "Staphylococcus enfeksiyonu",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Kifoz",
-      definition: "Omurgada öne eğilme",
-      example: "Kambur duruş deformitesi",
-      category: "Kas-İskelet Sistemi"
-    },
-    {
-      term: "Tendinit",
-      definition: "Tendon iltihabı",
-      example: "Aşil tendonu iltihabı",
-      category: "Kas-İskelet Sistemi"
-    },
-
-    // Solunum Sistemi
-    {
-      term: "Astım",
-      definition: "Solunum yollarının daralması",
-      example: "Bronkospazm atakları",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Bronşit",
-      definition: "Bronş iltihabı",
-      example: "Kronik obstrüktif bronşit",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Pnömoni",
-      definition: "Zatürre, akciğer enfeksiyonu",
-      example: "Streptokokal pnömoni",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Tüberküloz",
-      definition: "Verem hastalığı",
-      example: "Mycobacterium tuberculosis",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Atelektazi",
-      definition: "Akciğerin bir kısmının sönmesi",
-      example: "Postoperatif atelektazi",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Plörezi",
-      definition: "Akciğer zarı iltihabı",
-      example: "Plevral effüzyon",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Zatürre",
-      definition: "Akciğer enfeksiyonu",
-      example: "Toplum kökenli pnömoni",
-      category: "Solunum Sistemi"
-    },
-    {
-      term: "Trakeit",
-      definition: "Soluk borusu iltihabı",
-      example: "Viral trakeobronşit",
-      category: "Solunum Sistemi"
-    },
-
-    // Sindirim Sistemi
-    {
-      term: "Gastrit",
-      definition: "Mide iltihabı",
-      example: "H. pylori gastriti",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "Ülser",
-      definition: "Mide veya bağırsakta yara",
-      example: "Peptik ülser hastalığı",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "Hepatit",
-      definition: "Karaciğer iltihabı",
-      example: "Viral hepatit B",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "Kolit",
-      definition: "Kalın bağırsak iltihabı",
-      example: "Ülseratif kolit",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "Pankreatit",
-      definition: "Pankreas iltihabı",
-      example: "Akut pankreatit atağı",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "Kolesistit",
-      definition: "Safra kesesi iltihabı",
-      example: "Akut kolesistit",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "İrritabl Bağırsak Sendromu",
-      definition: "Hassas bağırsak hastalığı",
-      example: "Fonksiyonel bağırsak bozukluğu",
-      category: "Sindirim Sistemi"
-    },
-    {
-      term: "Diyare",
-      definition: "İshal",
-      example: "Sulu dışkı artışı",
-      category: "Sindirim Sistemi"
-    },
-
-    // Sinir Sistemi
-    {
-      term: "Migren",
-      definition: "Şiddetli baş ağrısı",
-      example: "Hemigraniyal baş ağrısı",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Epilepsi",
-      definition: "Sinir hücrelerinin ani boşalması",
-      example: "Nöbet bozukluğu",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Parkinson Hastalığı",
-      definition: "Hareketlerde yavaşlama ve titreme",
-      example: "Bradykinezi ve tremor",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Multipl Skleroz",
-      definition: "Sinir sistemini etkileyen hastalık",
-      example: "Demiyelinizan hastalık",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Menenjit",
-      definition: "Beyin zarı iltihabı",
-      example: "Bakteriyel menenjit",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Vertigo",
-      definition: "Baş dönmesi hissi",
-      example: "Vestibüler sistem bozukluğu",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Nevralji",
-      definition: "Sinir ağrısı",
-      example: "Trigeminal nevralji",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Tremor",
-      definition: "Titreme",
-      example: "Essansiyel tremor",
-      category: "Sinir Sistemi"
-    },
-
-    // Enfeksiyon Hastalıkları
-    {
-      term: "Enfeksiyon",
-      definition: "Mikroorganizmaların vücuda girmesi",
-      example: "Bakteriyel enfeksiyon",
-      category: "Enfeksiyon Hastalıkları"
-    },
-    {
-      term: "Antibiyotik",
-      definition: "Bakterilere karşı ilaç",
-      example: "Penisilin tedavisi",
-      category: "Enfeksiyon Hastalıkları"
-    },
-    {
-      term: "Sepsis",
-      definition: "Vücutta yaygın enfeksiyon yanıtı",
-      example: "Septik şok tablosu",
-      category: "Enfeksiyon Hastalıkları"
-    },
-    {
-      term: "Bruselloz",
-      definition: "Hayvansal kaynaklı enfeksiyon",
-      example: "Zoonotik enfeksiyon",
-      category: "Enfeksiyon Hastalıkları"
-    },
-    {
-      term: "Toksoplazmozis",
-      definition: "Parazitik enfeksiyon",
-      example: "Toxoplasma gondii",
-      category: "Enfeksiyon Hastalıkları"
-    },
-
-    // Kanser ve Tümörler
-    {
-      term: "Kanser",
-      definition: "Kontrolsüz hücre çoğalması",
-      example: "Malign neoplazm",
-      category: "Kanser ve Tümörler"
-    },
-    {
-      term: "Lösemi",
-      definition: "Kan kanseri",
-      example: "Akut lenfoblastik lösemi",
-      category: "Kanser ve Tümörler"
-    },
-    {
-      term: "Tümör",
-      definition: "Anormal hücre yığını",
-      example: "Benign beyin tümörü",
-      category: "Kanser ve Tümörler"
-    },
-    {
-      term: "Melanom",
-      definition: "Cilt kanseri türü",
-      example: "Malign melanom",
-      category: "Kanser ve Tümörler"
-    },
-    {
-      term: "Lipom",
-      definition: "Yağ dokusundan oluşan iyi huylu tümör",
-      example: "Subkutan lipom",
-      category: "Kanser ve Tümörler"
-    },
-
-    // Ruh Sağlığı
-    {
-      term: "Psikoz",
-      definition: "Gerçeklikten kopma durumu",
-      example: "Akut psikotik bozukluk",
-      category: "Ruh Sağlığı"
-    },
-    {
-      term: "Nevroz",
-      definition: "Kaygı bozukluğu",
-      example: "Nevrotik bozukluk",
-      category: "Ruh Sağlığı"
-    },
-    {
-      term: "Depresyon",
-      definition: "Sürekli mutsuzluk hali",
-      example: "Major depresif bozukluk",
-      category: "Ruh Sağlığı"
-    },
-    {
-      term: "Kaygı",
-      definition: "Aşırı endişe",
-      example: "Generalize kaygı bozukluğu",
-      category: "Ruh Sağlığı"
-    },
-    {
-      term: "Şizofreni",
-      definition: "Gerçeklikten kopma ve sanrılar",
-      example: "Paranoid şizofreni",
-      category: "Ruh Sağlığı"
-    },
-    {
-      term: "Otizm",
-      definition: "Gelişimsel iletişim bozukluğu",
-      example: "Otizm spektrum bozukluğu",
-      category: "Ruh Sağlığı"
-    },
-
-    // Göz Hastalıkları
-    {
-      term: "Katarakt",
-      definition: "Göz merceğinin bulanması",
-      example: "Senil katarakt",
-      category: "Göz Hastalıkları"
-    },
-    {
-      term: "Glakom",
-      definition: "Göz içi basıncının artması",
-      example: "Primer açık açılı glakom",
-      category: "Göz Hastalıkları"
-    },
-    {
-      term: "Retinopati",
-      definition: "Göz retinası hastalığı",
-      example: "Diyabetik retinopati",
-      category: "Göz Hastalıkları"
-    },
-    {
-      term: "Konjonktivit",
-      definition: "Gözün dış zarının iltihabı",
-      example: "Viral konjonktivit",
-      category: "Göz Hastalıkları"
-    },
-
-    // Cilt Hastalıkları
-    {
-      term: "Dermatit",
-      definition: "Cilt iltihabı",
-      example: "Atopik dermatit",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Sedef Hastalığı",
-      definition: "Kronik cilt hastalığı",
-      example: "Psoriazis vulgaris",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Vitiligo",
-      definition: "Ciltte renk kaybı",
-      example: "Depigmentasyon hastalığı",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Alopesi",
-      definition: "Saç dökülmesi",
-      example: "Androgenetik alopesi",
-      category: "Cilt Hastalıkları"
-    },
-
-    // Genel Tıp
-    {
-      term: "Alerji",
-      definition: "Bağışıklık sisteminin aşırı tepkisi",
-      example: "Polen alerjisi",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Anestezi",
-      definition: "Hissizlik durumu",
-      example: "Genel anestezi",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Obezite",
-      definition: "Aşırı kilolu olma",
-      example: "Morbid obezite",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Tetani",
-      definition: "Kaslarda istemsiz kasılma",
-      example: "Tetanoz enfeksiyonu",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Travma",
-      definition: "Fiziksel ya da psikolojik darbe",
-      example: "Kafa travması",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Hemofili",
-      definition: "Kanın pıhtılaşamaması",
-      example: "Hemofili A eksikliği",
-      category: "Genel Tıp"
-    },
-
-    // Kulak Burun Boğaz
-    {
-      term: "Otitis Media",
-      definition: "Orta kulak iltihabı",
-      example: "Çocuklarda yaygın kulak enfeksiyonu",
-      category: "Kulak Burun Boğaz"
-    },
-    {
-      term: "Laringit",
-      definition: "Gırtlak iltihabı",
-      example: "Ses kısıklığı nedeni",
-      category: "Kulak Burun Boğaz"
-    },
-    {
-      term: "Faringit",
-      definition: "Boğaz iltihabı",
-      example: "Streptokokal boğaz enfeksiyonu",
-      category: "Kulak Burun Boğaz"
-    },
-    {
-      term: "Tinnitus",
-      definition: "Kulakta çınlama",
-      example: "Sürekli kulak çınlaması",
-      category: "Kulak Burun Boğaz"
-    },
-    {
-      term: "Parotit",
-      definition: "Tükrük bezi iltihabı",
-      example: "Kabakulak hastalığı",
-      category: "Kulak Burun Boğaz"
-    },
-    {
-      term: "Alerjik Rinit",
-      definition: "Burun alerjisi",
-      example: "Mevsimsel polen alerjisi",
-      category: "Kulak Burun Boğaz"
-    },
-    {
-      term: "Rinore",
-      definition: "Burun akıntısı",
-      example: "Viral üst solunum yolu enfeksiyonu",
-      category: "Kulak Burun Boğaz"
-    },
-
-    // Üroloji
-    {
-      term: "Prostatit",
-      definition: "Prostat iltihabı",
-      example: "Bakteriyel prostat enfeksiyonu",
-      category: "Üroloji"
-    },
-    {
-      term: "Üretrit",
-      definition: "İdrar kanalı iltihabı",
-      example: "Gonokokal üretrit",
-      category: "Üroloji"
-    },
-    {
-      term: "İdrar Kaçırma",
-      definition: "İdrarı kontrol edememe",
-      example: "Stress inkontinansı",
-      category: "Üroloji"
-    },
-    {
-      term: "İnkontinans",
-      definition: "İdrar tutamama",
-      example: "Nörojenik mesane",
-      category: "Üroloji"
-    },
-    {
-      term: "Nefrolitiyazis",
-      definition: "Böbrek taşı hastalığı",
-      example: "Kalsiyum oksalat taşları",
-      category: "Üroloji"
-    },
-    {
-      term: "Nefrit",
-      definition: "Böbrek iltihabı",
-      example: "Glomerülonefrit",
-      category: "Üroloji"
-    },
-    {
-      term: "Piyelonefrit",
-      definition: "Böbrek enfeksiyonu",
-      example: "Akut piyelonefrit",
-      category: "Üroloji"
-    },
-    {
-      term: "Varikosel",
-      definition: "Testis damarlarının genişlemesi",
-      example: "Skrotal venöz genişleme",
-      category: "Üroloji"
-    },
-    {
-      term: "Fimosis",
-      definition: "Sünnet derisinin dar olması",
-      example: "Preputyal darlık",
-      category: "Üroloji"
-    },
-
-    // Kadın Hastalıkları
-    {
-      term: "Endometriozis",
-      definition: "Rahim içi dokunun dışarıda büyümesi",
-      example: "Pelvik endometriozis",
-      category: "Kadın Hastalıkları"
-    },
-    {
-      term: "Polikistik Over",
-      definition: "Yumurtalıklarda kist oluşumu",
-      example: "PCOS sendromu",
-      category: "Kadın Hastalıkları"
-    },
-    {
-      term: "Eklampsi",
-      definition: "Hamilelikte şiddetli nöbetlerle seyreden durum",
-      example: "Preeklampsi komplikasyonu",
-      category: "Kadın Hastalıkları"
-    },
-    {
-      term: "Jinekomasti",
-      definition: "Erkeklerde meme büyümesi",
-      example: "Hormonal dengesizlik",
-      category: "Kadın Hastalıkları"
-    },
-
-    // Spesifik Hastalıklar
-    {
-      term: "Anosmi",
-      definition: "Koku alma duyusunun kaybı",
-      example: "COVID-19 sonrası anosmi",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Cachexia",
-      definition: "Aşırı zayıflık ve kas kaybı",
-      example: "Kanser kaşeksisi",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Buerger Hastalığı",
-      definition: "Damar iltihabı ve tıkanıklığı",
-      example: "Tromboangiitis obliterans",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Fenilketonüri",
-      definition: "Protein metabolizması bozukluğu",
-      example: "PKU genetik hastalığı",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Raynaud Fenomeni",
-      definition: "Soğuğa bağlı parmak beyazlaması",
-      example: "Vazospastik fenomen",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Sarkoidoz",
-      definition: "Organlarda granülom oluşumu",
-      example: "Akciğer sarkoidozu",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Barotrauma",
-      definition: "Basınç değişikliğiyle oluşan doku zedelenmesi",
-      example: "Dalış barotravması",
-      category: "Spesifik Hastalıklar"
-    },
-    {
-      term: "Hidrosefali",
-      definition: "Beyinde sıvı birikmesi",
-      example: "Kongenital hidrosefali",
-      category: "Spesifik Hastalıklar"
-    },
-
-    // Ek Sistem Hastalıkları
-    {
-      term: "Eozinofili",
-      definition: "Kanda eozinofil hücrelerinin artışı",
-      example: "Paraziter enfeksiyon göstergesi",
-      category: "Kan Hastalıkları"
-    },
-    {
-      term: "İmmün Yetmezlik",
-      definition: "Bağışıklık sisteminin zayıf olması",
-      example: "Primer immün yetmezlik",
-      category: "İmmün Sistem"
-    },
-    {
-      term: "Hematom",
-      definition: "Kan birikmesi",
-      example: "Subdural hematom",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Hemoroid",
-      definition: "Basur",
-      example: "Eksternal hemoroid",
-      category: "Genel Tıp"
-    },
-    {
-      term: "İkter",
-      definition: "Sarılık",
-      example: "Bilirubin yüksekliği",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Hiperhidroz",
-      definition: "Aşırı terleme",
-      example: "Primer hiperhidroz",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Siyanoz",
-      definition: "Morarma",
-      example: "Santral siyanoz",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Gangren",
-      definition: "Doku ölümü",
-      example: "Diyabetik gangren",
-      category: "Genel Tıp"
-    },
-
-    // Ek Tıbbi Durumlar
-    {
-      term: "Amnezi",
-      definition: "Hafıza kaybı",
-      example: "Travmatik amnezi",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Agnozi",
-      definition: "Tanıma yetisinin kaybı",
-      example: "Görsel agnozi",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Ataksi",
-      definition: "Koordinasyon bozukluğu",
-      example: "Serebellar ataksi",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Dizartri",
-      definition: "Konuşma bozukluğu",
-      example: "Motor dizartri",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Disleksi",
-      definition: "Okuma güçlüğü bozukluğu",
-      example: "Gelişimsel disleksi",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Nistagmus",
-      definition: "Göz titremesi",
-      example: "Horizontal nistagmus",
-      category: "Göz Hastalıkları"
-    },
-    {
-      term: "Serebral Palsi",
-      definition: "Beyin felcine bağlı hareket bozukluğu",
-      example: "Spastik serebral palsi",
-      category: "Sinir Sistemi"
-    },
-    {
-      term: "Spina Bifida",
-      definition: "Doğumsal omurga açıklığı",
-      example: "Meningomyelosel",
-      category: "Doğumsal Hastalıklar"
-    },
-
-    // Son Eklenen Terimler
-    {
-      term: "Celülit",
-      definition: "Cilt altı dokunun enfeksiyonu",
-      example: "Bakteriyel selülit",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "İmpetigo",
-      definition: "Yüzeysel cilt enfeksiyonu",
-      example: "Streptokok impetigo",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Nevüs",
-      definition: "Ben, doğum lekesi",
-      example: "Pigmente nevüs",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Eritema",
-      definition: "Ciltte kızarıklık",
-      example: "Eritema migrans",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Ürtiker",
-      definition: "Kurdeşen",
-      example: "Akut ürtiker",
-      category: "Cilt Hastalıkları"
-    },
-    {
-      term: "Xerostomi",
-      definition: "Ağız kuruluğu",
-      example: "İlaç yan etkisi",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Stomatit",
-      definition: "Ağız içi iltihap",
-      example: "Aftöz stomatit",
-      category: "Genel Tıp"
-    },
-    {
-      term: "Zoonoz",
-      definition: "Hayvandan insana geçen hastalık",
-      example: "Brucella enfeksiyonu",
-      category: "Enfeksiyon Hastalıkları"
-    },
-
-    // Tıbbi Araç ve Gereçler
-    {
-      term: "Stetoskop",
-      definition: "Kalp ve akciğer seslerini dinlemek için kullanılır",
-      example: "Auskültasyon için temel araç",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Tansiyon Aleti",
-      definition: "Kan basıncını ölçmek için kullanılır",
-      example: "Sfigmomanometre",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Termometre",
-      definition: "Vücut ısısını ölçmek için kullanılır",
-      example: "Dijital termometre",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Otoskop",
-      definition: "Kulak içini muayene etmek için kullanılır",
-      example: "Otitis media tanısında",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Oftalmoskop",
-      definition: "Göz dibi muayenesi için kullanılır",
-      example: "Retina muayenesi",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "EKG (Elektrokardiyogram)",
-      definition: "Kalp ritmini ve elektriksel aktivitesini ölçer",
-      example: "Miyokard infarktüsü tanısı",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "EEG (Elektroensefalogram)",
-      definition: "Beyin dalgalarını ölçer",
-      example: "Epilepsi tanısında kullanılır",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Pulse Oksimetre",
-      definition: "Kan oksijen doygunluğunu ölçer",
-      example: "SpO2 ölçümü",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Defibrilatör",
-      definition: "Kalp durmasında elektriksel şokla müdahale eder",
-      example: "Acil resüsitasyon",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Ventilatör",
-      definition: "Solunumu destekleyen cihaz",
-      example: "Yoğun bakım solunumu",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Nebülizatör",
-      definition: "İlaçları buhar haline getirerek akciğerlere iletir",
-      example: "Astım tedavisinde",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Laringoskop",
-      definition: "Boğaz ve ses tellerini incelemek için kullanılır",
-      example: "Entübasyon işleminde",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "CPAP Cihazı",
-      definition: "Uyku apnesinde solunumu destekler",
-      example: "Obstrüktif sleep apne tedavisi",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "Monitör",
-      definition: "Hayati değerleri izleyen cihaz",
-      example: "Hasta takip monitörü",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-    {
-      term: "İnfüzyon Pompası",
-      definition: "Belirli hızda sıvı veren cihaz",
-      example: "İntravenöz ilaç infüzyonu",
-      category: "Tıbbi Araç ve Gereçler"
-    },
-
-    // Tıbbi Malzemeler
-    {
-      term: "Spekulum",
-      definition: "Vajinal muayenede kullanılan alettir",
-      example: "Jinekolojik muayene",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Nazogastrik Sonda",
-      definition: "Mideye sıvı ulaştırmak için kullanılır",
-      example: "Enteral beslenme",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Kateter",
-      definition: "Vücuda sıvı vermek veya sıvı çekmek için kullanılan tüp",
-      example: "Üriner kateter",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Enjektör",
-      definition: "İlaç enjekte etmek veya sıvı çekmek için kullanılır",
-      example: "İntramusküler enjeksiyon",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Skalp El",
-      definition: "Cerrahi kesilerde kullanılır",
-      example: "Cerrahi operasyon",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Yara Bandı",
-      definition: "Küçük yaraları kapatmak için kullanılır",
-      example: "Kesi sonrası örtü",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Turnike",
-      definition: "Kan akışını durdurmak için kullanılır",
-      example: "Kanama kontrolü",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Maske",
-      definition: "Solunum yollarını korumak için kullanılır",
-      example: "Enfeksiyon kontrolü",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Eldiven",
-      definition: "Steril çalışma sağlar",
-      example: "Cerrahi eldiven",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Kanül",
-      definition: "Damar içine yerleştirilen küçük tüp",
-      example: "İntravenöz kanül",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Elektrot",
-      definition: "Elektriksel sinyalleri algılayan parça",
-      example: "EKG elektrotları",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Serum",
-      definition: "Damar yoluyla verilen sıvı",
-      example: "Serum fizyolojik",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Alçı",
-      definition: "Kırıkları sabitlemek için kullanılır",
-      example: "Kol kırığı alçısı",
-      category: "Tıbbi Malzemeler"
-    },
-    {
-      term: "Atel",
-      definition: "Eklem sabitleyici",
-      example: "Bilek ateli",
-      category: "Tıbbi Malzemeler"
-    },
-
-    // Tıbbi İşlemler
-    {
-      term: "Sterilizasyon",
-      definition: "Mikroplardan arındırma işlemi",
-      example: "Cerrahi alet sterilizasyonu",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Antiseptik",
-      definition: "Mikropları yok eden madde",
-      example: "Cilt antisepsisi",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Aspirasyon",
-      definition: "Sıvı veya hava çekme işlemi",
-      example: "Solunum yolu aspirasyonu",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Biyopsi",
-      definition: "Doku örneği alma işlemi",
-      example: "Cilt biyopsisi",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Anamnez",
-      definition: "Hastanın hikayesinin alınması",
-      example: "Tıbbi öykü alma",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Palpasyon",
-      definition: "Elle muayene etme",
-      example: "Karın palpasyonu",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Perküsyon",
-      definition: "Vücuda vurularak iç organların muayenesi",
-      example: "Göğüs perküsyonu",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Auskültasyon",
-      definition: "Dinleme ile muayene",
-      example: "Kalp auskültasyonu",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Rektal Tuşe",
-      definition: "Parmakla makattan muayene",
-      example: "Prostat muayenesi",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Lavman",
-      definition: "Bağırsakları boşaltmak için verilen sıvı",
-      example: "Konstipasyon tedavisi",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Trakeostomi",
-      definition: "Soluk borusuna delik açılması işlemi",
-      example: "Uzun süreli solunum desteği",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "İntubasyon",
-      definition: "Solunum yoluna tüp yerleştirme işlemi",
-      example: "Anestezi entübasyonu",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Torasentez",
-      definition: "Göğüs boşluğundan sıvı alma işlemi",
-      example: "Plevral efüzyon tedavisi",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Lumbal Ponksiyon",
-      definition: "Belden sıvı örneği alma işlemi",
-      example: "BOS analizi",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Triaj",
-      definition: "Acilde hastaların önceliklendirilmesi",
-      example: "Acil servis triajı",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Pansuman",
-      definition: "Yaranın temizlenip kapatılması",
-      example: "Cerrahi yara bakımı",
-      category: "Tıbbi İşlemler"
-    },
-    {
-      term: "Dekontaminasyon",
-      definition: "Zararlı maddelerin uzaklaştırılması",
-      example: "Kimyasal dekontaminasyon",
-      category: "Tıbbi İşlemler"
-    },
-
-    // İlaç Uygulama Yolları
-    {
-      term: "Parenteral",
-      definition: "Sindirim sistemi dışı ilaç uygulaması",
-      example: "İntravenöz ilaç verme",
-      category: "İlaç Uygulama Yolları"
-    },
-    {
-      term: "İntramüsküler",
-      definition: "Kas içine ilaç enjeksiyonu",
-      example: "Aşı uygulaması",
-      category: "İlaç Uygulama Yolları"
-    },
-    {
-      term: "İntravenöz",
-      definition: "Damar içine ilaç verilmesi",
-      example: "IV antibiyotik",
-      category: "İlaç Uygulama Yolları"
-    },
-    {
-      term: "Subkutan",
-      definition: "Deri altına enjeksiyon",
-      example: "İnsülin enjeksiyonu",
-      category: "İlaç Uygulama Yolları"
-    },
-    {
-      term: "Topikal",
-      definition: "Cilt üzerine uygulama",
-      example: "Topikal anestezi",
-      category: "İlaç Uygulama Yolları"
-    },
-
-    // Anatomik Terimler
-    {
-      term: "Distal",
-      definition: "Vücut merkezinden uzak olan",
-      example: "Distal phalanx",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Proksimal",
-      definition: "Vücut merkezine yakın olan",
-      example: "Proksimal femur",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Anterior",
-      definition: "Vücudun ön tarafı",
-      example: "Anterior göğüs duvarı",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Posterior",
-      definition: "Vücudun arka tarafı",
-      example: "Posterior vertebra",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Medial",
-      definition: "Orta hatta yakın",
-      example: "Medial kondil",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Lateral",
-      definition: "Orta hattan uzak",
-      example: "Lateral epikondil",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Superior",
-      definition: "Üstte yer alan",
-      example: "Superior vena kava",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "Inferior",
-      definition: "Altta yer alan",
-      example: "Inferior vena kava",
-      category: "Anatomik Terimler"
-    },
-    {
-      term: "İnterkostal",
-      definition: "Kaburgalar arası",
-      example: "İnterkostal kas",
-      category: "Anatomik Terimler"
-    },
-
-    // Fizyolojik Terimler
-    {
-      term: "Ekspiryum",
-      definition: "Nefes verme",
-      example: "Ekspiratuar volüm",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "İnspiryum",
-      definition: "Nefes alma",
-      example: "İnspiratuar kapasite",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "Bradikardi",
-      definition: "Yavaş kalp atımı",
-      example: "60/dk altında kalp hızı",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "Taşipne",
-      definition: "Hızlı solunum",
-      example: "20/dk üzeri solunum",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "Bradipne",
-      definition: "Yavaş solunum",
-      example: "12/dk altı solunum",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "Hipertermi",
-      definition: "Vücut sıcaklığının artması",
-      example: "38°C üzeri ateş",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "Hipotermi",
-      definition: "Vücut sıcaklığının düşmesi",
-      example: "35°C altı vücut ısısı",
-      category: "Fizyolojik Terimler"
-    },
-    {
-      term: "Saturasyon",
-      definition: "Oksijen doygunluk oranı",
-      example: "SpO2 %95-100",
-      category: "Fizyolojik Terimler"
-    },
-
-    // İdrar Sistem Terimleri
-    {
-      term: "Oligüri",
-      definition: "Az idrar üretimi",
-      example: "400 ml/gün altı idrar",
-      category: "İdrar Sistem Terimleri"
-    },
-    {
-      term: "Poliüri",
-      definition: "Aşırı idrar üretimi",
-      example: "3000 ml/gün üzeri",
-      category: "İdrar Sistem Terimleri"
-    },
-    {
-      term: "Disüri",
-      definition: "Ağrılı idrar yapma",
-      example: "İdrar yolu enfeksiyonu",
-      category: "İdrar Sistem Terimleri"
-    },
-    {
-      term: "Anüri",
-      definition: "İdrar üretiminin durması",
-      example: "100 ml/gün altı",
-      category: "İdrar Sistem Terimleri"
-    },
-    {
-      term: "Hematüri",
-      definition: "İdrarda kan bulunması",
-      example: "Gross hematüri",
-      category: "İdrar Sistem Terimleri"
-    },
-
-    // Sindirim Sistem Terimleri
-    {
-      term: "Hemoptizi",
-      definition: "Ağızdan kan gelmesi",
-      example: "Akciğer kaynaklı kanama",
-      category: "Sindirim Sistem Terimleri"
-    },
-    {
-      term: "Melena",
-      definition: "Siyah dışkı (kanlı)",
-      example: "Üst GIS kanaması",
-      category: "Sindirim Sistem Terimleri"
-    },
-    {
-      term: "Hematemez",
-      definition: "Kanlı kusma",
-      example: "Özofagus varis kanaması",
-      category: "Sindirim Sistem Terimleri"
-    },
-    {
-      term: "Dekübit",
-      definition: "Uzun süre yatmaya bağlı yara",
-      example: "Yatak yarası",
-      category: "Sindirim Sistem Terimleri"
-    },
-
-    // Kan Hücreleri
-    {
-      term: "Trombosit",
-      definition: "Pıhtılaşmayı sağlayan kan hücresi",
-      example: "Platelet sayısı",
-      category: "Kan Hücreleri"
-    },
-    {
-      term: "Lökosit",
-      definition: "Bağışıklık hücresi",
-      example: "Beyaz kan hücresi",
-      category: "Kan Hücreleri"
-    },
-    {
-      term: "Eritrosit",
-      definition: "Oksijen taşıyan kırmızı kan hücresi",
-      example: "RBC sayısı",
-      category: "Kan Hücreleri"
-    },
-
-    // Laboratuvar ve Tanı
-    {
-      term: "Seroloji",
-      definition: "Kandaki antikorların incelenmesi",
-      example: "Hepatit serolojisi",
-      category: "Laboratuvar ve Tanı"
-    },
-    {
-      term: "Biyokimya",
-      definition: "Vücuttaki kimyasal maddelerin analizi",
-      example: "Glukoz, üre analizi",
-      category: "Laboratuvar ve Tanı"
-    },
-    {
-      term: "Mikrobiyoloji",
-      definition: "Mikroorganizmaların incelenmesi",
-      example: "Bakteri kültürü",
-      category: "Laboratuvar ve Tanı"
-    },
-
-    // Tıp Dalları (Güncellenmiş)
-    {
-      term: "Histoloji",
-      definition: "Mikroskobik doku bilimi",
-      example: "Hücre ve doku incelemesi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Embriyoloji",
-      definition: "Gelişimsel biyoloji dalı",
-      example: "Fetal gelişim çalışması",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Nefroloji",
-      definition: "Böbrek hastalıkları bilimi",
-      example: "Böbrek yetmezliği tedavisi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Gastroenteroloji",
-      definition: "Sindirim sistemi hastalıkları",
-      example: "Mide-bağırsak hastalıkları",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Endokrinoloji",
-      definition: "Hormon sistemi hastalıkları",
-      example: "Diabet tedavisi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Pulmonoloji",
-      definition: "Akciğer ve solunum sistemi hastalıkları",
-      example: "Astım tedavisi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Hematoloji",
-      definition: "Kan hastalıkları bilimi",
-      example: "Lösemi tedavisi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Dermatoloji",
-      definition: "Cilt hastalıkları bilimi",
-      example: "Egzama tedavisi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Psikiyatri",
-      definition: "Zihinsel hastalıklarla ilgilenir",
-      example: "Depresyon tedavisi",
-      category: "Tıp Dalları"
-    },
-    {
-      term: "Geriatri",
-      definition: "Yaşlı sağlığıyla ilgilenir",
-      example: "Yaşlılık hastalıkları",
-      category: "Tıp Dalları"
-    }
-  ];
-
-  const categories = [...new Set(medicalTerms.map(term => term.category))];
-  
-  const filteredTerms = medicalTerms.filter(term => 
-    term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    term.definition.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    term.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Bugünkü tarih kontrolü
-  const today = new Date().toDateString();
-
-  // LocalStorage'dan veri yükleme
-  useEffect(() => {
-    // Eski yanlış XP verilerini tamamen temizle (geçici kod)
-    localStorage.removeItem('flashcard_stats'); // Yanlış hesaplanmış XP verilerini temizle
-    
-    const savedProgress = localStorage.getItem('flashcard_progress');
-    
-    // Her zaman doğru hesaplama yap
-    if (savedProgress) {
-      const progress = JSON.parse(savedProgress);
-      setUserProgress(progress);
-      
-      // Öğrenilen kart sayısını ve XP'yi her zaman doğru hesapla
-      const learnedCount = Object.values(progress).filter((p: any) => p.level === 'mastered').length;
-      const correctXP = (learnedCount * 100) / medicalTerms.length; // Doğru XP hesaplaması
-      const correctLevel = Math.floor(correctXP / 10) + 1; // Her 10 XP'de 1 level (0-9.9=Lv1, 10-19.9=Lv2, etc.)
-      
-      // Her zaman fresh hesaplama yap, savedStats'i ignore et
-      setGameStats({
-        totalLearned: learnedCount,
-        weeklyGoal: 50,
-        currentStreak: 0,
-        longestStreak: 0,
-        level: correctLevel,
-        experience: correctXP,
-        achievements: [],
-        lastLoginDate: new Date().toDateString()
-      });
-    }
-  }, []);
-
-  // Veri kaydetme
-  useEffect(() => {
-    localStorage.setItem('flashcard_progress', JSON.stringify(userProgress));
-  }, [userProgress]);
-
-  useEffect(() => {
-    localStorage.setItem('flashcard_stats', JSON.stringify(gameStats));
-  }, [gameStats]);
-
-  
-
-  // Spaced Repetition - Tekrar edilmesi gereken kartları belirleme
-  const shouldReview = (progress: any) => {
-    const lastSeen = new Date(progress.lastSeen);
-    const nextReview = new Date(progress.nextReview);
-    const now = new Date();
-    return now >= nextReview;
-  };
-
-  // Spaced Repetition sürelerini hesaplama
-  const calculateNextReview = (level: string, spacedRepetitionCount: number) => {
-    const intervals = {
-      'beginner': [1, 3, 7],      // 1 gün, 3 gün, 1 hafta
-      'intermediate': [3, 7, 14], // 3 gün, 1 hafta, 2 hafta  
-      'advanced': [7, 14, 30],    // 1 hafta, 2 hafta, 1 ay
-      'mastered': [30, 90, 180]   // 1 ay, 3 ay, 6 ay
-    };
-
-    const levelIntervals = intervals[level as keyof typeof intervals] || intervals.beginner;
-    const intervalIndex = Math.min(spacedRepetitionCount, levelIntervals.length - 1);
-    const daysToAdd = levelIntervals[intervalIndex];
-
-    const nextReview = new Date();
-    nextReview.setDate(nextReview.getDate() + daysToAdd);
-    return nextReview.toISOString();
-  };
-
-  // Progress güncelleme
-  const updateProgress = (termName: string, isCorrect: boolean) => {
-    setUserProgress(prev => {
-      const current = prev[termName] || {
-        level: 'beginner' as const,
-        correctCount: 0,
-        incorrectCount: 0,
-        lastSeen: new Date().toISOString(),
-        nextReview: calculateNextReview('beginner', 0),
-        difficulty: 3,
-        spacedRepetitionCount: 0
-      };
-
-      const updated = {
-        ...current,
-        correctCount: isCorrect ? current.correctCount + 1 : current.correctCount,
-        incorrectCount: isCorrect ? current.incorrectCount : current.incorrectCount + 1,
-        lastSeen: new Date().toISOString(),
-        spacedRepetitionCount: isCorrect ? current.spacedRepetitionCount + 1 : 0
-      };
-
-      // Level up sistemi - Öğrendim butonuna basınca direkt mastered yap
-      if (isCorrect) {
-        updated.level = 'mastered';
-      } else {
-        // Bilmiyorum butonuna basınca geri beginner yap
-        updated.level = 'beginner';
-      }
-
-      // Zorluk seviyesi güncelleme
-      if (isCorrect) {
-        updated.difficulty = Math.max(1, updated.difficulty - 0.5);
-      } else {
-        updated.difficulty = Math.min(5, updated.difficulty + 1);
-      }
-
-      // Next review hesaplama
-      updated.nextReview = calculateNextReview(updated.level, updated.spacedRepetitionCount);
-
-      const newProgress = { ...prev, [termName]: updated };
-      
-      // XP ve level güncelleme - Her zaman doğru hesaplama yap
-      setGameStats(prevStats => {
-        // Öğrenilen kart sayısını güncelle
-        const newLearned = Object.values(newProgress).filter(p => p.level === 'mastered').length;
-        
-        // XP'yi her zaman toplam öğrenilen kart sayısına göre hesapla
-        const correctXP = (newLearned * 100) / medicalTerms.length;
-        const newLevel = Math.floor(correctXP / 10) + 1; // Her 10 XP'de 1 level artış
-        
-        return {
-          ...prevStats,
-          experience: correctXP,
-          level: newLevel,
-          totalLearned: newLearned
-        };
-      });
-
-      return newProgress;
-    });
-  };
-
-
-
-  // Akıllı kart seçimi - zorluk seviyesine göre
-  const getSmartCardSelection = () => {
-    const reviewDue = medicalTerms.filter(term => {
-      const progress = userProgress[term.term];
-      return progress && shouldReview(progress);
-    });
-
-    if (reviewDue.length > 0) return reviewDue;
-
-    const difficultCards = medicalTerms.filter(term => {
-      const progress = userProgress[term.term];
-      return progress && progress.difficulty >= 4;
-    });
-
-    if (difficultCards.length > 0) return difficultCards;
-
-    return medicalTerms.filter(term => {
-      const progress = userProgress[term.term];
-      return !progress || progress.level === 'beginner';
-    });
-  };
-
-  const handleStartStudy = (termName: string) => {
-    const smartCards = getSmartCardSelection();
-    const termIndex = smartCards.findIndex(term => term.term === termName) || 0;
-    setCurrentCardIndex(termIndex);
-    setShowFlashcard(true);
-    setFlipped(false);
-  };
-
-  const startSmartStudy = () => {
-    const smartCards = getSmartCardSelection();
-    const randomIndex = Math.floor(Math.random() * smartCards.length);
-    setCurrentCardIndex(randomIndex);
-    setShowFlashcard(true);
-    setFlipped(false);
-  };
-
-  const nextCard = () => {
-    setFlipped(false);
-    setCurrentCardIndex((prev) => (prev + 1) % medicalTerms.length);
-  };
-
-  const prevCard = () => {
-    setFlipped(false);
-    setCurrentCardIndex((prev) => (prev - 1 + medicalTerms.length) % medicalTerms.length);
-  };
-
-  // Challenge sistemi kaldırıldı - direkt flashcard erişimi
-
-  if (showFlashcard) {
-    const currentTerm = medicalTerms[currentCardIndex];
-    
-    return (
-      <div className="p-8 text-white min-h-screen">
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={() => setShowFlashcard(false)}
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300"
-          >
-            <ChevronLeft size={20} />
-            <span>Geri Dön</span>
-          </button>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-2">AI Flashcard Çalışması</h2>
-            <p className="text-gray-300">{currentCardIndex + 1} / {medicalTerms.length}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-300">İlerleme:</span>
-            <div className="w-32 h-2 bg-white/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-cyan-400 to-purple-400 transition-all duration-300"
-                style={{ width: `${((currentCardIndex + 1) / medicalTerms.length) * 100}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center items-center min-h-[500px]">
-          <div className="relative w-full max-w-2xl h-96">
-            <motion.div
-              className="absolute inset-0 cursor-pointer"
-              onClick={() => setFlipped(!flipped)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+          <div className="space-y-3">
+            {notifications.map((notification, index) => (
               <motion.div
-                className="w-full h-full relative preserve-3d"
-                animate={{ rotateY: flipped ? 180 : 0 }}
-                transition={{ duration: 0.6 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                key={notification.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  notification.isRead 
+                    ? 'bg-slate-50 border-slate-200' 
+                    : 'bg-blue-50 border-blue-200 shadow-sm'
+                }`}
+                onClick={() => markAsRead(notification.id)}
               >
-                {/* Ön yüz - Terim */}
-                <div 
-                  className="absolute inset-0 backface-hidden bg-gradient-to-br from-blue-500/20 to-purple-600/20 backdrop-blur-xl border border-white/20 rounded-3xl p-8 flex flex-col justify-center items-center text-center"
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <div className="mb-4">
-                    <span className="px-4 py-2 bg-white/20 rounded-full text-sm font-medium">
-                      {currentTerm.category}
-                    </span>
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    notification.type === 'appointment_request' 
+                      ? 'bg-yellow-100 text-yellow-600' 
+                      : notification.type === 'appointment_confirmed'
+                      ? 'bg-emerald-100 text-emerald-600'
+                      : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {notification.type === 'appointment_request' ? (
+                      <Calendar size={14} />
+                    ) : notification.type === 'appointment_confirmed' ? (
+                      <CheckCircle size={14} />
+                    ) : (
+                      <Bell size={14} />
+                    )}
                   </div>
-                  <h3 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                    {currentTerm.term}
-                  </h3>
-                  <p className="text-gray-300 text-lg">
-                    Bu terimi biliyor musunuz?
-                  </p>
-                  <div className="mt-6">
-                    <p className="text-sm text-gray-400 mb-4">Cevabı görmek için kartı çevirin</p>
-                    <RotateCcw size={24} className="text-gray-400 animate-pulse" />
-                  </div>
-                </div>
-
-                {/* Arka yüz - Tanım */}
-                <div 
-                  className="absolute inset-0 backface-hidden bg-gradient-to-br from-emerald-500/20 to-teal-600/20 backdrop-blur-xl border border-white/20 rounded-3xl p-8 flex flex-col justify-center"
-                  style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                >
-                  <div className="text-center">
-                    <h4 className="text-2xl font-bold mb-6 text-emerald-300">
-                      {currentTerm.term}
-                    </h4>
-                    <p className="text-lg text-white mb-6 leading-relaxed">
-                      {currentTerm.definition}
-                    </p>
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <p className="text-sm text-gray-300 mb-2">Örnek:</p>
-                      <p className="text-emerald-300 font-medium">
-                        {currentTerm.example}
-                      </p>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-medium text-slate-800 text-sm">
+                        {notification.type === 'appointment_request' 
+                          ? 'Randevu Talebi' 
+                          : notification.type === 'appointment_confirmed'
+                          ? 'Randevu Onaylandı'
+                          : 'Bildirim'}
+                      </h4>
+                      <span className="text-xs text-slate-500">
+                        {formatNotificationTime(notification.timestamp)}
+                      </span>
                     </div>
+                    
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      {notification.message}
+                    </p>
+                    
+                    {notification.appointmentDetails && (
+                      <div className="mt-2 p-2 bg-slate-100 rounded-md text-xs text-slate-600">
+                        <div>📅 {notification.appointmentDetails.date}</div>
+                        <div>⏰ {notification.appointmentDetails.time}</div>
+                        {notification.appointmentDetails.description && (
+                          <div>📝 {notification.appointmentDetails.description}</div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {!notification.isRead && (
+                      <div className="mt-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Akıllı Öğrenme Butonları - Her zaman görünür */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center gap-4 mt-6"
-        >
-          <motion.button
-            onClick={() => {
-              // Bilmiyorum - XP eklenmez, sadece geç
-              nextCard();
-            }}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500/20 to-red-600/20 hover:from-red-500/30 hover:to-red-600/30 border border-red-500/30 rounded-xl transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <X size={20} className="text-red-400" />
-            <span className="text-red-300">Bilmiyorum</span>
-          </motion.button>
-
-          <motion.button
-            onClick={() => {
-              // Öğrendim - XP ekle ve öğrenilen listesine ekle
-              updateProgress(currentTerm.term, true);
-              nextCard();
-            }}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30 border border-emerald-500/30 rounded-xl transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Check size={20} className="text-emerald-400" />
-            <span className="text-emerald-300">Öğrendim</span>
-          </motion.button>
-        </motion.div>
-
-        <div className="flex justify-center gap-6 mt-8">
-          <motion.button
-            onClick={prevCard}
-            className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ChevronLeft size={20} />
-            <span>Önceki</span>
-          </motion.button>
-
-          <motion.button
-            onClick={() => setFlipped(!flipped)}
-            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 rounded-xl transition-all duration-300 font-semibold"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <RotateCcw size={20} />
-            <span>Kartı Çevir</span>
-          </motion.button>
-
-          <motion.button
-            onClick={nextCard}
-            className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>Sonraki</span>
-            <ChevronRight size={20} />
-          </motion.button>
-        </div>
-
-        {/* Progress Info */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-8 text-center"
-        >
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 max-w-md mx-auto">
-            <p className="text-gray-400 text-sm mb-2">Bu kartın durumu:</p>
-            <div className="flex justify-center gap-4">
-              {userProgress[currentTerm.term] ? (
-                <>
-                  <span className="text-emerald-400 text-sm">
-                    ✓ {userProgress[currentTerm.term].correctCount} Doğru
-                  </span>
-                  <span className="text-red-400 text-sm">
-                    ✗ {userProgress[currentTerm.term].incorrectCount} Yanlış
-                  </span>
-                  <span className="text-purple-400 text-sm">
-                    📊 {userProgress[currentTerm.term].level}
-                  </span>
-                </>
-              ) : (
-                <span className="text-gray-400 text-sm">Henüz çalışılmadı</span>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-8 text-white min-h-screen flex flex-col">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-          AI Flashcard Üretici
-        </h2>
-        <p className="text-gray-300 text-lg">
-          Tıp terimlerini etkileşimli kartlarla öğrenin ve pratiği yapın.
-        </p>
-      </div>
-
-      {/* Akıllı İstatistikler */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <div className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-cyan-400/20 rounded-lg">
-              <Brain size={24} className="text-cyan-400" />
-            </div>
-            <span className="text-cyan-300 font-semibold">Toplam Terim</span>
-          </div>
-          <p className="text-3xl font-bold text-white">{medicalTerms.length}</p>
-        </div>
-
-        <motion.div 
-          className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 backdrop-blur-sm border border-white/20 rounded-xl p-6 cursor-pointer hover:from-emerald-500/30 hover:to-green-600/30 transition-all duration-300"
-          onClick={() => setShowLearnedCards(true)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-emerald-400/20 rounded-lg">
-              <CheckCircle size={24} className="text-emerald-400" />
-            </div>
-            <span className="text-emerald-300 font-semibold">Öğrenilen</span>
-          </div>
-          <p className="text-3xl font-bold text-white">{gameStats.totalLearned}</p>
-          <p className="text-xs text-emerald-300 mt-2">Listesini görmek için tıklayın</p>
-        </motion.div>
-
-        <div className="bg-gradient-to-br from-purple-500/20 to-pink-600/20 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-purple-400/20 rounded-lg">
-              <Zap size={24} className="text-purple-400" />
-            </div>
-            <span className="text-purple-300 font-semibold">Seviye</span>
-          </div>
-          <p className="text-3xl font-bold text-white">{gameStats.level}</p>
-          <div className="mt-2">
-            <div className="w-full bg-white/20 rounded-full h-1">
-              <div 
-                className="bg-gradient-to-r from-purple-400 to-pink-400 h-1 rounded-full"
-                style={{ 
-                  width: `${(() => {
-                    // Şu anki level için progress hesapla
-                    const currentLevelMinXP = (gameStats.level - 1) * 10;
-                    const nextLevelXP = gameStats.level * 10;
-                    const progressInLevel = ((gameStats.experience - currentLevelMinXP) / 10) * 100;
-                    return Math.max(0, Math.min(100, progressInLevel));
-                  })()}%` 
-                }}
-              />
-            </div>
-            <p className="text-xs text-gray-400 mt-1">
-              {gameStats.experience.toFixed(1)}/100 XP | Level {gameStats.level} ({gameStats.totalLearned} kart öğrenildi)
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Sonraki seviye: {(gameStats.level * 10).toFixed(1)} XP
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-500/20 to-red-600/20 backdrop-blur-sm border border-white/20 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-orange-400/20 rounded-lg">
-              <Target size={24} className="text-orange-400" />
-            </div>
-            <span className="text-orange-300 font-semibold">Streak</span>
-          </div>
-          <p className="text-3xl font-bold text-white">{gameStats.currentStreak} gün</p>
-          <p className="text-xs text-gray-400 mt-1">En uzun: {gameStats.longestStreak} gün</p>
-        </div>
-      </div>
-
-      {/* Ana Başlatma Bölümü */}
-      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 text-center lg:text-left -mt-25">
-        {/* Sol Taraf - Ana Kart */}
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-lg w-full"
-        >
-          <div className="mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-cyan-400/20 to-purple-600/20 rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-3">
-              <Brain size={32} className="text-cyan-400" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-3">
-              {medicalTerms.length} Tıp Terimi Hazır
-            </h3>
-            <p className="text-gray-300 text-base leading-relaxed">
-              Anatomiyeden fizyolojiye, klinik terimlerden tıbbi araçlara kadar 
-              kapsamlı tıp sözlüğünüzle interaktif flashcard çalışması yapın.
-            </p>
-          </div>
-
-          {/* Kategori Özeti */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-6">
-            {categories.slice(0, 6).map((category, index) => (
-              <div
-                key={index}
-                className="bg-white/5 rounded-xl p-2 border border-white/10"
-              >
-                <p className="text-xs text-gray-300 font-medium truncate">
-                  {category}
-                </p>
-              </div>
             ))}
-            {categories.length > 6 && (
-              <div className="bg-white/5 rounded-xl p-2 border border-white/10 flex items-center justify-center">
-                <p className="text-xs text-gray-400">
-                  +{categories.length - 6} daha
-                </p>
-              </div>
-            )}
           </div>
-
-          {/* Akıllı Başlatma Butonu */}
-          <motion.button
-            onClick={startSmartStudy}
-            className="w-full py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 rounded-2xl font-bold text-lg transition-all duration-300 shadow-2xl hover:shadow-cyan-500/25 mb-3"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="flex items-center justify-center gap-3">
-              <Brain size={20} />
-              <span>Akıllı Flashcard Başlat</span>
-              <Sparkles size={20} />
-            </div>
-          </motion.button>
-
-          <p className="text-gray-400 text-xs">
-            Akıllı algoritmayla en uygun kartları seçip öğrenin
-          </p>
-        </motion.div>
-
-        {/* Sağ Taraf - Özellik Kartları */}
-        <div className="flex flex-col gap-4 max-w-sm w-full">
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-sm border border-white/10 rounded-xl p-5"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                <RotateCcw size={20} className="text-blue-400" />
-              </div>
-              <div className="text-left">
-                <h4 className="font-semibold text-white text-base">Akıllı Kart Seçimi</h4>
-                <p className="text-gray-400 text-xs">
-                  Önce tekrar edilmesi gerekenleri gösterir
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 backdrop-blur-sm border border-white/10 rounded-xl p-5"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                <Target size={20} className="text-emerald-400" />
-              </div>
-              <div className="text-left">
-                <h4 className="font-semibold text-white text-base">Spaced Repetition</h4>
-                <p className="text-gray-400 text-xs">
-                  Bilimsel tekrar algoritmasıyla kalıcı öğrenme
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm border border-white/10 rounded-xl p-5"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                <Brain size={20} className="text-purple-400" />
-              </div>
-              <div className="text-left">
-                <h4 className="font-semibold text-white text-base">Gamification</h4>
-                <p className="text-gray-400 text-xs">
-                  XP, seviye ve streak sistemiyle motivasyonu artırın
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Öğrenilen Kartlar Modal */}
-      <AnimatePresence>
-        {showLearnedCards && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowLearnedCards(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col"
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <CheckCircle size={28} className="text-emerald-400" />
-                    Öğrenilen Kartlar
-                  </h2>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Toplam {Object.values(userProgress).filter(p => p.level === 'mastered').length} kart öğrendiniz
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowLearnedCards(false)}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                >
-                  <X size={20} className="text-gray-400" />
-                </button>
-              </div>
-
-              {/* Progress Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-emerald-500/20 backdrop-blur-sm border border-emerald-500/30 rounded-xl p-4 text-center">
-                  <p className="text-emerald-300 text-sm font-medium">Öğrenilen</p>
-                  <p className="text-white text-2xl font-bold">
-                    {Object.values(userProgress).filter(p => p.level === 'mastered').length}
-                  </p>
-                </div>
-                <div className="bg-blue-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-4 text-center">
-                  <p className="text-blue-300 text-sm font-medium">Toplam Kart</p>
-                  <p className="text-white text-2xl font-bold">{medicalTerms.length}</p>
-                </div>
-                <div className="bg-purple-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-4 text-center">
-                  <p className="text-purple-300 text-sm font-medium">Tamamlanma</p>
-                  <p className="text-white text-2xl font-bold">
-                    {Math.round((Object.values(userProgress).filter(p => p.level === 'mastered').length / medicalTerms.length) * 100)}%
-                  </p>
-                </div>
-              </div>
-
-              {/* Learned Cards List */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {medicalTerms.filter(term => {
-                    const progress = userProgress[term.term];
-                    return progress && progress.level === 'mastered';
-                  }).map((term, index) => (
-                    <motion.div
-                      key={term.term}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl p-4 transition-all duration-300 group"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-bold text-emerald-300 group-hover:text-emerald-200 transition-colors">
-                          {term.term}
-                        </h4>
-                        <span className="px-2 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full">
-                          {term.category}
-                        </span>
-                      </div>
-                      <p className="text-gray-300 text-sm leading-relaxed mb-3">
-                        {term.definition}
-                      </p>
-                      <div className="bg-white/5 rounded-lg p-2">
-                        <p className="text-xs text-gray-400 mb-1">Örnek:</p>
-                        <p className="text-emerald-300 text-sm">{term.example}</p>
-                      </div>
-                      
-                      {/* Progress Info */}
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-emerald-400">
-                            ✓ {userProgress[term.term]?.correctCount || 0} doğru
-                          </span>
-                          <span className="text-gray-400">
-                            Son görülme: {new Date(userProgress[term.term]?.lastSeen || '').toLocaleDateString('tr-TR')}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Empty State */}
-                {Object.values(userProgress).filter(p => p.level === 'mastered').length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="w-24 h-24 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle size={48} className="text-gray-400" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-400 mb-2">
-                      Henüz Öğrenilen Kart Yok
-                    </h3>
-                    <p className="text-gray-500 mb-6">
-                      Flashcard çalışmasına başlayarak kartları "Öğrendim" olarak işaretleyin
-                    </p>
-                    <motion.button
-                      onClick={() => {
-                        setShowLearnedCards(false);
-                        startSmartStudy();
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Çalışmaya Başla
-                    </motion.button>
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex justify-center pt-6 border-t border-white/10">
-                <motion.button
-                  onClick={() => setShowLearnedCards(false)}
-                  className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-all duration-300"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Kapat
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
 
 function ProfileModule({ studentData }: { studentData: StudentData }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: studentData.name,
+    email: studentData.email,
+    photo: studentData.photo || '',
+    goal: studentData.goal || '',
+    targetExam: studentData.targetExam || '',
+    studyHabits: studentData.studyHabits || '',
+    communicationStyle: studentData.communicationStyle || '',
+    coachExpectations: studentData.coachExpectations || '',
+    emotionalSupport: studentData.emotionalSupport || '',
+    programAdaptability: studentData.programAdaptability || '',
+    examHistory: studentData.examHistory || '',
+    preferredPlatforms: studentData.preferredPlatforms || '',
+    learningType: studentData.learningType || '',
+    previousCoachingExperience: studentData.previousCoachingExperience || ''
+  });
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  // Komponenet mount olduğunda kaydedilmiş profil verilerini yükle
+  useEffect(() => {
+    const loadProfileData = () => {
+      try {
+        // Email ile kaydedilmiş profil verilerini yükle
+        const savedProfile = localStorage.getItem(`student_profile_${studentData.email}`);
+        if (savedProfile) {
+          const parsedProfile = JSON.parse(savedProfile);
+          if (parsedProfile.profileData) {
+            setProfileData(parsedProfile.profileData);
+            console.log('✅ Kaydedilmiş profil yüklendi:', studentData.email);
+          }
+        } else {
+          // Eski localStorage key'ini kontrol et
+          const oldProfile = localStorage.getItem('studentProfile');
+          if (oldProfile) {
+            const parsedOldProfile = JSON.parse(oldProfile);
+            if (parsedOldProfile.email === studentData.email) {
+              setProfileData(parsedOldProfile);
+              console.log('✅ Eski profil formatı yüklendi ve güncellenecek:', studentData.email);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Profil yüklenirken hata:', error);
+      }
+    };
+
+    loadProfileData();
+  }, [studentData.email]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Email ile birlikte profil verilerini kaydet
+      const studentProfileData = {
+        email: profileData.email,
+        studentId: studentData.id,
+        lastUpdated: new Date().toISOString(),
+        profileData: profileData
+      };
+      
+      // LocalStorage'a email key'i ile kaydet
+      localStorage.setItem(`student_profile_${profileData.email}`, JSON.stringify(studentProfileData));
+      
+      // Tüm öğrenci profillerini tutan ana yapı
+      const allStudentProfiles = JSON.parse(localStorage.getItem('all_student_profiles') || '{}');
+      allStudentProfiles[profileData.email] = studentProfileData;
+      localStorage.setItem('all_student_profiles', JSON.stringify(allStudentProfiles));
+      
+      // Koç paneli için erişim kolaylığı
+      const coachAccessData = {
+        email: profileData.email,
+        name: profileData.name,
+        lastUpdated: new Date().toISOString(),
+        profileComplete: true
+      };
+      
+      const coachStudentList = JSON.parse(localStorage.getItem('coach_student_list') || '[]');
+      const existingIndex = coachStudentList.findIndex((student: any) => student.email === profileData.email);
+      
+      if (existingIndex >= 0) {
+        coachStudentList[existingIndex] = coachAccessData;
+      } else {
+        coachStudentList.push(coachAccessData);
+      }
+      
+      localStorage.setItem('coach_student_list', JSON.stringify(coachStudentList));
+      
+      // Eski localStorage key'ini temizle
+      localStorage.removeItem('studentProfile');
+      
+      console.log('✅ Profil başarıyla kaydedildi:', profileData.email);
+      
+    } catch (error) {
+      console.error('❌ Profil kaydedilirken hata:', error);
+      alert('Profil kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+    }
+    
+    setIsSaving(false);
+    setIsEditing(false);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // Show a toast notification here if needed
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Dosya boyutu kontrolü (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Dosya boyutu 5MB\'dan küçük olmalıdır.');
+      return;
+    }
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      alert('Lütfen sadece resim dosyası seçiniz.');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+
+    try {
+      // FileReader ile dosyayı base64'e çevir
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        setProfileData(prev => ({
+          ...prev,
+          photo: base64
+        }));
+        setIsUploadingPhoto(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Dosya yükleme hatası:', error);
+      setIsUploadingPhoto(false);
+      alert('Dosya yüklenirken bir hata oluştu.');
+    }
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
-    <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10">
-      <h2 className="text-2xl font-bold text-white mb-4">Profil</h2>
-      <p className="text-gray-400">Profil modülü yakında eklenecek...</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-6">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Modern Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <User size={32} className="text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">Profil Detayları</h1>
+                <p className="text-white/80 text-lg">
+                  Bu bilgiler koç eşleşmesinde kullanılacak ve koçunuz tarafından görülebilecek.
+                </p>
+              </div>
+            </div>
+            <motion.button
+              onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+              disabled={isSaving}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white font-bold rounded-2xl hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center gap-3"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {isSaving ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Kaydediliyor...
+                </>
+              ) : isEditing ? (
+                <>
+                  <CheckCircle size={20} />
+                  Kaydet
+                </>
+              ) : (
+                <>
+                  <User size={20} />
+                  Düzenle
+                </>
+              )}
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Profile Photo & Basic Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-pink-600/10 to-orange-600/10 rounded-3xl"></div>
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-orange-500 rounded-2xl flex items-center justify-center">
+                <User size={28} className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Temel Bilgiler</h2>
+                <p className="text-white/70">Kişisel bilgileriniz</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Profile Photo Section */}
+              <div className="lg:col-span-2">
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  📸 Profil Fotoğrafı
+                </label>
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white/30 shadow-xl">
+                      <img
+                        src={profileData.photo || studentData.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=face'}
+                        alt="Profil"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {isUploadingPhoto && (
+                      <div className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-8 h-8 border-3 border-white border-t-transparent rounded-full"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {isEditing && (
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <label className="block text-white/80 text-sm mb-2">
+                          💻 Bilgisayardan Yükle
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            disabled={isUploadingPhoto}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                          />
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-3 cursor-pointer hover:shadow-lg transition-all duration-300"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            {isUploadingPhoto ? 'Yükleniyor...' : 'Dosya Seç'}
+                          </motion.div>
+                        </div>
+                        <p className="text-white/60 text-sm mt-2">
+                          JPG, PNG, GIF - Maksimum 5MB
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-white/80 text-sm mb-2">
+                          🌐 Veya URL Girin
+                        </label>
+                        <input
+                          type="url"
+                          value={profileData.photo.startsWith('data:') ? '' : profileData.photo}
+                          onChange={(e) => handleChange('photo', e.target.value)}
+                          className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                          placeholder="https://example.com/photo.jpg"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block text-white font-semibold mb-3 text-lg">
+                  👤 Ad Soyad
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={profileData.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-pink-400 focus:border-transparent backdrop-blur-sm font-medium"
+                    placeholder="Adınızı ve soyadınızı girin"
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white font-medium text-lg">{profileData.name}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-white font-semibold mb-3 text-lg">
+                  📧 E-posta Adresi
+                </label>
+                <div className="flex items-center gap-3">
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      className="flex-1 px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm font-medium"
+                      placeholder="email@example.com"
+                    />
+                  ) : (
+                    <div className="flex-1 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                      <p className="text-white font-medium text-lg">{profileData.email}</p>
+                    </div>
+                  )}
+                  <motion.button
+                    onClick={() => copyToClipboard(profileData.email)}
+                    className="p-3 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl text-white hover:shadow-lg transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="E-posta adresini kopyala"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Student Details */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-teal-600/10 rounded-3xl"></div>
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center">
+                <Target size={28} className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Öğrenci Detayları</h2>
+                <p className="text-white/70">Koç eşleşmesinde kullanılacak önemli bilgiler</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Goal */}
+              <div className="lg:col-span-2">
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  🎯 Hedefim ve Motivasyonum
+                </label>
+                {isEditing ? (
+                  <textarea
+                    value={profileData.goal}
+                    onChange={(e) => handleChange('goal', e.target.value)}
+                    rows={4}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-yellow-400 focus:border-transparent backdrop-blur-sm resize-none"
+                    placeholder="Hedeflerinizi ve motivasyonunuzu detaylı olarak açıklayın..."
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
+                    <p className="text-white text-lg leading-relaxed">
+                      {profileData.goal || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Target Exam */}
+              <div>
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  📚 Hedef Sınav
+                </label>
+                {isEditing ? (
+                  <select
+                    value={profileData.targetExam}
+                    onChange={(e) => handleChange('targetExam', e.target.value)}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm font-medium"
+                  >
+                    <option value="" className="bg-gray-800">Seçiniz</option>
+                    <option value="LGS" className="bg-gray-800">LGS</option>
+                    <option value="YKS" className="bg-gray-800">YKS</option>
+                    <option value="TUS" className="bg-gray-800">TUS</option>
+                    <option value="USMLE" className="bg-gray-800">USMLE</option>
+                    <option value="Diğer" className="bg-gray-800">Diğer</option>
+                  </select>
+                ) : (
+                  <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white font-medium text-lg">
+                      {profileData.targetExam || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Study Habits */}
+              <div>
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  ⏰ Çalışma Alışkanlıkları
+                </label>
+                {isEditing ? (
+                  <textarea
+                    value={profileData.studyHabits}
+                    onChange={(e) => handleChange('studyHabits', e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent backdrop-blur-sm resize-none"
+                    placeholder="Günlük çalışma rutininizi açıklayın..."
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white text-lg">
+                      {profileData.studyHabits || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Communication Style */}
+              <div>
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  💬 İletişim Tarzı
+                </label>
+                {isEditing ? (
+                  <select
+                    value={profileData.communicationStyle}
+                    onChange={(e) => handleChange('communicationStyle', e.target.value)}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm font-medium"
+                  >
+                    <option value="" className="bg-gray-800">Seçiniz</option>
+                    <option value="Resmi" className="bg-gray-800">Resmi</option>
+                    <option value="Eğlenceli" className="bg-gray-800">Eğlenceli</option>
+                    <option value="Samimi" className="bg-gray-800">Samimi</option>
+                    <option value="Profesyonel" className="bg-gray-800">Profesyonel</option>
+                  </select>
+                ) : (
+                  <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white font-medium text-lg">
+                      {profileData.communicationStyle || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Learning Type */}
+              <div>
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  🧠 Öğrenme Tipi
+                </label>
+                {isEditing ? (
+                  <select
+                    value={profileData.learningType}
+                    onChange={(e) => handleChange('learningType', e.target.value)}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-sm font-medium"
+                  >
+                    <option value="" className="bg-gray-800">Seçiniz</option>
+                    <option value="Görsel" className="bg-gray-800">Görsel</option>
+                    <option value="İşitsel" className="bg-gray-800">İşitsel</option>
+                    <option value="Deneyimsel" className="bg-gray-800">Deneyimsel</option>
+                    <option value="Karma" className="bg-gray-800">Karma</option>
+                  </select>
+                ) : (
+                  <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white font-medium text-lg">
+                      {profileData.learningType || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Coach Expectations */}
+              <div className="lg:col-span-2">
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  🎓 Koçtan Beklentilerim
+                </label>
+                {isEditing ? (
+                  <textarea
+                    value={profileData.coachExpectations}
+                    onChange={(e) => handleChange('coachExpectations', e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-rose-400 focus:border-transparent backdrop-blur-sm resize-none"
+                    placeholder="Koçunuzdan neler beklediğinizi açıklayın..."
+                  />
+                ) : (
+                  <div className="bg-gradient-to-r from-rose-500/20 to-pink-500/20 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
+                    <p className="text-white text-lg leading-relaxed">
+                      {profileData.coachExpectations || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Emotional Support */}
+              <div>
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  💝 Duygusal Destek
+                </label>
+                {isEditing ? (
+                  <select
+                    value={profileData.emotionalSupport}
+                    onChange={(e) => handleChange('emotionalSupport', e.target.value)}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm font-medium"
+                  >
+                    <option value="" className="bg-gray-800">Seçiniz</option>
+                    <option value="Var" className="bg-gray-800">İhtiyacım var</option>
+                    <option value="Yok" className="bg-gray-800">İhtiyacım yok</option>
+                  </select>
+                ) : (
+                  <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white font-medium text-lg">
+                      {profileData.emotionalSupport || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Program Adaptability */}
+              <div>
+                <label className="block text-white font-semibold mb-4 text-lg">
+                  ⚡ Uyum Kapasitesi
+                </label>
+                {isEditing ? (
+                  <select
+                    value={profileData.programAdaptability}
+                    onChange={(e) => handleChange('programAdaptability', e.target.value)}
+                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent backdrop-blur-sm font-medium"
+                  >
+                    <option value="" className="bg-gray-800">Seçiniz</option>
+                    <option value="Şuan düşük" className="bg-gray-800">Şuan düşük</option>
+                    <option value="Genel olarak düşük" className="bg-gray-800">Genel olarak düşük</option>
+                    <option value="Orta" className="bg-gray-800">Orta</option>
+                    <option value="Yükseğe yakın" className="bg-gray-800">Yükseğe yakın</option>
+                    <option value="Yüksek" className="bg-gray-800">Yüksek</option>
+                  </select>
+                ) : (
+                  <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                    <p className="text-white font-medium text-lg">
+                      {profileData.programAdaptability || 'Henüz belirtilmemiş'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Additional Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        >
+          {/* Exam History */}
+          <div className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-purple-600/10 rounded-3xl"></div>
+            <div className="relative">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl flex items-center justify-center">
+                  <div className="text-2xl">📊</div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Sınav Geçmişi</h3>
+                  <p className="text-white/70 text-sm">Önceki deneyimleriniz</p>
+                </div>
+              </div>
+              
+              {isEditing ? (
+                <textarea
+                  value={profileData.examHistory}
+                  onChange={(e) => handleChange('examHistory', e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-violet-400 focus:border-transparent backdrop-blur-sm resize-none"
+                  placeholder="Sınav geçmişinizi detaylarıyla paylaşın..."
+                />
+              ) : (
+                <div className="bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                  <p className="text-white leading-relaxed">
+                    {profileData.examHistory || 'Henüz belirtilmemiş'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Preferred Platforms */}
+          <div className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-600/10 to-cyan-600/10 rounded-3xl"></div>
+            <div className="relative">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center">
+                  <div className="text-2xl">📱</div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Tercih Ettiğim Platformlar</h3>
+                  <p className="text-white/70 text-sm">İletişim kanallarınız</p>
+                </div>
+              </div>
+              
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={profileData.preferredPlatforms}
+                  onChange={(e) => handleChange('preferredPlatforms', e.target.value)}
+                  className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-teal-400 focus:border-transparent backdrop-blur-sm"
+                  placeholder="Örn: Instagram, WhatsApp, Discord, Teams..."
+                />
+              ) : (
+                <div className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
+                  <p className="text-white font-medium">
+                    {profileData.preferredPlatforms || 'Henüz belirtilmemiş'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Previous Coaching Experience */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-lime-600/10 to-green-600/10 rounded-3xl"></div>
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-lime-500 to-green-500 rounded-2xl flex items-center justify-center">
+                <div className="text-2xl">🏆</div>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Önceki Koçluk Deneyimi</h2>
+                <p className="text-white/70">Geçmiş rehberlik deneyimleriniz</p>
+              </div>
+            </div>
+            
+            {isEditing ? (
+              <textarea
+                value={profileData.previousCoachingExperience}
+                onChange={(e) => handleChange('previousCoachingExperience', e.target.value)}
+                rows={4}
+                className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-lime-400 focus:border-transparent backdrop-blur-sm resize-none"
+                placeholder="Önceki koçluk/rehberlik deneyimlerinizi detaylarıyla paylaşın..."
+              />
+            ) : (
+              <div className="bg-gradient-to-r from-lime-500/20 to-green-500/20 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
+                <p className="text-white text-lg leading-relaxed">
+                  {profileData.previousCoachingExperience || 'Henüz belirtilmemiş'}
+                </p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Info Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-blue-600/10 rounded-3xl"></div>
+          <div className="relative flex items-start gap-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <AlertCircle size={28} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-4">💡 Önemli Bilgi</h3>
+              <p className="text-white/90 text-lg leading-relaxed">
+                Bu profil bilgileri koç eşleşmesi sırasında kullanılacak ve size en uygun koçu bulmanıza yardımcı olacaktır. 
+                Bilgilerinizi ne kadar detaylı doldurursanız, o kadar uygun bir koç eşleşmesi yapılabilir.
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-white/80">Bilgileriniz güvenli şekilde saklanır</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
+
+

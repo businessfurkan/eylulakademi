@@ -5,47 +5,95 @@ import { motion } from 'framer-motion';
 import { 
   User,
   Mail,
-  Lock,
   Phone,
-  BookOpen,
+  MapPin,
   Calendar,
   GraduationCap,
-  Award,
-  FileText,
-  Heart,
-  ArrowLeft,
+  BookOpen,
+  Target,
+  MessageCircle,
   CheckCircle,
-  AlertCircle
+  ArrowLeft,
+  Instagram,
+  Clock,
+  Lightbulb,
+  Users,
+  Heart,
+  Award,
+  Brain,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
-type ApplicationData = {
+type CoachApplicationData = {
+  // 📌 Kişisel Bilgiler
   fullName: string;
+  birthDate: string;
+  country: string;
+  city: string;
+  district: string;
   email: string;
-  password: string;
-  confirmPassword: string;
   phone: string;
-  specialization: string;
-  experienceYears: number;
-  education: string;
-  certificates: string;
-  biography: string;
-  motivationLetter: string;
+  instagram: string;
+  currentJobSchool: string;
+  gradeOrGraduationYear: string;
+
+  // 🎯 Eğitim ve Deneyim Bilgileri
+  currentStudyField: string;
+  coachingExperience: string;
+  coachingAreas: string[];
+
+  // 🧠 Koçluk Vizyonun
+  goodCoachDefinition: string;
+  tipkomMeaning: string;
+  timeAvailability: string;
+  platformUsage: string;
+
+  // 💬 Ekstra Sorular
+  threeWords: string;
+  threeQualities: string;
+  innovationIdea: string;
+  studentExample: string;
+  interviewAvailability: string;
+
+  // ✅ Onay Kutusu
+  confirmationChecked: boolean;
 };
 
 export default function CoachApplication() {
-  const [formData, setFormData] = useState<ApplicationData>({
+  const [formData, setFormData] = useState<CoachApplicationData>({
+    // 📌 Kişisel Bilgiler
     fullName: '',
+    birthDate: '',
+    country: '',
+    city: '',
+    district: '',
     email: '',
-    password: '',
-    confirmPassword: '',
     phone: '',
-    specialization: '',
-    experienceYears: 0,
-    education: '',
-    certificates: '',
-    biography: '',
-    motivationLetter: ''
+    instagram: '',
+    currentJobSchool: '',
+    gradeOrGraduationYear: '',
+
+    // 🎯 Eğitim ve Deneyim Bilgileri
+    currentStudyField: '',
+    coachingExperience: '',
+    coachingAreas: [],
+
+    // 🧠 Koçluk Vizyonun
+    goodCoachDefinition: '',
+    tipkomMeaning: '',
+    timeAvailability: '',
+    platformUsage: '',
+
+    // 💬 Ekstra Sorular
+    threeWords: '',
+    threeQualities: '',
+    innovationIdea: '',
+    studentExample: '',
+    interviewAvailability: '',
+
+    // ✅ Onay Kutusu
+    confirmationChecked: false
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -55,9 +103,25 @@ export default function CoachApplication() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Required field validations
+    // 📌 Kişisel Bilgiler Validasyonu
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Ad Soyad zorunludur';
+    }
+
+    if (!formData.birthDate) {
+      newErrors.birthDate = 'Doğum tarihi zorunludur';
+    }
+
+    if (!formData.country.trim()) {
+      newErrors.country = 'Ülke bilgisi zorunludur';
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = 'Şehir bilgisi zorunludur';
+    }
+
+    if (!formData.district.trim()) {
+      newErrors.district = 'İlçe bilgisi zorunludur';
     }
 
     if (!formData.email.trim()) {
@@ -66,36 +130,78 @@ export default function CoachApplication() {
       newErrors.email = 'Geçerli bir e-posta adresi giriniz';
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Şifre zorunludur';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Şifre en az 6 karakter olmalıdır';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Şifre tekrarı zorunludur';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Şifreler eşleşmiyor';
-    }
-
-    if (!formData.education.trim()) {
-      newErrors.education = 'Eğitim durumu zorunludur';
-    }
-
-    if (!formData.biography.trim()) {
-      newErrors.biography = 'Kısa özgeçmiş zorunludur';
-    } else if (formData.biography.length < 50) {
-      newErrors.biography = 'Özgeçmiş en az 50 karakter olmalıdır';
-    }
-
-    if (!formData.motivationLetter.trim()) {
-      newErrors.motivationLetter = 'Motivasyon mektubu zorunludur';
-    } else if (formData.motivationLetter.length < 100) {
-      newErrors.motivationLetter = 'Motivasyon mektubu en az 100 karakter olmalıdır';
-    }
-
-    if (formData.phone && !/^0\d{10}$/.test(formData.phone.replace(/\s/g, ''))) {
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Telefon numarası zorunludur';
+    } else if (!/^0\d{10}$/.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Geçerli bir telefon numarası giriniz (05xx xxx xx xx)';
+    }
+
+    if (!formData.currentJobSchool.trim()) {
+      newErrors.currentJobSchool = 'Mevcut meslek/okul bilgisi zorunludur';
+    }
+
+    if (!formData.gradeOrGraduationYear.trim()) {
+      newErrors.gradeOrGraduationYear = 'Sınıf/Mezuniyet yılı zorunludur';
+    }
+
+    // 🎯 Eğitim ve Deneyim Validasyonu
+    if (!formData.currentStudyField.trim()) {
+      newErrors.currentStudyField = 'Şu anki eğitim durumu zorunludur';
+    }
+
+    if (!formData.coachingExperience.trim()) {
+      newErrors.coachingExperience = 'Koçluk deneyimi alanı zorunludur';
+    }
+
+    if (formData.coachingAreas.length === 0) {
+      newErrors.coachingAreas = 'En az bir koçluk alanı seçmelisiniz';
+    }
+
+    // 🧠 Koçluk Vizyonu Validasyonu
+    if (!formData.goodCoachDefinition.trim()) {
+      newErrors.goodCoachDefinition = 'İyi koç tanımı zorunludur';
+    } else if (formData.goodCoachDefinition.length < 50) {
+      newErrors.goodCoachDefinition = 'En az 50 karakter yazmalısınız';
+    }
+
+    if (!formData.tipkomMeaning.trim()) {
+      newErrors.tipkomMeaning = 'Tıpkom Koçluk ailesi anlamı zorunludur';
+    } else if (formData.tipkomMeaning.length < 50) {
+      newErrors.tipkomMeaning = 'En az 50 karakter yazmalısınız';
+    }
+
+    if (!formData.timeAvailability.trim()) {
+      newErrors.timeAvailability = 'Zaman durumu zorunludur';
+    }
+
+    if (!formData.platformUsage.trim()) {
+      newErrors.platformUsage = 'Platform kullanımı zorunludur';
+    }
+
+    // 💬 Ekstra Sorular Validasyonu
+    if (!formData.threeWords.trim()) {
+      newErrors.threeWords = '3 kelime ile tanımlama zorunludur';
+    }
+
+    if (!formData.threeQualities.trim()) {
+      newErrors.threeQualities = '3 özellik belirtmek zorunludur';
+    } else if (formData.threeQualities.length < 30) {
+      newErrors.threeQualities = 'En az 30 karakter yazmalısınız';
+    }
+
+    if (!formData.studentExample.trim()) {
+      newErrors.studentExample = 'Öğrenci örneği zorunludur';
+    } else if (formData.studentExample.length < 100) {
+      newErrors.studentExample = 'En az 100 karakter yazmalısınız';
+    }
+
+    if (!formData.interviewAvailability.trim()) {
+      newErrors.interviewAvailability = 'Mülakat zamanları zorunludur';
+    }
+
+    // ✅ Onay Kutusu Validasyonu
+    if (!formData.confirmationChecked) {
+      newErrors.confirmationChecked = 'Onay kutusunu işaretlemelisiniz';
     }
 
     setErrors(newErrors);
@@ -110,31 +216,52 @@ export default function CoachApplication() {
     }
 
     setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      // Save to localStorage for demo purposes
-      const applications = JSON.parse(localStorage.getItem('coachApplications') || '[]');
-      const newApplication = {
-        id: Date.now().toString(),
-        ...formData,
-        applicationDate: new Date(),
-        status: 'pending'
-      };
-      applications.push(newApplication);
-      localStorage.setItem('coachApplications', JSON.stringify(applications));
-
-      setIsSubmitting(false);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Form submitted:', formData);
       setIsSubmitted(true);
-    }, 2000);
+    } catch (error) {
+      console.error('Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleChange = (field: keyof ApplicationData, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (field: keyof CoachApplicationData, value: string | boolean | string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
+
+  const handleArrayChange = (field: 'coachingAreas', value: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked 
+        ? [...prev[field], value]
+        : prev[field].filter(item => item !== value)
+    }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const coachingAreasOptions = [
+    'LGS',
+    'YKS',
+    'Tıp PreKlinik',
+    'Tıp Klinik',
+    'TUS',
+    'USMLE',
+    'Diğer'
+  ];
 
   if (isSubmitted) {
     return (
@@ -242,7 +369,7 @@ export default function CoachApplication() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -319,479 +446,435 @@ export default function CoachApplication() {
           transition={{ duration: 0.8 }}
           className="max-w-4xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/30">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center"
-            >
-              <GraduationCap size={12} className="text-white" />
-            </motion.div>
-                              <span className="text-indigo-700 font-semibold">🎓 Eylül Büyükkaya Akademi Ailesi</span>
-          </div>
-          
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="text-5xl md:text-6xl font-bold mb-6"
-          >
-            <span className="bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 bg-clip-text text-transparent">
-              Koçluk Yolculuğuna
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-pink-600 to-indigo-600 bg-clip-text text-transparent">
-              Başlayın
-            </span>
-          </motion.h1>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-xl text-gray-700 max-w-3xl mx-auto mb-8 leading-relaxed"
-          >
-            Tıp eğitimi alanındaki deneyiminizi paylaşın, öğrencilerin hedeflerine ulaşmasına destek olun ve 
-                              <span className="font-semibold text-indigo-700"> Eylül Büyükkaya Akademi ailesinin bir parçası</span> olun.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-wrap justify-center gap-6 mb-12"
-          >
-            {[
-              { icon: User, text: "Uzman Koçlar", color: "from-blue-500 to-cyan-500" },
-              { icon: Heart, text: "Öğrenci Odaklı", color: "from-purple-500 to-pink-500" },
-              { icon: Award, text: "Kaliteli Eğitim", color: "from-indigo-500 to-purple-500" }
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                className="flex items-center gap-3 bg-white/30 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/40"
-              >
-                <div className={`w-8 h-8 bg-gradient-to-r ${item.color} rounded-lg flex items-center justify-center`}>
-                  <item.icon size={16} className="text-white" />
-                </div>
-                <span className="font-semibold text-gray-700">{item.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
+          <h2 className="text-5xl font-bold bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 bg-clip-text text-transparent mb-6">
+            Koç Başvuru Formu
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+            Eylül Büyükkaya Akademi ailesine katılarak öğrencilerin başarı yolculuğunda rehberlik yapmak istiyorsanız, lütfen formu eksiksiz doldurun.
+          </p>
         </motion.div>
       </div>
 
       {/* Form */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="bg-white/30 backdrop-blur-xl rounded-3xl p-8 md:p-12 shadow-2xl border border-white/40"
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-8"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 100%)',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)'
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%)',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.9)'
           }}
         >
-          <div className="text-center mb-12">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-              className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
-            >
-              <FileText size={32} className="text-white" />
-            </motion.div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent mb-4">
-              Başvuru Formu
-            </h2>
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
-              Aşağıdaki formu eksiksiz doldurarak koç başvurunuzu tamamlayın. 
-              <span className="font-semibold text-indigo-700"> Tüm bilgiler gizli tutulacaktır.</span>
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-              className="bg-white/50 backdrop-blur-sm rounded-2xl p-8 border border-white/60 shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)'
-              }}
-            >
+          <form onSubmit={handleSubmit} className="space-y-12">
+            {/* 📌 Kişisel Bilgiler */}
+            <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg"
-                >
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
                   <User size={20} className="text-white" />
-                </motion.div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Kişisel Bilgiler</h3>
-                  <p className="text-sm text-gray-600">Temel iletişim bilgileriniz</p>
                 </div>
+                <h3 className="text-2xl font-bold text-gray-800">📌 Kişisel Bilgiler</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ad Soyad <span className="text-red-500">*</span>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Ad Soyad *
                   </label>
                   <input
                     type="text"
                     value={formData.fullName}
                     onChange={(e) => handleChange('fullName', e.target.value)}
-                    className={`w-full px-4 py-3 bg-white/70 backdrop-blur-sm border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-300 hover:bg-white/90 ${
-                      errors.fullName ? 'border-red-300 bg-red-50/70' : 'border-white/60'
-                    }`}
-                    placeholder="Dr. Ahmet Yılmaz"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Adınız ve soyadınız"
                   />
-                  {errors.fullName && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.fullName}
-                    </p>
-                  )}
+                  {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    E-posta <span className="text-red-500">*</span>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Doğum Tarihi *
                   </label>
-                  <div className="relative">
-                    <Mail size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                      placeholder="ahmet@email.com"
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.email}
-                    </p>
-                  )}
+                  <input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => handleChange('birthDate', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  />
+                  {errors.birthDate && <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Şifre <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => handleChange('password', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                      placeholder="En az 6 karakter"
-                    />
-                  </div>
-                  {errors.password && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.password}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Şifre Tekrar <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Lock size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                      placeholder="Şifrenizi tekrar girin"
-                    />
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Telefon
-                  </label>
-                  <div className="relative">
-                    <Phone size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleChange('phone', e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                      placeholder="0532 123 45 67"
-                    />
-                  </div>
-                  {errors.phone && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.phone}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Professional Information */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="bg-white/50 backdrop-blur-sm rounded-2xl p-8 border border-white/60 shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)'
-              }}
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <BookOpen size={20} className="text-white" />
-                </motion.div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Profesyonel Bilgiler</h3>
-                  <p className="text-sm text-gray-600">Uzmanlık alanınız ve deneyiminiz</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Uzmanlık Alanı
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Bulunduğun Ülke *
                   </label>
                   <input
                     type="text"
-                    value={formData.specialization}
-                    onChange={(e) => handleChange('specialization', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Örn: Tıp Fakültesi Hazırlık, TUS Koçluğu"
+                    value={formData.country}
+                    onChange={(e) => handleChange('country', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Ülke"
+                  />
+                  {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Şehir *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Şehir"
+                  />
+                  {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    İlçe *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.district}
+                    onChange={(e) => handleChange('district', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="İlçe"
+                  />
+                  {errors.district && <p className="text-red-500 text-sm mt-1">{errors.district}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    E-posta *
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="ornek@email.com"
+                  />
+                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Telefon Numarası *
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="05xx xxx xx xx"
+                  />
+                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Instagram Kullanıcı Adı (İsteğe Bağlı)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.instagram}
+                    onChange={(e) => handleChange('instagram', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="@kullaniciadi"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Deneyim (Yıl)
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Mevcut Meslek/Okul *
                   </label>
-                  <div className="relative">
-                    <Calendar size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="number"
-                      min="0"
-                      max="50"
-                      value={formData.experienceYears}
-                      onChange={(e) => handleChange('experienceYears', parseInt(e.target.value) || 0)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Kaç yıl deneyiminiz var"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={formData.currentJobSchool}
+                    onChange={(e) => handleChange('currentJobSchool', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Meslek veya okul adı"
+                  />
+                  {errors.currentJobSchool && <p className="text-red-500 text-sm mt-1">{errors.currentJobSchool}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Sınıf/Mezuniyet Yılı *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gradeOrGraduationYear}
+                    onChange={(e) => handleChange('gradeOrGraduationYear', e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Örn: 3. Sınıf veya 2023"
+                  />
+                  {errors.gradeOrGraduationYear && <p className="text-red-500 text-sm mt-1">{errors.gradeOrGraduationYear}</p>}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Educational Background */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="bg-white/50 backdrop-blur-sm rounded-2xl p-8 border border-white/60 shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)'
-              }}
-            >
+            {/* 🎯 Eğitim ve Deneyim Bilgileri */}
+            <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg"
-                >
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
                   <GraduationCap size={20} className="text-white" />
-                </motion.div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Eğitim ve Sertifikalar</h3>
-                  <p className="text-sm text-gray-600">Akademik geçmişiniz ve başarılarınız</p>
                 </div>
+                <h3 className="text-2xl font-bold text-gray-800">🎯 Eğitim ve Deneyim Bilgileri</h3>
               </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Eğitim Durumu <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.education}
-                    onChange={(e) => handleChange('education', e.target.value)}
-                    rows={3}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.education ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Mezun olduğunuz okul, bölüm, dereceler vb."
-                  />
-                  {errors.education && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.education}
-                    </p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sertifikalar
-                  </label>
-                  <textarea
-                    value={formData.certificates}
-                    onChange={(e) => handleChange('certificates', e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Sahip olduğunuz sertifikalar, ödüller vb."
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Şu anda hangi bölümü/sınıfı okuyorsun? *
+                </label>
+                <textarea
+                  value={formData.currentStudyField}
+                  onChange={(e) => handleChange('currentStudyField', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={3}
+                  placeholder="Mevcut eğitim durumunuzu detaylı olarak açıklayın"
+                />
+                {errors.currentStudyField && <p className="text-red-500 text-sm mt-1">{errors.currentStudyField}</p>}
               </div>
-            </motion.div>
 
-            {/* Biography and Motivation */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="bg-white/50 backdrop-blur-sm rounded-2xl p-8 border border-white/60 shadow-lg"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)'
-              }}
-            >
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Koçluk/Özel Ders/Mentorluk Deneyimin *
+                </label>
+                <textarea
+                  value={formData.coachingExperience}
+                  onChange={(e) => handleChange('coachingExperience', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={4}
+                  placeholder="Koçluk, özel ders veya mentorluk deneyimlerinizi detaylı olarak paylaşın"
+                />
+                {errors.coachingExperience && <p className="text-red-500 text-sm mt-1">{errors.coachingExperience}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Koçluk Alanları *
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {coachingAreasOptions.map((area) => (
+                    <label key={area} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.coachingAreas.includes(area)}
+                        onChange={(e) => handleArrayChange('coachingAreas', area, e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1"
+                      />
+                      <span className="text-sm text-gray-700">{area}</span>
+                    </label>
+                  ))}
+                </div>
+                {errors.coachingAreas && <p className="text-red-500 text-sm mt-1">{errors.coachingAreas}</p>}
+              </div>
+            </div>
+
+            {/* 🧠 Koçluk Vizyonun */}
+            <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <FileText size={20} className="text-white" />
-                </motion.div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800">Özgeçmiş ve Motivasyon</h3>
-                  <p className="text-sm text-gray-600">Kendinizi tanıtın ve motivasyonunuzu paylaşın</p>
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Brain size={20} className="text-white" />
                 </div>
+                <h3 className="text-2xl font-bold text-gray-800">🧠 Koçluk Vizyonun</h3>
               </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kısa Özgeçmiş <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.biography}
-                    onChange={(e) => handleChange('biography', e.target.value)}
-                    rows={4}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.biography ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Kendinizi tanıtın (En az 50 karakter)"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">{formData.biography.length}/50 minimum karakter</p>
-                  {errors.biography && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.biography}
-                    </p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Motivasyon Mektubu <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={formData.motivationLetter}
-                    onChange={(e) => handleChange('motivationLetter', e.target.value)}
-                    rows={5}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.motivationLetter ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Neden koç olmak istiyorsunuz? Öğrencilere nasıl katkı sağlayabilirsiniz? (En az 100 karakter)"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">{formData.motivationLetter.length}/100 minimum karakter</p>
-                  {errors.motivationLetter && (
-                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={16} />
-                      {errors.motivationLetter}
-                    </p>
-                  )}
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Sence iyi bir koç nasıl olmalı? *
+                </label>
+                <textarea
+                  value={formData.goodCoachDefinition}
+                  onChange={(e) => handleChange('goodCoachDefinition', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={4}
+                  placeholder="İyi bir koçun sahip olması gereken özellikler hakkında görüşlerinizi paylaşın (minimum 50 karakter)"
+                />
+                {errors.goodCoachDefinition && <p className="text-red-500 text-sm mt-1">{errors.goodCoachDefinition}</p>}
               </div>
-            </motion.div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tıpkom Koçluk ailesi senin için ne anlama geliyor? *
+                </label>
+                <textarea
+                  value={formData.tipkomMeaning}
+                  onChange={(e) => handleChange('tipkomMeaning', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={4}
+                  placeholder="Tıpkom Koçluk ailesinin sizin için anlamını açıklayın (minimum 50 karakter)"
+                />
+                {errors.tipkomMeaning && <p className="text-red-500 text-sm mt-1">{errors.tipkomMeaning}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Zaman Durumun *
+                </label>
+                <textarea
+                  value={formData.timeAvailability}
+                  onChange={(e) => handleChange('timeAvailability', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={3}
+                  placeholder="Koçluk için ayırabileceğiniz zaman dilimlerini belirtin"
+                />
+                {errors.timeAvailability && <p className="text-red-500 text-sm mt-1">{errors.timeAvailability}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Platform Kullanımı *
+                </label>
+                <textarea
+                  value={formData.platformUsage}
+                  onChange={(e) => handleChange('platformUsage', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={3}
+                  placeholder="Hangi platformları kullanarak koçluk yapmayı planlıyorsunuz?"
+                />
+                {errors.platformUsage && <p className="text-red-500 text-sm mt-1">{errors.platformUsage}</p>}
+              </div>
+            </div>
+
+            {/* 💬 Ekstra Sorular */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                  <MessageCircle size={20} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">💬 Ekstra Sorular</h3>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Kendini 3 kelime ile nasıl tanımlarsın? *
+                </label>
+                <input
+                  type="text"
+                  value={formData.threeWords}
+                  onChange={(e) => handleChange('threeWords', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Örn: Sabırlı, Motivasyonlu, Çözüm Odaklı"
+                />
+                {errors.threeWords && <p className="text-red-500 text-sm mt-1">{errors.threeWords}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Bir koç olarak en güçlü 3 özelliğin nedir? *
+                </label>
+                <textarea
+                  value={formData.threeQualities}
+                  onChange={(e) => handleChange('threeQualities', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={3}
+                  placeholder="En güçlü 3 özelliğinizi açıklayın (minimum 30 karakter)"
+                />
+                {errors.threeQualities && <p className="text-red-500 text-sm mt-1">{errors.threeQualities}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Eğitim sürecine dair bir yenilik/fikir önerebilir misin?
+                </label>
+                <textarea
+                  value={formData.innovationIdea}
+                  onChange={(e) => handleChange('innovationIdea', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={4}
+                  placeholder="Eğitim sürecini iyileştirmek için önerilerinizi paylaşın"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Koçluk yaptığın bir öğrenci örneği verebilir misin? *
+                </label>
+                <textarea
+                  value={formData.studentExample}
+                  onChange={(e) => handleChange('studentExample', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={4}
+                  placeholder="Koçluk deneyiminizden bir örnek paylaşın (minimum 100 karakter)"
+                />
+                {errors.studentExample && <p className="text-red-500 text-sm mt-1">{errors.studentExample}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Mülakat için hangi zaman dilimlerinde müsaitsin? *
+                </label>
+                <textarea
+                  value={formData.interviewAvailability}
+                  onChange={(e) => handleChange('interviewAvailability', e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                  rows={3}
+                  placeholder="Mülakat için uygun olduğunuz gün ve saatleri belirtin"
+                />
+                {errors.interviewAvailability && <p className="text-red-500 text-sm mt-1">{errors.interviewAvailability}</p>}
+              </div>
+            </div>
+
+            {/* ✅ Onay Kutusu */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
+                  <CheckCircle size={20} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">✅ Onay Kutusu</h3>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.confirmationChecked}
+                    onChange={(e) => handleChange('confirmationChecked', e.target.checked)}
+                    className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-1"
+                  />
+                  <span className="text-sm text-gray-700 leading-relaxed">
+                    Verdiğim bilgilerin doğru olduğunu, koçluk sürecinde kurallara uyacağımı ve Eylül Büyükkaya Akademi değerlerini benimseyen bir yaklaşım sergileyeceğimi beyan ederim. Başvuru sürecinde gerekli değerlendirmelerin yapılacağını ve sonucunun tarafıma bildirileceğini kabul ediyorum.
+                  </span>
+                </label>
+                {errors.confirmationChecked && <p className="text-red-500 text-sm mt-2">{errors.confirmationChecked}</p>}
+              </div>
+            </div>
 
             {/* Submit Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4 pt-8"
-            >
-              <motion.div whileHover={{ scale: 1.02 }} className="flex-1">
-                <Link
-                  href="/"
-                  className="w-full px-8 py-4 bg-white/60 backdrop-blur-sm text-gray-700 rounded-xl hover:bg-white/80 transition-all duration-300 text-center font-semibold border border-white/60 shadow-lg flex items-center justify-center gap-2"
-                >
-                  <ArrowLeft size={20} />
-                  Ana Sayfaya Dön
-                </Link>
-              </motion.div>
+            <div className="flex justify-center pt-8">
               <motion.button
                 type="submit"
                 disabled={isSubmitting}
-                whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
-                whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                className="flex-1 px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 font-semibold text-lg shadow-xl"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-12 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  boxShadow: isSubmitting ? 'none' : '0 10px 30px rgba(168, 85, 247, 0.4)'
+                  boxShadow: '0 10px 30px rgba(99, 102, 241, 0.4)'
                 }}
               >
                 {isSubmitting ? (
-                  <>
+                  <div className="flex items-center gap-3">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                     />
                     Gönderiliyor...
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <motion.div
-                      whileHover={{ scale: 1.2 }}
-                      transition={{ type: "spring", stiffness: 400 }}
-                    >
-                      <Heart size={24} fill="currentColor" />
-                    </motion.div>
+                  <div className="flex items-center gap-3">
+                    <Sparkles size={20} />
                     Başvuruyu Gönder
-                  </>
+                  </div>
                 )}
               </motion.button>
-            </motion.div>
+            </div>
           </form>
         </motion.div>
       </div>

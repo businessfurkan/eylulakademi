@@ -55,6 +55,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=TT+Forms+Pro:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
         className={`${inter.variable} ${poppins.variable} antialiased min-h-screen relative overflow-x-hidden`}
         style={{ backgroundColor: '#8fdbd6' }}
