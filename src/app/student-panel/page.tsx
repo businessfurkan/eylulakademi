@@ -10,7 +10,7 @@ import ComingSoon from '../../components/ComingSoon';
   RotateCcw, Send, Paperclip, Search,
   List, X, Menu, Home, Users,
   GraduationCap, Library, Trophy, Video,
-  BarChart3,
+  BarChart3, CreditCard,
   Zap, Coffee, Sparkles, Check, Trash2, LogOut
 } from 'lucide-react';
 
@@ -52,11 +52,11 @@ type NavigationItem = {
 
 type ActiveModule = 
   | 'dashboard' 
-  | 'lessons' 
   | 'calendar' 
   | 'materials' 
   | 'messages'
-  | 'studyroom';
+  | 'studyroom'
+  | 'flashcard';
 
 export default function StudentPanel() {
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
@@ -160,11 +160,11 @@ export default function StudentPanel() {
   // Navigation items
   const navigationItems: NavigationItem[] = [
     { id: 'dashboard', name: 'Dashboard', icon: Home, color: 'text-cyan-400', badge: 0 },
-    { id: 'lessons', name: 'Derslerim', icon: BookOpen, color: 'text-emerald-400', badge: 0 },
     { id: 'calendar', name: 'Takvim', icon: Calendar, color: 'text-violet-400', badge: 0 },
     { id: 'materials', name: 'Koçtan Gelenler', icon: Library, color: 'text-orange-400', badge: 0 },
     { id: 'messages', name: 'Koç Mesajları', icon: MessageCircle, color: 'text-pink-400', badge: 0 },
-    { id: 'studyroom', name: 'Çalışma Odası', icon: Users, color: 'text-purple-400', badge: 0 }
+    { id: 'studyroom', name: 'Çalışma Odası', icon: Users, color: 'text-purple-400', badge: 0 },
+    { id: 'flashcard', name: 'Flashcard', icon: CreditCard, color: 'text-indigo-400', badge: 0 }
   ];
 
   // Responsive sidebar handling
@@ -187,8 +187,6 @@ export default function StudentPanel() {
     switch (activeModule) {
       case 'dashboard':
         return <DashboardModule studentData={studentData} setActiveModule={setActiveModule} />;
-      case 'lessons':
-        return <LessonsModule studentData={studentData} />;
       case 'calendar':
         return <CalendarModule />;
       case 'materials':
@@ -197,6 +195,8 @@ export default function StudentPanel() {
         return <MessagesModule studentData={studentData} />;
       case 'studyroom':
         return <StudyRoomModule studentData={studentData} />;
+      case 'flashcard':
+        return <FlashcardModule studentData={studentData} />;
       default:
         return <DashboardModule studentData={studentData} setActiveModule={setActiveModule} />;
     }
@@ -904,68 +904,7 @@ function DashboardModule({ studentData, setActiveModule }: { studentData: Studen
         </motion.div>
       </div>
 
-      {/* Modern Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-6 border-2 border-slate-200 shadow-xl"
-      >
-        <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-          <BarChart3 className="text-emerald-500" size={24} />
-          Sistem Bilgileri
-        </h3>
-        
-        <div className="space-y-4">
-          {[
-            {
-              icon: CheckCircle,
-              title: 'Öğrenci hesabı başarıyla oluşturuldu',
-              description: 'Sisteme giriş yapabilir ve özellikleri kullanabilirsiniz',
-              color: 'text-emerald-500',
-              bgColor: 'from-emerald-50 to-emerald-100',
-              borderColor: 'border-emerald-200'
-            },
-            {
-              icon: Users,
-              title: 'Koç eşleştirme sistemi geliştiriliyor',
-              description: 'Yakında size en uygun koç eşleştirilecek',
-              color: 'text-blue-500',
-              bgColor: 'from-blue-50 to-blue-100',
-              borderColor: 'border-blue-200'
-            },
 
-            {
-              icon: Calendar,
-              title: 'Kişisel takvim özelliği hazır',
-              description: 'Görevlerinizi ve planlarınızı takip edebilirsiniz',
-              color: 'text-orange-500',
-              bgColor: 'from-orange-50 to-orange-100',
-              borderColor: 'border-orange-200'
-            }
-          ].map((info, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 + index * 0.1 }}
-              whileHover={{ x: 8, scale: 1.01 }}
-              className={`flex items-center gap-4 p-4 bg-gradient-to-r ${info.bgColor} rounded-xl transition-all duration-300 border-2 ${info.borderColor} shadow-sm hover:shadow-md`}
-            >
-              <div className="p-2 bg-white/60 rounded-lg shadow-sm">
-                <info.icon size={16} className={info.color} />
-              </div>
-              
-              <div className="flex-1">
-                <p className="font-medium text-slate-800">{info.title}</p>
-                <p className="text-sm text-slate-600 mt-1">{info.description}</p>
-              </div>
-              
-              <ChevronRight size={16} className="text-slate-400" />
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
     </div>
   );
 }
@@ -3728,28 +3667,27 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Modern Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+          className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl"></div>
-          <div className="relative flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <User size={32} className="text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
                   <div className="w-3 h-3 bg-white rounded-full"></div>
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-white mb-2">Profil Detayları</h1>
-                <p className="text-white/80 text-lg">
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">Profil Detayları</h1>
+                <p className="text-gray-600 text-lg">
                   Bu bilgiler koç eşleşmesinde kullanılacak ve koçunuz tarafından görülebilecek.
                 </p>
               </div>
@@ -3757,9 +3695,9 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
             <motion.button
               onClick={() => isEditing ? handleSave() : setIsEditing(true)}
               disabled={isSaving}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-400 to-cyan-400 text-white font-bold rounded-2xl hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center gap-3"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 disabled:opacity-50 flex items-center gap-3"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {isSaving ? (
                 <>
@@ -3790,29 +3728,27 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+          className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-600/10 to-orange-600/10 rounded-3xl"></div>
-          <div className="relative">
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-orange-500 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center shadow-md">
                 <User size={28} className="text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Temel Bilgiler</h2>
-                <p className="text-white/70">Kişisel bilgileriniz</p>
+              <h2 className="text-2xl font-bold text-gray-900">Temel Bilgiler</h2>
+              <p className="text-gray-600">Kişisel bilgileriniz</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Profile Photo Section */}
               <div className="lg:col-span-2">
-                <label className="block text-white font-semibold mb-4 text-lg">
+              <label className="block text-gray-700 font-semibold mb-4 text-lg">
                   📸 Profil Fotoğrafı
                 </label>
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white/30 shadow-xl">
+                  <div className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-gray-200 shadow-lg">
                       <img
                         src={profileData.photo || studentData.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=face'}
                         alt="Profil"
@@ -3820,7 +3756,7 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                       />
                     </div>
                     {isUploadingPhoto && (
-                      <div className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -3833,7 +3769,7 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                   {isEditing && (
                     <div className="flex-1 space-y-4">
                       <div>
-                        <label className="block text-white/80 text-sm mb-2">
+                      <label className="block text-gray-600 text-sm mb-2">
                           💻 Bilgisayardan Yükle
                         </label>
                         <div className="relative">
@@ -3847,7 +3783,7 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                           <motion.div
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-3 cursor-pointer hover:shadow-lg transition-all duration-300"
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-3 cursor-pointer hover:shadow-lg transition-all duration-300"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -3855,20 +3791,20 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                             {isUploadingPhoto ? 'Yükleniyor...' : 'Dosya Seç'}
                           </motion.div>
                         </div>
-                        <p className="text-white/60 text-sm mt-2">
+                      <p className="text-gray-500 text-sm mt-2">
                           JPG, PNG, GIF - Maksimum 5MB
                         </p>
                       </div>
                       
                       <div>
-                        <label className="block text-white/80 text-sm mb-2">
+                      <label className="block text-gray-600 text-sm mb-2">
                           🌐 Veya URL Girin
                         </label>
                         <input
                           type="url"
                           value={profileData.photo.startsWith('data:') ? '' : profileData.photo}
                           onChange={(e) => handleChange('photo', e.target.value)}
-                          className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="https://example.com/photo.jpg"
                         />
                       </div>
@@ -3879,7 +3815,7 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
 
               {/* Name */}
               <div>
-                <label className="block text-white font-semibold mb-3 text-lg">
+              <label className="block text-gray-700 font-semibold mb-3 text-lg">
                   👤 Ad Soyad
                 </label>
                 {isEditing ? (
@@ -3887,19 +3823,19 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                     type="text"
                     value={profileData.name}
                     onChange={(e) => handleChange('name', e.target.value)}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-pink-400 focus:border-transparent backdrop-blur-sm font-medium"
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                     placeholder="Adınızı ve soyadınızı girin"
                   />
                 ) : (
-                  <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white font-medium text-lg">{profileData.name}</p>
+                <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p className="text-gray-900 font-medium text-lg">{profileData.name}</p>
                   </div>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-white font-semibold mb-3 text-lg">
+              <label className="block text-gray-700 font-semibold mb-3 text-lg">
                   📧 E-posta Adresi
                 </label>
                 <div className="flex items-center gap-3">
@@ -3908,17 +3844,17 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                       type="email"
                       value={profileData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
-                      className="flex-1 px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm font-medium"
+                    className="flex-1 px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                       placeholder="email@example.com"
                     />
                   ) : (
-                    <div className="flex-1 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                      <p className="text-white font-medium text-lg">{profileData.email}</p>
+                  <div className="flex-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-gray-900 font-medium text-lg">{profileData.email}</p>
                     </div>
                   )}
                   <motion.button
                     onClick={() => copyToClipboard(profileData.email)}
-                    className="p-3 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl text-white hover:shadow-lg transition-all duration-300"
+                  className="p-3 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl text-white hover:shadow-lg transition-all duration-300"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     title="E-posta adresini kopyala"
@@ -3927,7 +3863,6 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   </motion.button>
-                </div>
               </div>
             </div>
           </div>
@@ -3938,24 +3873,22 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
+          className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-teal-600/10 rounded-3xl"></div>
-          <div className="relative">
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-md">
                 <Target size={28} className="text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Öğrenci Detayları</h2>
-                <p className="text-white/70">Koç eşleşmesinde kullanılacak önemli bilgiler</p>
+              <h2 className="text-2xl font-bold text-gray-900">Öğrenci Detayları</h2>
+              <p className="text-gray-600">Koç eşleşmesinde kullanılacak önemli bilgiler</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Goal */}
               <div className="lg:col-span-2">
-                <label className="block text-white font-semibold mb-4 text-lg">
+              <label className="block text-gray-700 font-semibold mb-4 text-lg">
                   🎯 Hedefim ve Motivasyonum
                 </label>
                 {isEditing ? (
@@ -3963,12 +3896,12 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                     value={profileData.goal}
                     onChange={(e) => handleChange('goal', e.target.value)}
                     rows={4}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-yellow-400 focus:border-transparent backdrop-blur-sm resize-none"
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     placeholder="Hedeflerinizi ve motivasyonunuzu detaylı olarak açıklayın..."
                   />
                 ) : (
-                  <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
-                    <p className="text-white text-lg leading-relaxed">
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                  <p className="text-gray-900 text-lg leading-relaxed">
                       {profileData.goal || 'Henüz belirtilmemiş'}
                     </p>
                   </div>
@@ -3977,25 +3910,25 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
 
               {/* Target Exam */}
               <div>
-                <label className="block text-white font-semibold mb-4 text-lg">
+              <label className="block text-gray-700 font-semibold mb-4 text-lg">
                   📚 Hedef Sınav
                 </label>
                 {isEditing ? (
                   <select
                     value={profileData.targetExam}
                     onChange={(e) => handleChange('targetExam', e.target.value)}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm font-medium"
-                  >
-                    <option value="" className="bg-gray-800">Seçiniz</option>
-                    <option value="LGS" className="bg-gray-800">LGS</option>
-                    <option value="YKS" className="bg-gray-800">YKS</option>
-                    <option value="TUS" className="bg-gray-800">TUS</option>
-                    <option value="USMLE" className="bg-gray-800">USMLE</option>
-                    <option value="Diğer" className="bg-gray-800">Diğer</option>
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="LGS">LGS</option>
+                  <option value="YKS">YKS</option>
+                  <option value="TUS">TUS</option>
+                  <option value="USMLE">USMLE</option>
+                  <option value="Diğer">Diğer</option>
                   </select>
                 ) : (
-                  <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white font-medium text-lg">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <p className="text-gray-900 font-medium text-lg">
                       {profileData.targetExam || 'Henüz belirtilmemiş'}
                     </p>
                   </div>
@@ -4004,7 +3937,7 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
 
               {/* Study Habits */}
               <div>
-                <label className="block text-white font-semibold mb-4 text-lg">
+              <label className="block text-gray-700 font-semibold mb-4 text-lg">
                   ⏰ Çalışma Alışkanlıkları
                 </label>
                 {isEditing ? (
@@ -4012,12 +3945,12 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                     value={profileData.studyHabits}
                     onChange={(e) => handleChange('studyHabits', e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent backdrop-blur-sm resize-none"
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     placeholder="Günlük çalışma rutininizi açıklayın..."
                   />
                 ) : (
-                  <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white text-lg">
+                <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
+                  <p className="text-gray-900 text-lg">
                       {profileData.studyHabits || 'Henüz belirtilmemiş'}
                     </p>
                   </div>
@@ -4026,24 +3959,24 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
 
               {/* Communication Style */}
               <div>
-                <label className="block text-white font-semibold mb-4 text-lg">
+              <label className="block text-gray-700 font-semibold mb-4 text-lg">
                   💬 İletişim Tarzı
                 </label>
                 {isEditing ? (
                   <select
                     value={profileData.communicationStyle}
                     onChange={(e) => handleChange('communicationStyle', e.target.value)}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm font-medium"
-                  >
-                    <option value="" className="bg-gray-800">Seçiniz</option>
-                    <option value="Resmi" className="bg-gray-800">Resmi</option>
-                    <option value="Eğlenceli" className="bg-gray-800">Eğlenceli</option>
-                    <option value="Samimi" className="bg-gray-800">Samimi</option>
-                    <option value="Profesyonel" className="bg-gray-800">Profesyonel</option>
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="Resmi">Resmi</option>
+                  <option value="Eğlenceli">Eğlenceli</option>
+                  <option value="Samimi">Samimi</option>
+                  <option value="Profesyonel">Profesyonel</option>
                   </select>
                 ) : (
-                  <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white font-medium text-lg">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                  <p className="text-gray-900 font-medium text-lg">
                       {profileData.communicationStyle || 'Henüz belirtilmemiş'}
                     </p>
                   </div>
@@ -4052,243 +3985,984 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
 
               {/* Learning Type */}
               <div>
-                <label className="block text-white font-semibold mb-4 text-lg">
+              <label className="block text-gray-700 font-semibold mb-4 text-lg">
                   🧠 Öğrenme Tipi
                 </label>
                 {isEditing ? (
                   <select
                     value={profileData.learningType}
                     onChange={(e) => handleChange('learningType', e.target.value)}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-indigo-400 focus:border-transparent backdrop-blur-sm font-medium"
-                  >
-                    <option value="" className="bg-gray-800">Seçiniz</option>
-                    <option value="Görsel" className="bg-gray-800">Görsel</option>
-                    <option value="İşitsel" className="bg-gray-800">İşitsel</option>
-                    <option value="Deneyimsel" className="bg-gray-800">Deneyimsel</option>
-                    <option value="Karma" className="bg-gray-800">Karma</option>
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="Görsel">Görsel</option>
+                  <option value="İşitsel">İşitsel</option>
+                  <option value="Deneyimsel">Deneyimsel</option>
+                  <option value="Karma">Karma</option>
                   </select>
                 ) : (
-                  <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white font-medium text-lg">
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+                  <p className="text-gray-900 font-medium text-lg">
                       {profileData.learningType || 'Henüz belirtilmemiş'}
                     </p>
                   </div>
                 )}
               </div>
-
-              {/* Coach Expectations */}
-              <div className="lg:col-span-2">
-                <label className="block text-white font-semibold mb-4 text-lg">
-                  🎓 Koçtan Beklentilerim
-                </label>
-                {isEditing ? (
-                  <textarea
-                    value={profileData.coachExpectations}
-                    onChange={(e) => handleChange('coachExpectations', e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-rose-400 focus:border-transparent backdrop-blur-sm resize-none"
-                    placeholder="Koçunuzdan neler beklediğinizi açıklayın..."
-                  />
-                ) : (
-                  <div className="bg-gradient-to-r from-rose-500/20 to-pink-500/20 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
-                    <p className="text-white text-lg leading-relaxed">
-                      {profileData.coachExpectations || 'Henüz belirtilmemiş'}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Emotional Support */}
-              <div>
-                <label className="block text-white font-semibold mb-4 text-lg">
-                  💝 Duygusal Destek
-                </label>
-                {isEditing ? (
-                  <select
-                    value={profileData.emotionalSupport}
-                    onChange={(e) => handleChange('emotionalSupport', e.target.value)}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent backdrop-blur-sm font-medium"
-                  >
-                    <option value="" className="bg-gray-800">Seçiniz</option>
-                    <option value="Var" className="bg-gray-800">İhtiyacım var</option>
-                    <option value="Yok" className="bg-gray-800">İhtiyacım yok</option>
-                  </select>
-                ) : (
-                  <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white font-medium text-lg">
-                      {profileData.emotionalSupport || 'Henüz belirtilmemiş'}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Program Adaptability */}
-              <div>
-                <label className="block text-white font-semibold mb-4 text-lg">
-                  ⚡ Uyum Kapasitesi
-                </label>
-                {isEditing ? (
-                  <select
-                    value={profileData.programAdaptability}
-                    onChange={(e) => handleChange('programAdaptability', e.target.value)}
-                    className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent backdrop-blur-sm font-medium"
-                  >
-                    <option value="" className="bg-gray-800">Seçiniz</option>
-                    <option value="Şuan düşük" className="bg-gray-800">Şuan düşük</option>
-                    <option value="Genel olarak düşük" className="bg-gray-800">Genel olarak düşük</option>
-                    <option value="Orta" className="bg-gray-800">Orta</option>
-                    <option value="Yükseğe yakın" className="bg-gray-800">Yükseğe yakın</option>
-                    <option value="Yüksek" className="bg-gray-800">Yüksek</option>
-                  </select>
-                ) : (
-                  <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                    <p className="text-white font-medium text-lg">
-                      {profileData.programAdaptability || 'Henüz belirtilmemiş'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Additional Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-        >
-          {/* Exam History */}
-          <div className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-purple-600/10 rounded-3xl"></div>
-            <div className="relative">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl flex items-center justify-center">
-                  <div className="text-2xl">📊</div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Sınav Geçmişi</h3>
-                  <p className="text-white/70 text-sm">Önceki deneyimleriniz</p>
-                </div>
-              </div>
-              
-              {isEditing ? (
-                <textarea
-                  value={profileData.examHistory}
-                  onChange={(e) => handleChange('examHistory', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-violet-400 focus:border-transparent backdrop-blur-sm resize-none"
-                  placeholder="Sınav geçmişinizi detaylarıyla paylaşın..."
-                />
-              ) : (
-                <div className="bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                  <p className="text-white leading-relaxed">
-                    {profileData.examHistory || 'Henüz belirtilmemiş'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Preferred Platforms */}
-          <div className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-600/10 to-cyan-600/10 rounded-3xl"></div>
-            <div className="relative">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center">
-                  <div className="text-2xl">📱</div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Tercih Ettiğim Platformlar</h3>
-                  <p className="text-white/70 text-sm">İletişim kanallarınız</p>
-                </div>
-              </div>
-              
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profileData.preferredPlatforms}
-                  onChange={(e) => handleChange('preferredPlatforms', e.target.value)}
-                  className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-teal-400 focus:border-transparent backdrop-blur-sm"
-                  placeholder="Örn: Instagram, WhatsApp, Discord, Teams..."
-                />
-              ) : (
-                <div className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-2xl p-4 backdrop-blur-sm border border-white/20">
-                  <p className="text-white font-medium">
-                    {profileData.preferredPlatforms || 'Henüz belirtilmemiş'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Previous Coaching Experience */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-lime-600/10 to-green-600/10 rounded-3xl"></div>
-          <div className="relative">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-lime-500 to-green-500 rounded-2xl flex items-center justify-center">
-                <div className="text-2xl">🏆</div>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">Önceki Koçluk Deneyimi</h2>
-                <p className="text-white/70">Geçmiş rehberlik deneyimleriniz</p>
-              </div>
-            </div>
-            
-            {isEditing ? (
-              <textarea
-                value={profileData.previousCoachingExperience}
-                onChange={(e) => handleChange('previousCoachingExperience', e.target.value)}
-                rows={4}
-                className="w-full px-4 py-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-white/60 focus:ring-2 focus:ring-lime-400 focus:border-transparent backdrop-blur-sm resize-none"
-                placeholder="Önceki koçluk/rehberlik deneyimlerinizi detaylarıyla paylaşın..."
-              />
-            ) : (
-              <div className="bg-gradient-to-r from-lime-500/20 to-green-500/20 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
-                <p className="text-white text-lg leading-relaxed">
-                  {profileData.previousCoachingExperience || 'Henüz belirtilmemiş'}
-                </p>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Info Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="relative bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-blue-600/10 rounded-3xl"></div>
-          <div className="relative flex items-start gap-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <AlertCircle size={28} className="text-white" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-4">💡 Önemli Bilgi</h3>
-              <p className="text-white/90 text-lg leading-relaxed">
-                Bu profil bilgileri koç eşleşmesi sırasında kullanılacak ve size en uygun koçu bulmanıza yardımcı olacaktır. 
-                Bilgilerinizi ne kadar detaylı doldurursanız, o kadar uygun bir koç eşleşmesi yapılabilir.
-              </p>
-              <div className="mt-4 flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white/80">Bilgileriniz güvenli şekilde saklanır</span>
-              </div>
-            </div>
           </div>
         </motion.div>
       </div>
     </div>
   );
 }
+
+// Flashcard Types
+type Flashcard = {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  subject: string;
+};
+
+// FlashcardModule Component
+function FlashcardModule({ studentData }: { studentData: StudentData }) {
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [knownCards, setKnownCards] = useState<number[]>([]);
+  const [unknownCards, setUnknownCards] = useState<number[]>([]);
+  const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState('Tıp Fakültesi (Preklinik)');
+  const [newTopicInput, setNewTopicInput] = useState('');
+  const [showAddTopic, setShowAddTopic] = useState(false);
+  
+  // AI Integration States
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedCards, setGeneratedCards] = useState<Flashcard[]>([]);
+  const [activeCardSet, setActiveCardSet] = useState<'example' | 'generated'>('example');
+  const [lastGeneratedTopic, setLastGeneratedTopic] = useState('');
+  
+  // Limit and Topics Management
+  const [savedTopics, setSavedTopics] = useState<any[]>([]);
+  const [dailyLimit, setDailyLimit] = useState(0);
+  const [showTopicsList, setShowTopicsList] = useState(false);
+
+  // subjects array
+  const subjects = [
+    'Tıp Fakültesi (Preklinik)',
+    'Tıp Fakültesi (Klinik)',
+    'YKS',
+    'LGS',
+    'USMLE',
+    'TUS'
+  ];
+
+  // localStorage'dan günlük limit kontrolü
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const limitData = JSON.parse(localStorage.getItem('flashcard_daily_limit') || '{}');
+    
+    if (limitData.date === today) {
+      setDailyLimit(limitData.count || 0);
+    } else {
+      setDailyLimit(0);
+      localStorage.setItem('flashcard_daily_limit', JSON.stringify({ date: today, count: 0 }));
+    }
+
+    // Kaydedilen konuları yükle
+    const topics = JSON.parse(localStorage.getItem('flashcard_topics') || '[]');
+    setSavedTopics(topics);
+  }, []);
+
+  // Günlük limit güncelleme
+  const updateDailyLimit = () => {
+    const today = new Date().toDateString();
+    const newCount = dailyLimit + 1;
+    setDailyLimit(newCount);
+    localStorage.setItem('flashcard_daily_limit', JSON.stringify({ date: today, count: newCount }));
+  };
+
+  // Konu kaydetme
+  const saveTopic = (title: string, cards: Flashcard[], subject: string) => {
+    const topicData = {
+      title,
+      cards,
+      subject,
+      date: new Date().toLocaleDateString(),
+      id: Date.now().toString()
+    };
+    
+    const existingTopics = JSON.parse(localStorage.getItem('flashcard_topics') || '[]');
+    existingTopics.push(topicData);
+    localStorage.setItem('flashcard_topics', JSON.stringify(existingTopics));
+    setSavedTopics(existingTopics);
+  };
+
+  // Kayıtlı konuya geç
+  const switchToSavedTopic = (topic: any) => {
+    setGeneratedCards(topic.cards);
+    setActiveCardSet('generated');
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setLastGeneratedTopic(topic.title);
+    setShowTopicsList(false);
+    setSessionStats({ correct: 0, incorrect: 0 });
+    setKnownCards([]);
+    setUnknownCards([]);
+  };
+
+  // Örnek flashcard verileri
+  const flashcards: Flashcard[] = [
+    {
+      id: 1,
+      question: "Kalbin ana işlevi nedir?",
+      answer: "Kalbin ana işlevi, vücudun tüm organlarına kan pompalamak ve böylece oksijen ile besinleri dolaşım sistemi aracılığıyla taşımaktır. Kalp, dakikada ortalama 60-100 kez atarak sürekli kan dolaşımını sağlar.",
+      category: "Kardiyovasküler Sistem",
+      difficulty: "easy",
+      subject: "Anatomi"
+    },
+    {
+      id: 2,
+      question: "Mitoz bölünmenin aşamaları nelerdir?",
+      answer: "Mitoz bölünmenin aşamaları: 1) Profaz - Kromozomlar görünür hale gelir, 2) Metafaz - Kromozomlar hücre ortasında dizilir, 3) Anafaz - Kromozomlar kutuplara çekilir, 4) Telofaz - Yeni çekirdekler oluşur ve sitokinezle hücre bölünür.",
+      category: "Hücre Biyolojisi",
+      difficulty: "medium",
+      subject: "Biyoloji"
+    },
+    {
+      id: 3,
+      question: "Hemoglobin nedir ve görevi nedir?",
+      answer: "Hemoglobin, kırmızı kan hücrelerinde bulunan demir içeren bir proteindir. Ana görevi akciğerlerden oksijen alarak vücudun dokularına taşımak ve dokuların karbondioksitini akciğerlere götürmektir. Normal hemoglobin değeri erkeklerde 14-18 g/dL, kadınlarda 12-16 g/dL'dir.",
+      category: "Hematoloji",
+      difficulty: "medium",
+      subject: "Fizyoloji"
+    },
+    {
+      id: 4,
+      question: "Nöron yapısının bölümleri nelerdir?",
+      answer: "Nöron yapısı: 1) Dendrit - Sinyalleri alan dallar, 2) Hücre gövdesi (soma) - Çekirdek ve organellerin bulunduğu kısım, 3) Akson - Sinyalleri ileten uzun çıkıntı, 4) Sinaps - Diğer nöronlarla bağlantı kurduğu noktalar, 5) Miyelin kılıfı - Aksonu saran koruyucu tabaka.",
+      category: "Sinir Sistemi",
+      difficulty: "hard",
+      subject: "Anatomi"
+    },
+    {
+      id: 5,
+      question: "Enzim aktivitesini etkileyen faktörler nelerdir?",
+      answer: "Enzim aktivitesini etkileyen faktörler: 1) Sıcaklık - Optimum sıcaklık vardır, 2) pH - Her enzimin optimum pH'sı vardır, 3) Substrat konsantrasyonu - Belirli bir noktaya kadar aktiviteyi artırır, 4) Enzim konsantrasyonu - Doğru orantılı, 5) İnhibitörler - Kompetitif ve non-kompetitif inhibisyon, 6) Aktivatörler - Enzim aktivitesini artırır.",
+      category: "Enzim Kinetikleri",
+      difficulty: "hard",
+      subject: "Biyokimya"
+    }
+  ];
+
+  // Dynamic card selection
+  const currentCards = activeCardSet === 'generated' ? generatedCards : flashcards;
+  const currentCard = currentCards[currentCardIndex];
+
+  // No cards available - AI kartları seçili ama kart yok
+  if (activeCardSet === 'generated' && generatedCards.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+        <div className="max-w-6xl mx-auto p-4">
+          <div className="flex items-center justify-center min-h-96">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🤖</div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">AI Kartları Henüz Yok</h2>
+              <p className="text-gray-600 mb-8">Yeni bir konu oluşturun veya "Örnek Kartlar"ı deneyin!</p>
+              <div className="flex gap-4 justify-center">
+                <motion.button
+                  onClick={() => setShowAddTopic(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  🚀 Yeni Konu Oluştur
+                </motion.button>
+                <motion.button
+                  onClick={() => {
+                    setActiveCardSet('example');
+                    setCurrentCardIndex(0);
+                    setIsFlipped(false);
+                    setSessionStats({ correct: 0, incorrect: 0 });
+                    setKnownCards([]);
+                    setUnknownCards([]);
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-colors"
+                >
+                  📚 Örnek Kartları Dene
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state during AI generation
+  if (isGenerating) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="relative mb-8">
+            <div className="w-24 h-24 border-8 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-2xl">🤖</div>
+                  </div>
+              </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">AI Çalışıyor...</h2>
+          <p className="text-gray-600 text-lg mb-2">"{lastGeneratedTopic}" konusu için flashcard'lar oluşturuluyor</p>
+          <p className="text-gray-500">Bu işlem birkaç saniye sürebilir ⏳</p>
+          
+          <div className="mt-8 bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/50 max-w-md mx-auto">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-700">ChatGPT'ye bağlanılıyor</span>
+            </div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse delay-300"></div>
+              <span className="text-sm text-gray-700">Konu analiz ediliyor</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse delay-700"></div>
+              <span className="text-sm text-gray-700">Flashcard'lar oluşturuluyor</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const handleCardFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleKnown = () => {
+    if (!knownCards.includes(currentCard.id)) {
+      setKnownCards([...knownCards, currentCard.id]);
+      setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    }
+    nextCard();
+  };
+
+  const handleUnknown = () => {
+    if (!unknownCards.includes(currentCard.id)) {
+      setUnknownCards([...unknownCards, currentCard.id]);
+      setSessionStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+    }
+    nextCard();
+  };
+
+  const nextCard = () => {
+    setIsFlipped(false);
+    if (currentCardIndex < currentCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+    } else {
+      setShowCelebration(true);
+      setTimeout(() => {
+        setCurrentCardIndex(0);
+        setShowCelebration(false);
+      }, 3000);
+    }
+  };
+
+  const resetSession = () => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setKnownCards([]);
+    setUnknownCards([]);
+    setSessionStats({ correct: 0, incorrect: 0 });
+    setShowCelebration(false);
+  };
+
+  // Touch/Swipe handlers for mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+    
+    if (distance > minSwipeDistance) {
+      // Swipe left - next card
+      if (currentCardIndex < currentCards.length - 1) {
+        setCurrentCardIndex(currentCardIndex + 1);
+        setIsFlipped(false);
+      }
+    } else if (distance < -minSwipeDistance) {
+      // Swipe right - previous card
+      if (currentCardIndex > 0) {
+        setCurrentCardIndex(currentCardIndex - 1);
+        setIsFlipped(false);
+      }
+    }
+  };
+
+
+
+  // 🤖 ChatGPT API Integration
+  const generateFlashcardsWithAI = async (topic: string) => {
+    // Günlük limit kontrolü
+    if (dailyLimit >= 3) {
+      alert('❌ Günlük konu oluşturma limitiniz dolmuş! (3/3)\n🕐 Yarın tekrar deneyebilirsiniz.');
+      return;
+    }
+
+    // 🔑 API KEY'İNİZİ BURAYA YAZIN
+    const apiKey = 'sk-YOUR_API_KEY_HERE';
+
+    setIsGenerating(true);
+    setLastGeneratedTopic(topic);
+
+    try {
+      // Konuya özel prompt seçimi
+      const getDetailedPrompt = (subject: string, topic: string) => {
+        switch (subject) {
+          case 'YKS':
+            return `YKS sınavına hazırlanan bir öğrenci için "${topic}" konusunda sade, detaylı ve örnekli şekilde flashcard'lar üret. Her flashcard bir kavram veya soru içersin, ardından açıklayıcı bilgi ve örnek ver. Tam olarak 3 flashcard oluştur.
+
+Dili sade, YKS öğrencisine uygun seviyede olsun. Teknik terimler gerekiyorsa tanımı da verilsin.
+
+JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "Soru veya kavram",
+    "answer": "Detaylı açıklama ve örnek",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "YKS"
+  }
+]`;
+
+          case 'LGS':
+            return `LGS sınavına hazırlanan bir öğrenci için "${topic}" konusunda eğlenceli, sade anlatımlı ve akılda kalıcı flashcard'lar üret. Her bir kartta konu başlığı, kısa açıklama ve bir çocuğun bile anlayabileceği şekilde örnek olsun. Tam olarak 3 flashcard üret.
+
+JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "Soru veya kavram",
+    "answer": "Eğlenceli ve sade açıklama",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "LGS"
+  }
+]`;
+
+          case 'Tıp Fakültesi (Preklinik)':
+            return `Tıp fakültesi preklinik dönemdeki öğrenciler için "${topic}" konusuyla ilgili sınavlara hazırlık amaçlı flashcardlar hazırla. Her kartta bir temel kavram veya soru olsun, ardından açıklayıcı bilgi ekle. Latince terimler varsa açıklamasını da yaz. Tam olarak 3 kart oluştur.
+
+JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "Tıbbi kavram veya soru",
+    "answer": "Detaylı tıbbi açıklama (Latince terimler dahil)",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "Tıp Fakültesi (Preklinik)"
+  }
+]`;
+
+          case 'Tıp Fakültesi (Klinik)':
+            return `Tıp fakültesi klinik dönem öğrencisi için "${topic}" başlığında klinik bilgi ve açıklamalar içeren flashcard'lar üret. Her flashcard tanı, semptom, tedavi veya hasta senaryosu içersin. Tam olarak 3 kart oluştur.
+
+JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "Klinik soru veya hasta senaryosu",
+    "answer": "Tanı, semptom ve tedavi açıklaması",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "Tıp Fakültesi (Klinik)"
+  }
+]`;
+
+          case 'USMLE':
+            return `USMLE sınavına hazırlanan bir öğrenci için "${topic}" başlığında yüksek seviye, İngilizce terimlere sahip, sınav formatına uygun flashcard'lar üret. Her kart USMLE tarzı kısa vaka veya bilgi sorusu içersin ve ardından açıklamasını yaz. Tam olarak 3 kart oluştur.
+
+JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "USMLE-style question or case",
+    "answer": "Detailed medical explanation",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "USMLE"
+  }
+]`;
+
+          case 'TUS':
+            return `TUS sınavına hazırlanan bir hekim için "${topic}" konusunda klinik bilgi ve açıklamalar içeren flashcard'lar üret. Her flashcard tanı, semptom, tedavi veya hasta senaryosu içersin. Tam olarak 3 kart oluştur.
+
+JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "TUS tarzı klinik soru",
+    "answer": "Klinik açıklama ve tedavi yaklaşımı",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "TUS"
+  }
+]`;
+
+          default:
+            return `"${topic}" konusu hakkında ${selectedSubject} seviyesinde flashcard'lar oluştur. JSON formatında şu yapıda döndür:
+[
+  {
+    "question": "Soru metni",
+    "answer": "Detaylı cevap metni",
+    "category": "${topic}",
+    "difficulty": "easy" | "medium" | "hard",
+    "subject": "${selectedSubject}"
+  }
+]`;
+        }
+      };
+
+      // ChatGPT API Call
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'Sen bir eğitim uzmanısın. Verilen talimatlara göre öğrenciler için flashcard\'lar oluşturacaksın. Her flashcard bir soru ve detaylı cevaptan oluşmalı. JSON formatında yanıt ver.'
+            },
+            {
+              role: 'user',
+              content: getDetailedPrompt(selectedSubject, topic)
+            }
+          ],
+          max_tokens: 3000,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices[0].message.content;
+      
+      // JSON parsing
+      const cardData = JSON.parse(content);
+      
+      // Convert to Flashcard format (sadece ilk 3 kart)
+      const newCards: Flashcard[] = cardData.slice(0, 3).map((card: any, index: number) => ({
+        id: Date.now() + index,
+        question: card.question,
+        answer: card.answer,
+        category: card.category || topic,
+        difficulty: card.difficulty || 'medium',
+        subject: card.subject || selectedSubject
+      }));
+
+      setGeneratedCards(newCards);
+      setActiveCardSet('generated');
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+      setKnownCards([]);
+      setUnknownCards([]);
+      setSessionStats({ correct: 0, incorrect: 0 });
+
+      // Günlük limit artır ve konu kaydet
+      updateDailyLimit();
+      saveTopic(topic, newCards, selectedSubject);
+
+    } catch (error) {
+      console.error('AI Generation Error:', error);
+      alert('❌ Flashcard oluşturulurken bir hata oluştu. API key\'inizi kontrol edin.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAddTopic = async () => {
+    if (newTopicInput.trim()) {
+      await generateFlashcardsWithAI(newTopicInput.trim());
+      setNewTopicInput('');
+      setShowAddTopic(false);
+    }
+  };
+
+
+
+  const getSubjectEmoji = (subject: string) => {
+    switch (subject) {
+      case 'Tıp Fakültesi (Preklinik)': return '🩺';
+      case 'Tıp Fakültesi (Klinik)': return '🏥';
+      case 'YKS': return '🎓';
+      case 'LGS': return '📚';
+      case 'USMLE': return '🇺🇸';
+      case 'TUS': return '💊';
+      default: return '📖';
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-100 text-green-800 border-green-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'hard': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getDifficultyText = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'Kolay';
+      case 'medium': return 'Orta';
+      case 'hard': return 'Zor';
+      default: return 'Bilinmiyor';
+    }
+  };
+
+  if (showCelebration) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center"
+        >
+          <div className="text-6xl mb-4">🎉</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Tebrikler!</h2>
+          <p className="text-gray-600 mb-6">Tüm kartları tamamladınız!</p>
+          <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
+                <div className="text-sm text-gray-600">Bildiğim</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
+                <div className="text-sm text-gray-600">Bilmediğim</div>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={resetSession}
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+          >
+            Yeniden Başla
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+      <div className="max-w-6xl mx-auto p-4">
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            {/* Title & Subject */}
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">AI Flashcard Studio</h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{getSubjectEmoji(selectedSubject)}</span>
+                  <select
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    className="text-gray-600 bg-transparent border-none focus:outline-none font-medium"
+                  >
+                    {subjects.map(subject => (
+                      <option key={subject} value={subject}>{subject}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Add Topic Controls */}
+            <div className="flex items-center gap-3">
+              {!showAddTopic ? (
+                <motion.button
+                  onClick={() => setShowAddTopic(true)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <Plus size={18} />
+                  Yeni Konu Oluştur
+                </motion.button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newTopicInput}
+                    onChange={(e) => setNewTopicInput(e.target.value)}
+                    placeholder="Konu başlığı girin..."
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddTopic()}
+                    disabled={isGenerating}
+                    maxLength={30}
+                  />
+                  <motion.button
+                    onClick={handleAddTopic}
+                    disabled={isGenerating}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        AI Çalışıyor...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={18} />
+                        Oluştur
+                      </>
+                    )}
+                  </motion.button>
+                  <button
+                    onClick={() => setShowAddTopic(false)}
+                    className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                    disabled={isGenerating}
+                  >
+                    <X size={18} />
+                  </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+        {/* Card Set Toggle & Topics */}
+        <div className="flex flex-col items-center gap-4 mb-8">
+          {/* Card Set Toggle */}
+          <div className="bg-white rounded-xl p-1 shadow-sm border border-gray-200">
+            <div className="flex">
+              <button
+                onClick={() => {
+                  setActiveCardSet('example');
+                  setCurrentCardIndex(0);
+                  setIsFlipped(false);
+                  setSessionStats({ correct: 0, incorrect: 0 });
+                  setKnownCards([]);
+                  setUnknownCards([]);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  activeCardSet === 'example'
+                    ? 'bg-blue-100 text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <BookOpen size={16} />
+                Örnek Kartlar ({flashcards.length})
+              </button>
+              <button
+                onClick={() => {
+                  setActiveCardSet('generated');
+                  setCurrentCardIndex(0);
+                  setIsFlipped(false);
+                  setSessionStats({ correct: 0, incorrect: 0 });
+                  setKnownCards([]);
+                  setUnknownCards([]);
+                }}
+                disabled={generatedCards.length === 0}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 ${
+                  activeCardSet === 'generated'
+                    ? 'bg-green-100 text-green-700 shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Sparkles size={16} />
+                AI Kartları ({generatedCards.length})
+                {lastGeneratedTopic && (
+                  <span className="block text-xs opacity-75">
+                    {lastGeneratedTopic}
+                  </span>
+                )}
+              </button>
+                </div>
+                </div>
+
+          {/* Daily Limit & Topics */}
+          <div className="flex items-center gap-4">
+            {/* Daily Limit Display */}
+            <div className="bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
+              <span className="text-sm text-gray-600">Günlük limit: </span>
+              <span className={`font-semibold ${dailyLimit >= 3 ? 'text-red-600' : 'text-green-600'}`}>
+                {dailyLimit}/3
+              </span>
+              </div>
+              
+            {/* Topics Button */}
+            <button
+              onClick={() => setShowTopicsList(!showTopicsList)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+            >
+              <List size={16} />
+              Konularım ({savedTopics.length})
+            </button>
+          </div>
+
+                    {/* Topics List */}
+          {showTopicsList && (
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 w-full max-w-2xl">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <List size={18} />
+                Kaydedilen Konular
+              </h3>
+              {savedTopics.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {savedTopics.map((topic, index) => (
+                    <div
+                      key={topic.id || index}
+                      onClick={() => switchToSavedTopic(topic)}
+                      className="p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all"
+                    >
+                      <div className="font-medium text-gray-900 mb-1">{topic.title}</div>
+                      <div className="text-sm text-gray-600">
+                        {getSubjectEmoji(topic.subject)} {topic.subject}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {topic.cards?.length || 3} kart • {topic.date}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-4xl mb-2">📝</div>
+                  <p>Henüz kayıtlı konu bulunmuyor.</p>
+                  <p className="text-sm">AI ile yeni konu oluşturun!</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+
+
+        {/* Progress & Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Progress */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Target size={20} className="text-blue-600" />
+                İlerleme
+              </h3>
+              <span className="text-sm text-gray-500">
+                {sessionStats.correct + sessionStats.incorrect}/{currentCards.length}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${((sessionStats.correct + sessionStats.incorrect) / currentCards.length) * 100}%` }}
+              ></div>
+            </div>
+            <div className="text-xs text-gray-500">
+              {Math.round(((sessionStats.correct + sessionStats.incorrect) / currentCards.length) * 100)}% tamamlandı
+            </div>
+          </div>
+
+          {/* Correct Stats */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <Check size={20} className="text-green-600" />
+                </div>
+                <div>
+                <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
+                <div className="text-sm text-gray-600">Biliyorum</div>
+              </div>
+                </div>
+              </div>
+              
+          {/* Incorrect Stats */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                <X size={20} className="text-red-600" />
+                </div>
+              <div>
+                <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
+                <div className="text-sm text-gray-600">Bilmiyorum</div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        {/* Flashcard Container */}
+        <div className="flex justify-center mb-8">
+          <div className="w-full max-w-2xl h-96 relative" style={{ perspective: '1000px' }}>
+        <motion.div
+              key={currentCard.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full relative cursor-pointer"
+              onClick={handleCardFlip}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <motion.div
+                className="w-full h-full relative"
+                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                transition={{ duration: 0.6 }}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Front Side */}
+                <div className="absolute inset-0 w-full h-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col" style={{ backfaceVisibility: 'hidden' }}>
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                      {currentCard.category}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(currentCard.difficulty)}`}>
+                      {getDifficultyText(currentCard.difficulty)}
+                    </span>
+              </div>
+                  
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl mb-4">🤔</div>
+                      <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
+                        {currentCard.question}
+                      </h2>
+              </div>
+            </div>
+            
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-6">
+                    <RotateCcw size={16} />
+                    <span>Cevabı görmek için kartı çevirin</span>
+              </div>
+          </div>
+
+                {/* Back Side */}
+                <div 
+                  className="absolute inset-0 w-full h-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col"
+                  style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
+                >
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                      {currentCard.category}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(currentCard.difficulty)}`}>
+                      {getDifficultyText(currentCard.difficulty)}
+                    </span>
+            </div>
+                  
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl mb-4">💡</div>
+                      <p className="text-lg text-gray-700 leading-relaxed">
+                        {currentCard.answer}
+                      </p>
+              </div>
+            </div>
+                  
+                  <div className="text-center text-sm text-gray-500 mt-6">
+                    {currentCard.subject}
+                  </div>
+          </div>
+              </motion.div>
+        </motion.div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-center max-w-md mx-auto mb-8">
+          <motion.button
+            onClick={handleUnknown}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+          >
+            <X size={20} />
+            Bilmiyorum
+          </motion.button>
+          
+          <motion.button
+            onClick={handleKnown}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-sm"
+          >
+            <Check size={20} />
+            Biliyorum
+          </motion.button>
+        </div>
+
+        {/* Navigation & Reset */}
+        <div className="flex items-center justify-center gap-8">
+          {/* Navigation */}
+          <div className="flex items-center gap-4">
+            <motion.button
+              onClick={() => setCurrentCardIndex(Math.max(0, currentCardIndex - 1))}
+              disabled={currentCardIndex === 0}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-3 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={20} className="text-gray-600" />
+            </motion.button>
+            
+            <span className="text-sm text-gray-500 font-medium min-w-16 text-center">
+              {currentCardIndex + 1} / {currentCards.length}
+            </span>
+            
+            <motion.button
+              onClick={() => setCurrentCardIndex(Math.min(currentCards.length - 1, currentCardIndex + 1))}
+              disabled={currentCardIndex === currentCards.length - 1}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-3 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={20} className="text-gray-600" />
+            </motion.button>
+          </div>
+
+          {/* Reset Button */}
+          <motion.button
+            onClick={resetSession}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-xl font-medium hover:bg-gray-700 transition-colors"
+          >
+            <RotateCcw size={18} />
+            Sıfırla
+          </motion.button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 
