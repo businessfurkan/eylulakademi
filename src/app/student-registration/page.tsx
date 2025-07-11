@@ -16,6 +16,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
+import { prepareStudentRegistrationForFirebase, sendStudentRegistrationToFirebase } from '@/utils/firebaseSync';
 
 type FormData = {
   email: string;
@@ -39,10 +40,15 @@ export default function StudentRegistrationPage() {
   });
 
   const studyFields = [
-    { id: 'yks', label: 'YKS HAZIRLIĞI', icon: '🎓' },
-    { id: 'lgs', label: 'LGS HAZIRLIĞI', icon: '📚' },
+    { id: 'tyt', label: 'TYT HAZIRLIĞI', icon: '📝' },
+    { id: 'ayt', label: 'AYT HAZIRLIĞI', icon: '🎓' },
+    { id: 'tyt_ayt', label: 'TYT ve AYT HAZIRLIĞI', icon: '📚' },
+    { id: 'lgs', label: 'LGS HAZIRLIĞI', icon: '📖' },
+    { id: 'tip', label: 'TIP ÖĞRENCİLERİ', icon: '⚕️' },
     { id: 'preklinik', label: 'PRE KLİNİK ÖĞRENCİLERİ', icon: '🩺' },
-    { id: 'klinik', label: 'KLİNİK ÖĞRENCİLERİ', icon: '🏥' }
+    { id: 'klinik', label: 'KLİNİK ÖĞRENCİLERİ', icon: '🏥' },
+    { id: 'usmle', label: 'USMLE HAZIRLIĞI', icon: '🇺🇸' },
+    { id: 'tus', label: 'TUS HAZIRLIĞI', icon: '📋' }
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,6 +132,26 @@ export default function StudentRegistrationPage() {
       // Add new student to the list
       existingStudents.push(studentData);
       localStorage.setItem('registeredStudents', JSON.stringify(existingStudents));
+      
+      // Firebase'e gönder
+      try {
+        const firebaseStudentData = prepareStudentRegistrationForFirebase(
+          formData.email,
+          formData.field,
+          studentData.studentId
+        );
+        
+        const firebaseSuccess = await sendStudentRegistrationToFirebase(firebaseStudentData);
+        if (firebaseSuccess) {
+          console.log('✅ Öğrenci verileri Firebase\'e başarıyla gönderildi');
+        } else {
+          console.log('⚠️ Firebase\'e gönderim başarısız oldu, sadece localStorage\'a kaydedildi');
+        }
+      } catch (firebaseError) {
+        console.error('❌ Firebase gönderim hatası:', firebaseError);
+        // Firebase hatası olsa da kayıt işlemini devam ettir
+      }
+      
       setIsSubmitted(true);
       
       // Redirect to success page after 2 seconds

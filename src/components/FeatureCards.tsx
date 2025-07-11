@@ -20,7 +20,8 @@ const features = [
     stats: '100+ Video Ders',
     gradient: 'from-white via-red-50/30 to-rose-50/50',
     hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
-    iconColor: 'text-[#af2e3d]'
+    iconColor: 'text-[#af2e3d]',
+    comingSoon: true
   },
   {
     id: 2,
@@ -30,7 +31,8 @@ const features = [
     stats: '200+ Tıp Terimi',
     gradient: 'from-white via-red-50/30 to-rose-50/50',
     hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
-    iconColor: 'text-[#af2e3d]'
+    iconColor: 'text-[#af2e3d]',
+    comingSoon: false
   },
   {
     id: 3,
@@ -40,7 +42,8 @@ const features = [
     stats: 'Yakında',
     gradient: 'from-white via-red-50/30 to-rose-50/50',
     hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
-    iconColor: 'text-[#af2e3d]'
+    iconColor: 'text-[#af2e3d]',
+    comingSoon: true
   },
   {
     id: 4,
@@ -50,7 +53,8 @@ const features = [
     stats: '7/24 Canlı Odalar',
     gradient: 'from-white via-red-50/30 to-rose-50/50',
     hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
-    iconColor: 'text-[#af2e3d]'
+    iconColor: 'text-[#af2e3d]',
+    comingSoon: false
   },
   {
     id: 5,
@@ -60,7 +64,8 @@ const features = [
     stats: 'Kişisel Mentorluk',
     gradient: 'from-white via-red-50/30 to-rose-50/50',
     hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
-    iconColor: 'text-[#af2e3d]'
+    iconColor: 'text-[#af2e3d]',
+    comingSoon: true
   },
   {
     id: 6,
@@ -70,7 +75,8 @@ const features = [
     stats: 'Detaylı Analytics',
     gradient: 'from-white via-red-50/30 to-rose-50/50',
     hoverGradient: 'from-white via-red-50/50 to-rose-50/70',
-    iconColor: 'text-[#af2e3d]'
+    iconColor: 'text-[#af2e3d]',
+    comingSoon: true
   }
 ];
 
@@ -119,11 +125,42 @@ export default function FeatureCards() {
               {/* Oval Card Container - mobile responsive */}
               <div className={`relative p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br ${feature.gradient} hover:bg-gradient-to-br group-hover:${feature.hoverGradient} border border-white/60 shadow-lg hover:shadow-xl transition-all duration-500 backdrop-blur-sm h-full`}>
                 
-                {/* Stats Badge - responsive */}
-                <div className="absolute -top-2 sm:-top-3 right-3 sm:right-6">
-                  <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-white text-gray-800 shadow-md border border-gray-200/50">
-                    {feature.stats}
-                  </span>
+                {/* Stats Badge or YAKINDA Badge - responsive */}
+                <div className="absolute -top-2 sm:-top-3 right-3 sm:right-6 z-20">
+                  {feature.comingSoon ? (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -10 }}
+                      animate={{ 
+                        scale: 1, 
+                        rotate: [0, 2, -2, 0],
+                      }}
+                      transition={{ 
+                        duration: 0.6,
+                        rotate: {
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "mirror"
+                        }
+                      }}
+                      className="relative"
+                    >
+                      <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-lg border-2 border-white/30">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                          <span className="text-white font-bold text-xs sm:text-sm uppercase tracking-wide">
+                            YAKINDA
+                          </span>
+                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                        </div>
+                      </div>
+                      {/* Glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-red-500 to-pink-500 rounded-full blur-md opacity-60 animate-pulse"></div>
+                    </motion.div>
+                  ) : (
+                    <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-white text-gray-800 shadow-md border border-gray-200/50">
+                      {feature.stats}
+                    </span>
+                  )}
                 </div>
 
                 {/* Icon Container - responsive */}
@@ -145,14 +182,19 @@ export default function FeatureCards() {
 
                   {/* Simple Action Button - responsive */}
                   <div className="pt-3 sm:pt-4">
-                    <button className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-800 hover:text-gray-900 transition-colors duration-200">
-                      <span>{feature.id === 3 ? 'Yakında' : 'Kullanmak için kayıt ol'}</span>
-                      {feature.id !== 3 && (
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                      )}
-                    </button>
+                    {feature.comingSoon ? (
+                      <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-600 cursor-not-allowed">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-r from-orange-400 to-red-500 animate-pulse"></div>
+                        <span>Bu özellik yakında aktif olacak</span>
+                      </div>
+                    ) : (
+                      <button className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-800 hover:text-gray-900 transition-colors duration-200">
+                        <span>Kullanmak için kayıt ol</span>
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
 

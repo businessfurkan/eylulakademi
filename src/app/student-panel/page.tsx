@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ComingSoon from '../../components/ComingSoon';
+import { prepareStudentProfileForFirebase, sendStudentProfileToFirebase, debugFirebaseData } from '@/utils/firebaseSync';
+import { generateFlashcardsWithOpenAI, logApiUsage, getApiUsageStats } from '@/utils/openaiApi';
   import {
   BookOpen, Calendar, MessageCircle, FileText, User, Bell,
   ChevronLeft, ChevronRight, Plus, Download, Clock,
@@ -139,21 +141,101 @@ export default function StudentPanel() {
     window.location.href = '/auth?mode=login&message=logged-out';
   };
 
-  // Örnek öğrenci verisi
-  const studentData: StudentData = {
+  // Gerçek öğrenci verisi - localStorage'dan al
+  const [studentData, setStudentData] = useState<StudentData>({
     id: 1,
-    name: 'Ahmet Yılmaz',
-    email: 'ahmet.yilmaz@email.com',
+    name: 'Demo Öğrenci',
+    email: 'demo@eylulakademi.com',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     class: '3. Sınıf',
     department: 'Tıp Fakültesi',
     coach: 'Henüz eşleşmedi',
-    enrollmentDate: new Date(2022, 8, 15),
+    enrollmentDate: new Date(),
     completedLessons: 0,
     totalLessons: 35,
     averageGrade: 0,
-    nextMeeting: undefined
-  };
+    nextMeeting: undefined,
+    targetExam: 'PRE KLİNİK ÖĞRENCİLERİ' // Demo için Preklinik alanı
+  });
+
+  // Component mount olduğunda kullanıcı verilerini yükle
+  useEffect(() => {
+    const currentStudent = localStorage.getItem('currentStudent');
+    console.log('🔍 useEffect çalıştı, currentStudent:', currentStudent);
+    
+    if (currentStudent) {
+      try {
+        const student = JSON.parse(currentStudent);
+        console.log('🔍 Parsed student:', student);
+        
+        // Demo öğrenci kontrolü - demo@eylulakademi.com veya demo@student.com ise demo verilerini koru
+        if (student.email === 'demo@eylulakademi.com' || student.email === 'demo@student.com') {
+          console.log('🔍 Demo öğrenci tespit edildi, preklinik veriler ayarlanıyor');
+          setStudentData(prev => ({
+            ...prev,
+            name: 'Demo Öğrenci',
+            email: 'demo@eylulakademi.com',
+            targetExam: 'PRE KLİNİK ÖĞRENCİLERİ' // Demo için preklinik alanını zorla ayarla
+          }));
+          return;
+        }
+        
+        // Registered students'dan detaylı bilgileri al
+        const registeredStudents = JSON.parse(localStorage.getItem('registeredStudents') || '[]');
+        const studentDetail = registeredStudents.find((s: any) => s.email === student.email);
+        
+        if (studentDetail) {
+          // Field ID'sini human readable name'e çevir
+          const getFieldDisplayName = (fieldId: string) => {
+            const fieldMap: { [key: string]: string } = {
+              'tyt': 'TYT HAZIRLIĞI',
+              'ayt': 'AYT HAZIRLIĞI',
+              'tyt_ayt': 'TYT ve AYT HAZIRLIĞI',
+              'lgs': 'LGS HAZIRLIĞI',
+              'tip': 'TIP ÖĞRENCİLERİ',
+              'preklinik': 'PRE KLİNİK ÖĞRENCİLERİ',
+              'klinik': 'KLİNİK ÖĞRENCİLERİ',
+              'usmle': 'USMLE HAZIRLIĞI',
+              'tus': 'TUS HAZIRLIĞI'
+            };
+            return fieldMap[fieldId] || fieldId;
+          };
+
+          console.log('🔍 StudentDetail bulundu:', studentDetail);
+          setStudentData(prev => ({
+            ...prev,
+            name: student.fullName || studentDetail.fullName || 'Öğrenci',
+            email: student.email,
+            targetExam: getFieldDisplayName(studentDetail.field), // Kayıt sırasında seçilen alan
+            enrollmentDate: new Date(studentDetail.registrationDate)
+          }));
+        } else {
+          console.log('⚠️ StudentDetail bulunamadı, localStorage temizleniyor');
+          // Kayıtlı öğrenci bulunamadı, demo moda geç
+          localStorage.removeItem('currentStudent');
+          setStudentData(prev => ({
+            ...prev,
+            name: 'Demo Öğrenci',
+            email: 'demo@eylulakademi.com',
+            targetExam: 'PRE KLİNİK ÖĞRENCİLERİ'
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Öğrenci verileri yüklenirken hata:', error);
+        console.log('🔧 localStorage temizleniyor, demo mode aktif');
+        localStorage.removeItem('currentStudent');
+        setStudentData(prev => ({
+          ...prev,
+          name: 'Demo Öğrenci',
+          email: 'demo@eylulakademi.com',
+          targetExam: 'PRE KLİNİK ÖĞRENCİLERİ'
+        }));
+      }
+    } else {
+      console.log('✅ localStorage\'da currentStudent bulunamadı, demo veriler kullanılıyor');
+      console.log('✅ Demo öğrenci targetExam:', studentData.targetExam);
+    }
+  }, []);
 
 
 
@@ -2990,32 +3072,128 @@ type ChatMessage = {
   roomId: string;
 };
 
+// StudyRoomModule Component - Modern ve responsive tasarım
 function StudyRoomModule({ studentData }: { studentData: StudentData }) {
   const [selectedRoom, setSelectedRoom] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
+  // Öğrencinin alanını normalize et (field ID'ye çevir)
+  const normalizeStudentField = (targetExam: string): string => {
+    if (!targetExam) return '';
+    
+    const fieldLower = targetExam.toLowerCase();
+    console.log('🔍 normalizeStudentField çalıştı:', { targetExam, fieldLower });
+    
+    if (fieldLower.includes('tyt ve ayt') || fieldLower.includes('tyt_ayt')) {
+      console.log('✅ Match: tyt_ayt');
+      return 'tyt_ayt';
+    } else if (fieldLower.includes('preklinik') || fieldLower.includes('pre klinik') || fieldLower.includes('pre kli̇ni̇k')) {
+      console.log('✅ Match: preklinik');
+      return 'preklinik';
+    } else if (fieldLower.includes('klinik') && !fieldLower.includes('pre')) {
+      console.log('✅ Match: klinik');
+      return 'klinik';
+    } else if (fieldLower.includes('tyt')) {
+      console.log('✅ Match: tyt');
+      return 'tyt';
+    } else if (fieldLower.includes('ayt')) {
+      console.log('✅ Match: ayt');
+      return 'ayt';
+    } else if (fieldLower.includes('lgs')) {
+      console.log('✅ Match: lgs');
+      return 'lgs';
+    } else if (fieldLower.includes('tip')) {
+      console.log('✅ Match: tip');
+      return 'tip';
+    } else if (fieldLower.includes('usmle')) {
+      console.log('✅ Match: usmle');
+      return 'usmle';
+    } else if (fieldLower.includes('tus')) {
+      console.log('✅ Match: tus');
+      return 'tus';
+    }
+    
+    console.log('❌ No match found for:', fieldLower);
+    return '';
+  };
+
+  // Oda erişim kontrolü
+  const checkRoomAccess = (roomId: string): boolean => {
+    const studentField = normalizeStudentField(studentData.targetExam || '');
+    console.log('🔍 Oda erişim kontrolü:', {
+      studentField,
+      roomId,
+      studentTargetExam: studentData.targetExam,
+      studentEmail: studentData.email,
+      accessGranted: studentField === roomId
+    });
+    
+    return studentField === roomId;
+  };
+
+  // Oda seçim fonksiyonu (erişim kontrolü ile)
+  const handleRoomSelection = (roomId: string) => {
+    if (!checkRoomAccess(roomId)) {
+      const room = studyRooms.find(r => r.id === roomId);
+      alert(`⚠️ Bu alanda olmadığınız için "${room?.name}" odasına katılamazsınız.\n\n🎯 Sizin alanınız: ${studentData.targetExam}\n🚪 Bu oda: ${room?.name} alanı için\n\n💡 Sadece kendi alanınızdaki çalışma odasına katılabilirsiniz.`);
+      return;
+    }
+    
+    setSelectedRoom(roomId);
+  };
+
   const studyRooms: StudyRoom[] = [
     {
-      id: 'yks',
-      name: 'YKS',
-      description: 'Üniversite sınavına hazırlanan öğrenciler',
-      icon: '🎓',
+      id: 'tyt',
+      name: 'TYT',
+      description: 'TYT sınavına hazırlanan öğrenciler',
+      icon: '📝',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
-      onlineCount: 12
+      onlineCount: 24
+    },
+    {
+      id: 'ayt',
+      name: 'AYT',
+      description: 'AYT sınavına hazırlanan öğrenciler',
+      icon: '🎓',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      onlineCount: 18
+    },
+    {
+      id: 'tyt_ayt',
+      name: 'TYT ve AYT',
+      description: 'TYT ve AYT sınavlarına hazırlanan öğrenciler',
+      icon: '📚',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      onlineCount: 31
     },
     {
       id: 'lgs',
       name: 'LGS',
-      description: 'Lise giriş sınavına hazırlanan öğrenciler',
-      icon: '📚',
+      description: 'LGS sınavına hazırlanan öğrenciler',
+      icon: '📖',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
       onlineCount: 15
+    },
+    {
+      id: 'tip',
+      name: 'TIP',
+      description: 'Tıp fakültesi öğrencileri',
+      icon: '⚕️',
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-50',
+      borderColor: 'border-teal-200',
+      onlineCount: 12
     },
     {
       id: 'preklinik',
@@ -3036,6 +3214,26 @@ function StudyRoomModule({ studentData }: { studentData: StudentData }) {
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
       onlineCount: 6
+    },
+    {
+      id: 'usmle',
+      name: 'USMLE',
+      description: 'USMLE sınavına hazırlanan doktorlar',
+      icon: '🇺🇸',
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-50',
+      borderColor: 'border-cyan-200',
+      onlineCount: 4
+    },
+    {
+      id: 'tus',
+      name: 'TUS',
+      description: 'TUS sınavına hazırlanan doktorlar',
+      icon: '📋',
+      color: 'text-slate-600',
+      bgColor: 'bg-slate-50',
+      borderColor: 'border-slate-200',
+      onlineCount: 7
     }
   ];
 
@@ -3069,7 +3267,7 @@ function StudyRoomModule({ studentData }: { studentData: StudentData }) {
       id: Date.now().toString(),
       userId: studentData.id.toString(),
       userName: studentData.name,
-      userPhoto: studentData.photo || '',
+      userPhoto: studentData.photo || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
       message: newMessage.trim(),
       timestamp: new Date(),
       roomId: selectedRoom
@@ -3083,7 +3281,7 @@ function StudyRoomModule({ studentData }: { studentData: StudentData }) {
       const autoReply: ChatMessage = {
         id: (Date.now() + 1).toString(),
         userId: 'bot',
-        userName: 'Study Bot',
+        userName: 'Çalışma Asistanı',
         userPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
         message: getAutoReply(newMessage),
         timestamp: new Date(),
@@ -3133,226 +3331,384 @@ function StudyRoomModule({ studentData }: { studentData: StudentData }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 mb-6"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl">
+    <div className="h-screen bg-gradient-to-br from-white via-gray-50 to-white flex flex-col overflow-hidden relative">
+      {/* Animated Background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute -bottom-20 left-40 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      {/* Header - Discord Style */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/95 backdrop-blur-xl border-b border-gray-200/50 p-4 shadow-lg z-10 flex-shrink-0 relative"
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="p-3 bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl shadow-xl">
                 <Users className="text-white" size={24} />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Çalışma Odası</h1>
-                <p className="text-gray-600">Birlikte çalış, birlikte öğren</p>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
+                Çalışma Odaları
+              </h1>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <p className="text-gray-600 text-sm">Topluluk • Canlı</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-green-100 px-4 py-2 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-green-500/20 px-4 py-2 rounded-full border border-green-500/30 shadow-lg">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-green-700 text-sm font-medium">
-                {studyRooms.reduce((total, room) => total + room.onlineCount, 0)} aktif üye
+                {studyRooms.reduce((total, room) => total + room.onlineCount, 0)} çevrimiçi
               </span>
+            </div>
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform">
+              <User className="text-white" size={18} />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main Content - Flexible */}
+      <div className="flex-1 max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0 overflow-hidden">
+        {/* Sidebar - Discord Style */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200/50 p-1 flex flex-col min-h-0 relative overflow-hidden"
+        >
+          {/* Glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 via-transparent to-cyan-500/5 pointer-events-none"></div>
+          
+          <div className="relative z-10 p-3">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <GraduationCap className="text-white" size={16} />
+              </div>
+              <h2 className="text-gray-800 font-bold text-sm">ÇALIŞMA KANALLARI</h2>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+              {studyRooms.map((room, index) => {
+                const isActive = selectedRoom === room.id;
+                const canAccess = checkRoomAccess(room.id);
+                
+                return (
+                  <motion.button
+                    key={room.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => handleRoomSelection(room.id)}
+                    disabled={!canAccess}
+                    className={`w-full p-3 rounded-lg transition-all duration-300 text-left group relative overflow-hidden ${
+                      isActive
+                        ? 'bg-gradient-to-r from-purple-100 to-purple-200 shadow-lg border border-purple-400'
+                        : canAccess 
+                        ? 'hover:bg-gray-100 hover:shadow-md'
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    {/* Active indicator */}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-400 to-cyan-400"></div>
+                    )}
+                    
+                    {/* Hover glow */}
+                    <div className={`absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-opacity ${
+                      room.bgColor.replace('bg-', 'from-').replace('-50', '-500')
+                    } to-transparent pointer-events-none`}></div>
+                    
+                    <div className="flex items-center gap-3 relative z-10">
+                      <div className={`text-lg flex-shrink-0 ${isActive ? 'scale-110' : ''} transition-transform`}>
+                        {room.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className={`font-bold text-sm ${
+                            isActive ? 'text-gray-800' : canAccess ? 'text-gray-700' : 'text-gray-400'
+                          }`}>
+                            {room.name}
+                          </h3>
+                          {!canAccess && (
+                            <div className="w-4 h-4 bg-red-500/20 rounded-full flex items-center justify-center">
+                              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                            </div>
+                          )}
+                        </div>
+                        <p className={`text-xs truncate ${
+                          isActive ? 'text-gray-600' : 'text-gray-500'
+                        }`}>
+                          {room.description}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className={`flex items-center gap-1 ${
+                            isActive ? 'text-green-600' : 'text-gray-500'
+                          }`}>
+                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-xs font-medium">{room.onlineCount}</span>
+                          </div>
+                          {canAccess && (
+                            <div className="text-xs text-emerald-600 font-medium">✓</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Rules Section - Discord Style */}
+            <div className="mt-4 p-3 bg-amber-50/80 rounded-lg border border-amber-200/50 flex-shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-4 bg-amber-500/20 rounded flex items-center justify-center">
+                  <AlertCircle className="text-amber-600" size={12} />
+                </div>
+                <h4 className="text-amber-700 text-xs font-bold">TOPLULUK KURALLARI</h4>
+              </div>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li className="flex items-center gap-2">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <span>Saygılı olun</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <span>Konuyla ilgili kalın</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <span>Spam yapmayın</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <span>Birbirinize yardım edin</span>
+                </li>
+              </ul>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-          {/* Odalar Listesi */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100"
-          >
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Çalışma Odaları</h2>
-            <div className="space-y-3">
-              {studyRooms.map((room, index) => (
-                <motion.button
-                  key={room.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => setSelectedRoom(room.id)}
-                  className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 ${
-                    selectedRoom === room.id
-                      ? `${room.bgColor} ${room.borderColor} shadow-lg`
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
+        {/* Chat Area - Discord Style */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-3 bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200/50 flex flex-col min-h-0 relative overflow-hidden"
+        >
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-100/20 via-transparent to-cyan-100/20 pointer-events-none"></div>
+          
+          {selectedRoom ? (
+            <>
+              {/* Chat Header - Discord Style */}
+              <div className="p-4 border-b border-gray-200/50 flex-shrink-0 relative z-10">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl">{room.icon}</div>
-                    <div className="flex-1 text-left">
-                      <h3 className={`font-semibold ${selectedRoom === room.id ? room.color : 'text-gray-700'}`}>
-                        {room.name}
+                    <div className="relative">
+                      <div className="text-3xl drop-shadow-lg">
+                        {studyRooms.find(room => room.id === selectedRoom)?.icon}
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        {studyRooms.find(room => room.id === selectedRoom)?.name}
+                        <div className="px-2 py-1 bg-purple-500/20 rounded-full text-xs text-purple-700 border border-purple-500/30">
+                          CANLI
+                        </div>
                       </h3>
-                      <p className="text-sm text-gray-500">{room.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span className="text-xs text-gray-600">{room.onlineCount} aktif</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <p className="text-gray-600 text-sm">
+                          {studyRooms.find(room => room.id === selectedRoom)?.onlineCount} üye çevrimiçi
+                        </p>
                       </div>
                     </div>
                   </div>
-                </motion.button>
-              ))}
-            </div>
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <Bell className="text-gray-600" size={18} />
+                    </button>
+                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                      <Search className="text-gray-600" size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-            {/* Kurallar */}
-            <div className="mt-6 p-4 bg-yellow-50 rounded-2xl border border-yellow-200">
-              <h4 className="font-semibold text-yellow-800 mb-2">📋 Oda Kuralları</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
-                <li>• Saygılı ve nazik ol</li>
-                <li>• Konuyla ilgili paylaşımlar yap</li>
-                <li>• Spam ve reklam yasak</li>
-                <li>• Birbirinize yardım edin</li>
-              </ul>
-            </div>
-          </motion.div>
-
-          {/* Chat Alanı */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col"
-          >
-            {selectedRoom ? (
-              <>
-                {/* Chat Header */}
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">
-                      {studyRooms.find(room => room.id === selectedRoom)?.icon}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800">
-                        {studyRooms.find(room => room.id === selectedRoom)?.name}
-                      </h3>
-                      <p className="text-gray-500 text-sm">
-                        {studyRooms.find(room => room.id === selectedRoom)?.onlineCount} aktif üye
+              {/* Messages - Discord Style */}
+              <div className="flex-1 p-4 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent relative z-10">
+                {messages.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center min-h-full">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <MessageCircle className="text-gray-500" size={32} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">#{studyRooms.find(room => room.id === selectedRoom)?.name} Odası</h3>
+                      <p className="text-gray-600 text-sm max-w-md">
+                        Bu odada çalışma yolculuğunuzun başlangıcı. Merhaba diyerek başlayın!
                       </p>
                     </div>
                   </div>
-                </div>
-
-                {/* Mesajlar */}
-                <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-4xl mb-4">💬</div>
-                      <p className="text-gray-500 text-lg">İlk mesajı sen at!</p>
-                      <p className="text-gray-400 text-sm mt-1">Bu odadaki ilk kişi sen olabilirsin</p>
-                    </div>
-                  ) : (
-                    messages.map((message, index) => {
+                ) : (
+                  <div className="space-y-1">
+                    {messages.map((message, index) => {
                       const showDateHeader = index === 0 || 
                         formatDate(message.timestamp) !== formatDate(messages[index - 1].timestamp);
+                      const showUserInfo = index === 0 || 
+                        messages[index - 1].userId !== message.userId ||
+                        showDateHeader;
                       
                       return (
                         <div key={message.id}>
                           {showDateHeader && (
-                            <div className="text-center my-4">
-                              <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                            <div className="flex items-center justify-center my-6">
+                              <div className="flex-1 h-px bg-gray-300"></div>
+                              <span className="px-4 text-xs text-gray-500 bg-gray-100 rounded-full py-1 border border-gray-200">
                                 {formatDate(message.timestamp)}
                               </span>
+                              <div className="flex-1 h-px bg-gray-300"></div>
                             </div>
                           )}
                           
                           <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`flex gap-3 ${
-                              message.userId === studentData.id.toString() ? 'justify-end' : 'justify-start'
-                            }`}
+                            className="group hover:bg-gray-100/50 px-3 py-1 rounded-lg transition-colors"
                           >
-                            {message.userId !== studentData.id.toString() && (
-                              <img
-                                src={message.userPhoto}
-                                alt={message.userName}
-                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              />
-                            )}
-                            
-                            <div className={`max-w-xs lg:max-w-md ${
-                              message.userId === studentData.id.toString() ? 'order-first' : ''
-                            }`}>
-                              {message.userId !== studentData.id.toString() && (
-                                <p className="text-sm text-gray-600 mb-1">{message.userName}</p>
-                              )}
-                              <div className={`p-3 rounded-2xl ${
-                                message.userId === studentData.id.toString()
-                                  ? 'bg-blue-500 text-white'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                <p className="text-sm">{message.message}</p>
+                            {showUserInfo ? (
+                              <div className="flex items-start gap-3">
+                                <div className="relative">
+                                  <img
+                                    src={message.userPhoto}
+                                    alt={message.userName}
+                                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
+                                  />
+                                  {message.userId === studentData.id.toString() && (
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-baseline gap-2 mb-1">
+                                    <span className={`font-bold text-sm ${
+                                      message.userId === studentData.id.toString() ? 'text-purple-600' : 'text-gray-800'
+                                    }`}>
+                                      {message.userName}
+                                    </span>
+                                    {message.userId === studentData.id.toString() && (
+                                      <span className="text-xs text-purple-600 bg-purple-500/20 px-2 py-0.5 rounded-full">SEN</span>
+                                    )}
+                                    <span className="text-xs text-gray-500">
+                                      {formatTime(message.timestamp)}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-700 text-sm leading-relaxed">
+                                    {message.message}
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {formatTime(message.timestamp)}
-                              </p>
-                            </div>
-
-                            {message.userId === studentData.id.toString() && (
-                              <img
-                                src={message.userPhoto}
-                                alt={message.userName}
-                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              />
+                            ) : (
+                              <div className="flex gap-3">
+                                <div className="w-10 flex justify-center">
+                                  <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {formatTime(message.timestamp).split(':')[0]}:{formatTime(message.timestamp).split(':')[1]}
+                                  </span>
+                                </div>
+                                <div className="flex-1 text-gray-700 text-sm leading-relaxed">
+                                  {message.message}
+                                </div>
+                              </div>
                             )}
                           </motion.div>
                         </div>
                       );
-                    })
-                  )}
-                </div>
+                    })}
+                  </div>
+                )}
+              </div>
 
-                {/* Mesaj Gönderme */}
-                <div className="p-6 border-t border-gray-100">
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                      placeholder="Mesajını yaz..."
-                      className="flex-1 p-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <motion.button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim()}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <Send size={20} />
-                    </motion.button>
+              {/* Message Input - Discord Style */}
+              <div className="p-4 flex-shrink-0 relative z-10">
+                <div className="relative">
+                  <div className="flex items-end gap-3 bg-gray-100 rounded-xl p-3 border border-gray-200">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        placeholder={`#${studyRooms.find(room => room.id === selectedRoom)?.name?.toLowerCase() || 'odası'} kanalına mesaj yazın`}
+                        className="w-full bg-transparent text-gray-700 placeholder-gray-500 border-none outline-none text-sm resize-none"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                        <Paperclip className="text-gray-600" size={18} />
+                      </button>
+                      <motion.button
+                        onClick={sendMessage}
+                        disabled={!newMessage.trim()}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`p-2 rounded-lg transition-all ${
+                          newMessage.trim() 
+                            ? 'bg-purple-500 hover:bg-purple-600 text-white shadow-lg' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        <Send size={18} />
+                      </motion.button>
+                    </div>
                   </div>
                   
+                  {/* Typing Indicator */}
                   {isTyping && (
-                    <div className="mt-2 text-sm text-gray-500">
-                      <span className="inline-flex items-center gap-1">
-                        Birisi yazıyor
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute -top-8 left-3"
+                    >
+                      <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-lg">
                         <div className="flex gap-1">
-                          <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
+                          <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
-                      </span>
-                    </div>
+                        <span className="text-xs text-gray-700">Birisi yazıyor...</span>
+                      </div>
+                    </motion.div>
                   )}
                 </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">🏠</div>
-                  <h3 className="text-xl font-bold text-gray-700 mb-2">Bir oda seç</h3>
-                  <p className="text-gray-500">Sol taraftan katılmak istediğin çalışma odasını seç</p>
+              </div>
+            </>
+                      ) : (
+              <div className="flex-1 flex items-center justify-center relative z-10">
+                <div className="text-center max-w-md">
+                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <Users className="text-gray-500" size={48} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                    Çalışma Odalarına Hoş Geldiniz
+                  </h3>
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Alanınızdaki diğer öğrencilerle iş birliği yapmak için kenar çubuğundan bir çalışma odası seçin.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Bağlanmaya hazır</span>
+                  </div>
                 </div>
               </div>
             )}
-          </motion.div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -3527,6 +3883,10 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
     previousCoachingExperience: studentData.previousCoachingExperience || ''
   });
 
+  // Debug: profil yüklendiğinde targetExam değerini kontrol et
+  console.log('🔍 ProfileModule - studentData.targetExam:', studentData.targetExam);
+  console.log('🔍 ProfileModule - profileData.targetExam:', profileData.targetExam);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
@@ -3539,7 +3899,12 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
         if (savedProfile) {
           const parsedProfile = JSON.parse(savedProfile);
           if (parsedProfile.profileData) {
-            setProfileData(parsedProfile.profileData);
+            // Hedef sınavı kayıt sırasında seçilen alan ile güncelle (override etmesin)
+            const updatedProfileData = {
+              ...parsedProfile.profileData,
+              targetExam: studentData.targetExam || parsedProfile.profileData.targetExam
+            };
+            setProfileData(updatedProfileData);
             console.log('✅ Kaydedilmiş profil yüklendi:', studentData.email);
           }
         } else {
@@ -3548,9 +3913,20 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
           if (oldProfile) {
             const parsedOldProfile = JSON.parse(oldProfile);
             if (parsedOldProfile.email === studentData.email) {
-              setProfileData(parsedOldProfile);
+              const updatedOldProfile = {
+                ...parsedOldProfile,
+                targetExam: studentData.targetExam || parsedOldProfile.targetExam
+              };
+              setProfileData(updatedOldProfile);
               console.log('✅ Eski profil formatı yüklendi ve güncellenecek:', studentData.email);
             }
+          } else {
+            // İlk kez profil açılıyorsa, kayıt sırasında seçilen hedef sınavı ayarla
+            setProfileData(prev => ({
+              ...prev,
+              targetExam: studentData.targetExam || ''
+            }));
+            console.log('🔍 İlk kez profil açılıyor, targetExam ayarlandı:', studentData.targetExam);
           }
         }
       } catch (error) {
@@ -3558,8 +3934,19 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
       }
     };
 
-    loadProfileData();
-  }, [studentData.email]);
+    if (studentData.email) {
+      loadProfileData();
+    }
+    
+    // Her zaman targetExam field'ını studentData'dan al (güvenlik için)
+    if (studentData.targetExam && profileData.targetExam !== studentData.targetExam) {
+      setProfileData(prev => ({
+        ...prev,
+        targetExam: studentData.targetExam || ''
+      }));
+      console.log('🔍 targetExam güncellendi:', studentData.targetExam);
+    }
+  }, [studentData.email, studentData.targetExam, profileData.targetExam]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -3605,6 +3992,21 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
       
       // Eski localStorage key'ini temizle
       localStorage.removeItem('studentProfile');
+      
+      // Firebase'e profil verilerini gönder
+      try {
+        const firebaseProfileData = prepareStudentProfileForFirebase(profileData, studentData);
+        const firebaseSuccess = await sendStudentProfileToFirebase(firebaseProfileData);
+        
+        if (firebaseSuccess) {
+          console.log('✅ Profil verileri Firebase\'e başarıyla gönderildi');
+        } else {
+          console.log('⚠️ Firebase\'e profil gönderimi başarısız oldu, sadece localStorage\'a kaydedildi');
+        }
+      } catch (firebaseError) {
+        console.error('❌ Firebase profil gönderim hatası:', firebaseError);
+        // Firebase hatası olsa da profil kaydetmeyi devam ettir
+      }
       
       console.log('✅ Profil başarıyla kaydedildi:', profileData.email);
       
@@ -3908,31 +4310,24 @@ function ProfileModule({ studentData }: { studentData: StudentData }) {
                 )}
               </div>
 
-              {/* Target Exam */}
+              {/* Target Exam - Not Editable */}
               <div>
               <label className="block text-gray-700 font-semibold mb-4 text-lg">
-                  📚 Hedef Sınav
+                  📚 Hedef Sınav (Kayıt Sırasında Seçildi)
                 </label>
-                {isEditing ? (
-                  <select
-                    value={profileData.targetExam}
-                    onChange={(e) => handleChange('targetExam', e.target.value)}
-                  className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
-                >
-                  <option value="">Seçiniz</option>
-                  <option value="LGS">LGS</option>
-                  <option value="YKS">YKS</option>
-                  <option value="TUS">TUS</option>
-                  <option value="USMLE">USMLE</option>
-                  <option value="Diğer">Diğer</option>
-                  </select>
-                ) : (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200 relative">
                   <p className="text-gray-900 font-medium text-lg">
-                      {profileData.targetExam || 'Henüz belirtilmemiş'}
-                    </p>
+                    {studentData.targetExam || profileData.targetExam || 'Henüz belirtilmemiş'}
+                  </p>
+                  <div className="absolute top-2 right-2">
+                    <div className="bg-emerald-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                      Sabit
+                    </div>
                   </div>
-                )}
+                  <p className="text-emerald-700 text-sm mt-2 font-medium">
+                    💡 Bu alan kayıt sırasında seçilmiştir ve değiştirilemez
+                  </p>
+                </div>
               </div>
 
               {/* Study Habits */}
@@ -4025,40 +4420,25 @@ type Flashcard = {
   subject: string;
 };
 
-// FlashcardModule Component
+// FlashcardModule Component - Tam özellikli flashcard sistemi
 function FlashcardModule({ studentData }: { studentData: StudentData }) {
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [knownCards, setKnownCards] = useState<number[]>([]);
-  const [unknownCards, setUnknownCards] = useState<number[]>([]);
-  const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [selectedSubject, setSelectedSubject] = useState('Tıp Fakültesi (Preklinik)');
+  // ✅ TÜM HOOK'LAR EN BAŞTA
+  const [isGenerating, setIsGenerating] = useState(false);
   const [newTopicInput, setNewTopicInput] = useState('');
   const [showAddTopic, setShowAddTopic] = useState(false);
-  
-  // AI Integration States
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedCards, setGeneratedCards] = useState<Flashcard[]>([]);
-  const [activeCardSet, setActiveCardSet] = useState<'example' | 'generated'>('example');
-  const [lastGeneratedTopic, setLastGeneratedTopic] = useState('');
-  
-  // Limit and Topics Management
-  const [savedTopics, setSavedTopics] = useState<any[]>([]);
   const [dailyLimit, setDailyLimit] = useState(0);
-  const [showTopicsList, setShowTopicsList] = useState(false);
+  const [apiUsageStats, setApiUsageStats] = useState(getApiUsageStats());
+  
+  // Flashcard görüntüleme için hook'lar
+  const [generatedCards, setGeneratedCards] = useState<Flashcard[]>([]);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [studiedCards, setStudiedCards] = useState<number[]>([]);
+  const [knownCards, setKnownCards] = useState<number[]>([]);
+  const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
+  const [showStudyMode, setShowStudyMode] = useState(false);
 
-  // subjects array
-  const subjects = [
-    'Tıp Fakültesi (Preklinik)',
-    'Tıp Fakültesi (Klinik)',
-    'YKS',
-    'LGS',
-    'USMLE',
-    'TUS'
-  ];
-
-  // localStorage'dan günlük limit kontrolü
+  // useEffect her zaman çağrılmalı
   useEffect(() => {
     const today = new Date().toDateString();
     const limitData = JSON.parse(localStorage.getItem('flashcard_daily_limit') || '{}');
@@ -4070,10 +4450,25 @@ function FlashcardModule({ studentData }: { studentData: StudentData }) {
       localStorage.setItem('flashcard_daily_limit', JSON.stringify({ date: today, count: 0 }));
     }
 
-    // Kaydedilen konuları yükle
-    const topics = JSON.parse(localStorage.getItem('flashcard_topics') || '[]');
-    setSavedTopics(topics);
+    // Kaydedilmiş flashcard'ları yükle
+    loadSavedFlashcards();
   }, []);
+
+  // Kaydedilmiş flashcard'ları yükle
+  const loadSavedFlashcards = () => {
+    try {
+      const savedCards = localStorage.getItem('user_flashcards');
+      if (savedCards) {
+        const cards = JSON.parse(savedCards);
+        setGeneratedCards(cards);
+        if (cards.length > 0) {
+          setShowStudyMode(true);
+        }
+      }
+    } catch (error) {
+      console.error('Flashcard yükleme hatası:', error);
+    }
+  };
 
   // Günlük limit güncelleme
   const updateDailyLimit = () => {
@@ -4083,418 +4478,96 @@ function FlashcardModule({ studentData }: { studentData: StudentData }) {
     localStorage.setItem('flashcard_daily_limit', JSON.stringify({ date: today, count: newCount }));
   };
 
-  // Konu kaydetme
-  const saveTopic = (title: string, cards: Flashcard[], subject: string) => {
-    const topicData = {
-      title,
-      cards,
-      subject,
-      date: new Date().toLocaleDateString(),
-      id: Date.now().toString()
-    };
-    
-    const existingTopics = JSON.parse(localStorage.getItem('flashcard_topics') || '[]');
-    existingTopics.push(topicData);
-    localStorage.setItem('flashcard_topics', JSON.stringify(existingTopics));
-    setSavedTopics(existingTopics);
-  };
-
-  // Kayıtlı konuya geç
-  const switchToSavedTopic = (topic: any) => {
-    setGeneratedCards(topic.cards);
-    setActiveCardSet('generated');
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setLastGeneratedTopic(topic.title);
-    setShowTopicsList(false);
-    setSessionStats({ correct: 0, incorrect: 0 });
-    setKnownCards([]);
-    setUnknownCards([]);
-  };
-
-  // Örnek flashcard verileri
-  const flashcards: Flashcard[] = [
-    {
-      id: 1,
-      question: "Kalbin ana işlevi nedir?",
-      answer: "Kalbin ana işlevi, vücudun tüm organlarına kan pompalamak ve böylece oksijen ile besinleri dolaşım sistemi aracılığıyla taşımaktır. Kalp, dakikada ortalama 60-100 kez atarak sürekli kan dolaşımını sağlar.",
-      category: "Kardiyovasküler Sistem",
-      difficulty: "easy",
-      subject: "Anatomi"
-    },
-    {
-      id: 2,
-      question: "Mitoz bölünmenin aşamaları nelerdir?",
-      answer: "Mitoz bölünmenin aşamaları: 1) Profaz - Kromozomlar görünür hale gelir, 2) Metafaz - Kromozomlar hücre ortasında dizilir, 3) Anafaz - Kromozomlar kutuplara çekilir, 4) Telofaz - Yeni çekirdekler oluşur ve sitokinezle hücre bölünür.",
-      category: "Hücre Biyolojisi",
-      difficulty: "medium",
-      subject: "Biyoloji"
-    },
-    {
-      id: 3,
-      question: "Hemoglobin nedir ve görevi nedir?",
-      answer: "Hemoglobin, kırmızı kan hücrelerinde bulunan demir içeren bir proteindir. Ana görevi akciğerlerden oksijen alarak vücudun dokularına taşımak ve dokuların karbondioksitini akciğerlere götürmektir. Normal hemoglobin değeri erkeklerde 14-18 g/dL, kadınlarda 12-16 g/dL'dir.",
-      category: "Hematoloji",
-      difficulty: "medium",
-      subject: "Fizyoloji"
-    },
-    {
-      id: 4,
-      question: "Nöron yapısının bölümleri nelerdir?",
-      answer: "Nöron yapısı: 1) Dendrit - Sinyalleri alan dallar, 2) Hücre gövdesi (soma) - Çekirdek ve organellerin bulunduğu kısım, 3) Akson - Sinyalleri ileten uzun çıkıntı, 4) Sinaps - Diğer nöronlarla bağlantı kurduğu noktalar, 5) Miyelin kılıfı - Aksonu saran koruyucu tabaka.",
-      category: "Sinir Sistemi",
-      difficulty: "hard",
-      subject: "Anatomi"
-    },
-    {
-      id: 5,
-      question: "Enzim aktivitesini etkileyen faktörler nelerdir?",
-      answer: "Enzim aktivitesini etkileyen faktörler: 1) Sıcaklık - Optimum sıcaklık vardır, 2) pH - Her enzimin optimum pH'sı vardır, 3) Substrat konsantrasyonu - Belirli bir noktaya kadar aktiviteyi artırır, 4) Enzim konsantrasyonu - Doğru orantılı, 5) İnhibitörler - Kompetitif ve non-kompetitif inhibisyon, 6) Aktivatörler - Enzim aktivitesini artırır.",
-      category: "Enzim Kinetikleri",
-      difficulty: "hard",
-      subject: "Biyokimya"
-    }
-  ];
-
-  // Dynamic card selection
-  const currentCards = activeCardSet === 'generated' ? generatedCards : flashcards;
-  const currentCard = currentCards[currentCardIndex];
-
-  // No cards available - AI kartları seçili ama kart yok
-  if (activeCardSet === 'generated' && generatedCards.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
-        <div className="max-w-6xl mx-auto p-4">
-          <div className="flex items-center justify-center min-h-96">
-            <div className="text-center">
-              <div className="text-6xl mb-4">🤖</div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">AI Kartları Henüz Yok</h2>
-              <p className="text-gray-600 mb-8">Yeni bir konu oluşturun veya "Örnek Kartlar"ı deneyin!</p>
-              <div className="flex gap-4 justify-center">
-                <motion.button
-                  onClick={() => setShowAddTopic(true)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  🚀 Yeni Konu Oluştur
-                </motion.button>
-                <motion.button
-                  onClick={() => {
-                    setActiveCardSet('example');
-                    setCurrentCardIndex(0);
-                    setIsFlipped(false);
-                    setSessionStats({ correct: 0, incorrect: 0 });
-                    setKnownCards([]);
-                    setUnknownCards([]);
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-colors"
-                >
-                  📚 Örnek Kartları Dene
-                </motion.button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state during AI generation
-  if (isGenerating) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="relative mb-8">
-            <div className="w-24 h-24 border-8 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-2xl">🤖</div>
-                  </div>
-              </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">AI Çalışıyor...</h2>
-          <p className="text-gray-600 text-lg mb-2">"{lastGeneratedTopic}" konusu için flashcard'lar oluşturuluyor</p>
-          <p className="text-gray-500">Bu işlem birkaç saniye sürebilir ⏳</p>
-          
-          <div className="mt-8 bg-white/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/50 max-w-md mx-auto">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-700">ChatGPT'ye bağlanılıyor</span>
-            </div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse delay-300"></div>
-              <span className="text-sm text-gray-700">Konu analiz ediliyor</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse delay-700"></div>
-              <span className="text-sm text-gray-700">Flashcard'lar oluşturuluyor</span>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  const handleCardFlip = () => {
-    setIsFlipped(!isFlipped);
-  };
-
-  const handleKnown = () => {
-    if (!knownCards.includes(currentCard.id)) {
-      setKnownCards([...knownCards, currentCard.id]);
-      setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
-    }
-    nextCard();
-  };
-
-  const handleUnknown = () => {
-    if (!unknownCards.includes(currentCard.id)) {
-      setUnknownCards([...unknownCards, currentCard.id]);
-      setSessionStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
-    }
-    nextCard();
-  };
-
-  const nextCard = () => {
-    setIsFlipped(false);
-    if (currentCardIndex < currentCards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-    } else {
-      setShowCelebration(true);
-      setTimeout(() => {
-        setCurrentCardIndex(0);
-        setShowCelebration(false);
-      }, 3000);
-    }
-  };
-
-  const resetSession = () => {
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setKnownCards([]);
-    setUnknownCards([]);
-    setSessionStats({ correct: 0, incorrect: 0 });
-    setShowCelebration(false);
-  };
-
-  // Touch/Swipe handlers for mobile
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-  
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-  
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const minSwipeDistance = 50;
-    
-    if (distance > minSwipeDistance) {
-      // Swipe left - next card
-      if (currentCardIndex < currentCards.length - 1) {
-        setCurrentCardIndex(currentCardIndex + 1);
-        setIsFlipped(false);
-      }
-    } else if (distance < -minSwipeDistance) {
-      // Swipe right - previous card
-      if (currentCardIndex > 0) {
-        setCurrentCardIndex(currentCardIndex - 1);
-        setIsFlipped(false);
-      }
-    }
-  };
-
-
-
-  // 🤖 ChatGPT API Integration
+  // AI ile flashcard oluşturma
   const generateFlashcardsWithAI = async (topic: string) => {
-    // Günlük limit kontrolü
-    if (dailyLimit >= 3) {
-      alert('❌ Günlük konu oluşturma limitiniz dolmuş! (3/3)\n🕐 Yarın tekrar deneyebilirsiniz.');
+    if (dailyLimit >= 10) {
+      alert('❌ Günlük konu oluşturma limitiniz dolmuş! (10/10)\n🕐 Yarın tekrar deneyebilirsiniz.');
       return;
     }
 
-    // 🔑 API KEY'İNİZİ BURAYA YAZIN
-    const apiKey = 'sk-YOUR_API_KEY_HERE';
-
     setIsGenerating(true);
-    setLastGeneratedTopic(topic);
-
+    
     try {
-      // Konuya özel prompt seçimi
-      const getDetailedPrompt = (subject: string, topic: string) => {
-        switch (subject) {
-          case 'YKS':
-            return `YKS sınavına hazırlanan bir öğrenci için "${topic}" konusunda sade, detaylı ve örnekli şekilde flashcard'lar üret. Her flashcard bir kavram veya soru içersin, ardından açıklayıcı bilgi ve örnek ver. Tam olarak 3 flashcard oluştur.
-
-Dili sade, YKS öğrencisine uygun seviyede olsun. Teknik terimler gerekiyorsa tanımı da verilsin.
-
-JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "Soru veya kavram",
-    "answer": "Detaylı açıklama ve örnek",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "YKS"
-  }
-]`;
-
-          case 'LGS':
-            return `LGS sınavına hazırlanan bir öğrenci için "${topic}" konusunda eğlenceli, sade anlatımlı ve akılda kalıcı flashcard'lar üret. Her bir kartta konu başlığı, kısa açıklama ve bir çocuğun bile anlayabileceği şekilde örnek olsun. Tam olarak 3 flashcard üret.
-
-JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "Soru veya kavram",
-    "answer": "Eğlenceli ve sade açıklama",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "LGS"
-  }
-]`;
-
-          case 'Tıp Fakültesi (Preklinik)':
-            return `Tıp fakültesi preklinik dönemdeki öğrenciler için "${topic}" konusuyla ilgili sınavlara hazırlık amaçlı flashcardlar hazırla. Her kartta bir temel kavram veya soru olsun, ardından açıklayıcı bilgi ekle. Latince terimler varsa açıklamasını da yaz. Tam olarak 3 kart oluştur.
-
-JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "Tıbbi kavram veya soru",
-    "answer": "Detaylı tıbbi açıklama (Latince terimler dahil)",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "Tıp Fakültesi (Preklinik)"
-  }
-]`;
-
-          case 'Tıp Fakültesi (Klinik)':
-            return `Tıp fakültesi klinik dönem öğrencisi için "${topic}" başlığında klinik bilgi ve açıklamalar içeren flashcard'lar üret. Her flashcard tanı, semptom, tedavi veya hasta senaryosu içersin. Tam olarak 3 kart oluştur.
-
-JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "Klinik soru veya hasta senaryosu",
-    "answer": "Tanı, semptom ve tedavi açıklaması",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "Tıp Fakültesi (Klinik)"
-  }
-]`;
-
-          case 'USMLE':
-            return `USMLE sınavına hazırlanan bir öğrenci için "${topic}" başlığında yüksek seviye, İngilizce terimlere sahip, sınav formatına uygun flashcard'lar üret. Her kart USMLE tarzı kısa vaka veya bilgi sorusu içersin ve ardından açıklamasını yaz. Tam olarak 3 kart oluştur.
-
-JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "USMLE-style question or case",
-    "answer": "Detailed medical explanation",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "USMLE"
-  }
-]`;
-
-          case 'TUS':
-            return `TUS sınavına hazırlanan bir hekim için "${topic}" konusunda klinik bilgi ve açıklamalar içeren flashcard'lar üret. Her flashcard tanı, semptom, tedavi veya hasta senaryosu içersin. Tam olarak 3 kart oluştur.
-
-JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "TUS tarzı klinik soru",
-    "answer": "Klinik açıklama ve tedavi yaklaşımı",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "TUS"
-  }
-]`;
-
-          default:
-            return `"${topic}" konusu hakkında ${selectedSubject} seviyesinde flashcard'lar oluştur. JSON formatında şu yapıda döndür:
-[
-  {
-    "question": "Soru metni",
-    "answer": "Detaylı cevap metni",
-    "category": "${topic}",
-    "difficulty": "easy" | "medium" | "hard",
-    "subject": "${selectedSubject}"
-  }
-]`;
+      // Debug: studentData'yı kontrol et
+      console.log('🔍 DEBUG: studentData object:', studentData);
+      console.log('🔍 DEBUG: studentData.targetExam:', studentData.targetExam);
+      
+      // Kullanıcının kayıt sırasında seçtiği alan otomatik kullanılır
+      const userField = studentData.targetExam || 'Genel';
+      console.log('🔍 DEBUG: userField after || operator:', userField);
+      
+      // Subject field'ını normalize et
+      const normalizeSubject = (field: string) => {
+        const fieldLower = field.toLowerCase();
+        console.log('🔍 Original field:', field);
+        console.log('🔍 Normalized field:', fieldLower);
+        
+        if (fieldLower.includes('preklinik') || fieldLower.includes('pre klinik') || fieldLower.includes('pre kli̇ni̇k')) {
+          console.log('✅ Matched: preklinik');
+          return 'preklinik';
+        } else if (fieldLower.includes('klinik') && !fieldLower.includes('pre')) {
+          console.log('✅ Matched: klinik');
+          return 'klinik';
+        } else if (fieldLower.includes('tyt ve ayt') || fieldLower.includes('tyt_ayt')) {
+          console.log('✅ Matched: tyt_ayt');
+          return 'tyt_ayt';
+        } else if (fieldLower.includes('tyt')) {
+          console.log('✅ Matched: tyt');
+          return 'tyt';
+        } else if (fieldLower.includes('ayt')) {
+          console.log('✅ Matched: ayt');
+          return 'ayt';
+        } else if (fieldLower.includes('lgs')) {
+          console.log('✅ Matched: lgs');
+          return 'lgs';
+        } else if (fieldLower.includes('tip')) {
+          console.log('✅ Matched: tip');
+          return 'tip';
+        } else if (fieldLower.includes('usmle')) {
+          console.log('✅ Matched: usmle');
+          return 'usmle';
+        } else if (fieldLower.includes('tus')) {
+          console.log('✅ Matched: tus');
+          return 'tus';
         }
+        console.log('❌ No match found, using:', fieldLower);
+        return fieldLower;
+      };
+      
+      const normalizedSubject = normalizeSubject(userField);
+      
+      const flashcardRequest = {
+        subject: normalizedSubject,
+        topic: topic,
+        count: 5 // En az 5 kart
       };
 
-      // ChatGPT API Call
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'Sen bir eğitim uzmanısın. Verilen talimatlara göre öğrenciler için flashcard\'lar oluşturacaksın. Her flashcard bir soru ve detaylı cevaptan oluşmalı. JSON formatında yanıt ver.'
-            },
-            {
-              role: 'user',
-              content: getDetailedPrompt(selectedSubject, topic)
-            }
-          ],
-          max_tokens: 3000,
-          temperature: 0.7
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.choices[0].message.content;
+      console.log(`🚀 Original Field: ${userField}`);
+      console.log(`🚀 Normalized Subject: ${normalizedSubject}`);
+      console.log(`🚀 Final Request:`, flashcardRequest);
+      console.log(`🚀 "${topic}" konusu için AI flashcard oluşturuluyor...`);
       
-      // JSON parsing
-      const cardData = JSON.parse(content);
+      const newCards = await generateFlashcardsWithOpenAI(flashcardRequest);
       
-      // Convert to Flashcard format (sadece ilk 3 kart)
-      const newCards: Flashcard[] = cardData.slice(0, 3).map((card: any, index: number) => ({
-        id: Date.now() + index,
-        question: card.question,
-        answer: card.answer,
-        category: card.category || topic,
-        difficulty: card.difficulty || 'medium',
-        subject: card.subject || selectedSubject
-      }));
-
-      setGeneratedCards(newCards);
-      setActiveCardSet('generated');
-      setCurrentCardIndex(0);
+      // Kartları kaydet ve görüntüle
+      const updatedCards = [...generatedCards, ...newCards];
+      setGeneratedCards(updatedCards);
+      localStorage.setItem('user_flashcards', JSON.stringify(updatedCards));
+      
+      // Çalışma modunu aç
+      setShowStudyMode(true);
+      setCurrentCardIndex(generatedCards.length); // Yeni kartlardan başla
       setIsFlipped(false);
-      setKnownCards([]);
-      setUnknownCards([]);
-      setSessionStats({ correct: 0, incorrect: 0 });
-
-      // Günlük limit artır ve konu kaydet
+      
       updateDailyLimit();
-      saveTopic(topic, newCards, selectedSubject);
-
+      logApiUsage();
+      setApiUsageStats(getApiUsageStats());
+      
+      alert(`✅ ${userField} alanında "${topic}" konusu için ${newCards.length} flashcard başarıyla oluşturuldu! Artık çalışmaya başlayabilirsiniz.`);
+      
     } catch (error) {
-      console.error('AI Generation Error:', error);
-      alert('❌ Flashcard oluşturulurken bir hata oluştu. API key\'inizi kontrol edin.');
+      console.error('❌ OpenAI Flashcard Generation Error:', error);
+      alert('❌ Flashcard oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsGenerating(false);
     }
@@ -4508,456 +4581,353 @@ JSON formatında şu yapıda döndür:
     }
   };
 
+  // Flashcard etkileşim fonksiyonları
+  const handleCardFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
 
+  const handleKnown = () => {
+    const currentCard = generatedCards[currentCardIndex];
+    if (currentCard && !knownCards.includes(currentCard.id)) {
+      setKnownCards([...knownCards, currentCard.id]);
+      setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    }
+    nextCard();
+  };
 
-  const getSubjectEmoji = (subject: string) => {
-    switch (subject) {
-      case 'Tıp Fakültesi (Preklinik)': return '🩺';
-      case 'Tıp Fakültesi (Klinik)': return '🏥';
-      case 'YKS': return '🎓';
-      case 'LGS': return '📚';
-      case 'USMLE': return '🇺🇸';
-      case 'TUS': return '💊';
-      default: return '📖';
+  const handleUnknown = () => {
+    const currentCard = generatedCards[currentCardIndex];
+    if (currentCard && !studiedCards.includes(currentCard.id)) {
+      setStudiedCards([...studiedCards, currentCard.id]);
+      setSessionStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+    }
+    nextCard();
+  };
+
+  const nextCard = () => {
+    setIsFlipped(false);
+    if (currentCardIndex < generatedCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+    } else {
+      // Son karta ulaşıldı
+      setCurrentCardIndex(0);
+      alert(`🎉 Tüm kartları tamamladınız!\n✅ Bildiğiniz: ${sessionStats.correct + (knownCards.includes(generatedCards[currentCardIndex]?.id) ? 1 : 0)}\n❌ Tekrar edilecek: ${sessionStats.incorrect + (!knownCards.includes(generatedCards[currentCardIndex]?.id) ? 1 : 0)}`);
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'hard': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const resetSession = () => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setStudiedCards([]);
+    setKnownCards([]);
+    setSessionStats({ correct: 0, incorrect: 0 });
   };
 
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Kolay';
-      case 'medium': return 'Orta';
-      case 'hard': return 'Zor';
-      default: return 'Bilinmiyor';
+  const clearAllCards = () => {
+    if (confirm('Tüm flashcard\'ları silmek istediğinizden emin misiniz?')) {
+      setGeneratedCards([]);
+      localStorage.removeItem('user_flashcards');
+      setShowStudyMode(false);
+      resetSession();
     }
   };
-
-  if (showCelebration) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Tebrikler!</h2>
-          <p className="text-gray-600 mb-6">Tüm kartları tamamladınız!</p>
-          <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
-                <div className="text-sm text-gray-600">Bildiğim</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
-                <div className="text-sm text-gray-600">Bilmediğim</div>
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={resetSession}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-          >
-            Yeniden Başla
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
       <div className="max-w-6xl mx-auto p-4">
-        {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-            {/* Title & Subject */}
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">AI Flashcard Studio</h1>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{getSubjectEmoji(selectedSubject)}</span>
-                  <select
-                    value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="text-gray-600 bg-transparent border-none focus:outline-none font-medium"
-                  >
-                    {subjects.map(subject => (
-                      <option key={subject} value={subject}>{subject}</option>
-                    ))}
-                  </select>
+          <div className="text-center">
+            <div className="text-6xl mb-4">🤖</div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">AI Flashcard Studio</h1>
+            {studentData.targetExam ? (
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-xl font-semibold">
+                  🎯 {studentData.targetExam} Alanı
                 </div>
+                <p className="text-gray-600">
+                  {studentData.targetExam} sınavınız için özelleştirilmiş AI flashcard'lar
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-600 mb-8">AI destekli flashcard oluşturun</p>
+            )}
+
+            {/* API Usage Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <div className="text-2xl font-bold text-purple-600">{apiUsageStats.todayUsage}</div>
+                <div className="text-sm text-purple-700">Bugün AI Kullanım</div>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <div className="text-2xl font-bold text-blue-600">{dailyLimit}/10</div>
+                <div className="text-sm text-blue-700">Günlük Limit</div>
+              </div>
+              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                <div className="text-2xl font-bold text-green-600">{apiUsageStats.totalUsage}</div>
+                <div className="text-sm text-green-700">Toplam Kullanım</div>
               </div>
             </div>
 
             {/* Add Topic Controls */}
-            <div className="flex items-center gap-3">
-              {!showAddTopic ? (
+            {!showAddTopic ? (
+              <motion.button
+                onClick={() => setShowAddTopic(true)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium mx-auto"
+                disabled={dailyLimit >= 10}
+              >
+                <span className="text-lg">🚀</span>
+                {dailyLimit >= 10 ? 'Günlük Limit Doldu' : 'Yeni Konu Oluştur'}
+              </motion.button>
+            ) : (
+              <div className="flex items-center gap-2 justify-center">
+                <input
+                  type="text"
+                  value={newTopicInput}
+                  onChange={(e) => setNewTopicInput(e.target.value)}
+                  placeholder={
+                    studentData.targetExam 
+                      ? `${studentData.targetExam} konusu girin (örn: Kalp Fizyolojisi, Türkçe Yazım Kuralları...)` 
+                      : "Konu başlığı girin..."
+                  }
+                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddTopic()}
+                  disabled={isGenerating}
+                  maxLength={50}
+                />
                 <motion.button
-                  onClick={() => setShowAddTopic(true)}
+                  onClick={handleAddTopic}
+                  disabled={isGenerating || !newTopicInput.trim()}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Plus size={18} />
-                  Yeni Konu Oluştur
+                  {isGenerating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      AI Çalışıyor...
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-lg">✨</span>
+                      Oluştur
+                    </>
+                  )}
                 </motion.button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newTopicInput}
-                    onChange={(e) => setNewTopicInput(e.target.value)}
-                    placeholder="Konu başlığı girin..."
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddTopic()}
-                    disabled={isGenerating}
-                    maxLength={30}
-                  />
-                  <motion.button
-                    onClick={handleAddTopic}
-                    disabled={isGenerating}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        AI Çalışıyor...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={18} />
-                        Oluştur
-                      </>
-                    )}
-                  </motion.button>
-                  <button
-                    onClick={() => setShowAddTopic(false)}
-                    className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-                    disabled={isGenerating}
-                  >
-                    <X size={18} />
-                  </button>
+                <button
+                  onClick={() => {
+                    setShowAddTopic(false);
+                    setNewTopicInput('');
+                  }}
+                  className="p-3 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={isGenerating}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {isGenerating && (
+              <div className="mt-8 bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="w-6 h-6 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-emerald-700 font-medium">AI flashcard oluşturuyor...</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-emerald-600">ChatGPT API'ye bağlanılıyor</span>
                   </div>
-                )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse delay-300"></div>
+                    <span className="text-sm text-emerald-600">Konu analiz ediliyor</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse delay-700"></div>
+                    <span className="text-sm text-emerald-600">Flashcard'lar oluşturuluyor</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Flashcard Çalışma Modu veya Boş Durum */}
+        {showStudyMode && generatedCards.length > 0 ? (
+          <div className="space-y-6">
+            {/* Çalışma İstatistikleri */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{currentCardIndex + 1}/{generatedCards.length}</div>
+                  <div className="text-sm text-gray-600">Kart İlerlemesi</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
+                  <div className="text-sm text-gray-600">Biliyorum</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
+                  <div className="text-sm text-gray-600">Tekrar Edilecek</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">{generatedCards.length}</div>
+                  <div className="text-sm text-gray-600">Toplam Kart</div>
+                </div>
               </div>
             </div>
-          </div>
 
-        {/* Card Set Toggle & Topics */}
-        <div className="flex flex-col items-center gap-4 mb-8">
-          {/* Card Set Toggle */}
-          <div className="bg-white rounded-xl p-1 shadow-sm border border-gray-200">
-            <div className="flex">
-              <button
-                onClick={() => {
-                  setActiveCardSet('example');
-                  setCurrentCardIndex(0);
-                  setIsFlipped(false);
-                  setSessionStats({ correct: 0, incorrect: 0 });
-                  setKnownCards([]);
-                  setUnknownCards([]);
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  activeCardSet === 'example'
-                    ? 'bg-blue-100 text-blue-700 shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <BookOpen size={16} />
-                Örnek Kartlar ({flashcards.length})
-              </button>
-              <button
-                onClick={() => {
-                  setActiveCardSet('generated');
-                  setCurrentCardIndex(0);
-                  setIsFlipped(false);
-                  setSessionStats({ correct: 0, incorrect: 0 });
-                  setKnownCards([]);
-                  setUnknownCards([]);
-                }}
-                disabled={generatedCards.length === 0}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 ${
-                  activeCardSet === 'generated'
-                    ? 'bg-green-100 text-green-700 shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Sparkles size={16} />
-                AI Kartları ({generatedCards.length})
-                {lastGeneratedTopic && (
-                  <span className="block text-xs opacity-75">
-                    {lastGeneratedTopic}
-                  </span>
-                )}
-              </button>
-                </div>
-                </div>
-
-          {/* Daily Limit & Topics */}
-          <div className="flex items-center gap-4">
-            {/* Daily Limit Display */}
-            <div className="bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200">
-              <span className="text-sm text-gray-600">Günlük limit: </span>
-              <span className={`font-semibold ${dailyLimit >= 3 ? 'text-red-600' : 'text-green-600'}`}>
-                {dailyLimit}/3
-              </span>
-              </div>
-              
-            {/* Topics Button */}
-            <button
-              onClick={() => setShowTopicsList(!showTopicsList)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-            >
-              <List size={16} />
-              Konularım ({savedTopics.length})
-            </button>
-          </div>
-
-                    {/* Topics List */}
-          {showTopicsList && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 w-full max-w-2xl">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <List size={18} />
-                Kaydedilen Konular
-              </h3>
-              {savedTopics.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {savedTopics.map((topic, index) => (
-                    <div
-                      key={topic.id || index}
-                      onClick={() => switchToSavedTopic(topic)}
-                      className="p-3 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all"
-                    >
-                      <div className="font-medium text-gray-900 mb-1">{topic.title}</div>
-                      <div className="text-sm text-gray-600">
-                        {getSubjectEmoji(topic.subject)} {topic.subject}
+            {/* Flashcard Gösterimi */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl h-96 relative" style={{ perspective: '1000px' }}>
+                <motion.div
+                  key={generatedCards[currentCardIndex]?.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full h-full relative cursor-pointer"
+                  onClick={handleCardFlip}
+                >
+                  <motion.div
+                    className="w-full h-full relative"
+                    animate={{ rotateY: isFlipped ? 180 : 0 }}
+                    transition={{ duration: 0.6 }}
+                    style={{ transformStyle: 'preserve-3d' }}
+                  >
+                    {/* Ön Yüz (Soru) */}
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-lg border border-blue-200 p-8 flex flex-col" style={{ backfaceVisibility: 'hidden' }}>
+                      <div className="flex justify-between items-start mb-6">
+                        <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
+                          {generatedCards[currentCardIndex]?.category || 'Konu'}
+                        </span>
+                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                          {generatedCards[currentCardIndex]?.difficulty === 'easy' ? 'Kolay' : 
+                           generatedCards[currentCardIndex]?.difficulty === 'medium' ? 'Orta' : 'Zor'}
+                        </span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {topic.cards?.length || 3} kart • {topic.date}
+                      
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-4xl mb-4">🤔</div>
+                          <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
+                            {generatedCards[currentCardIndex]?.question}
+                          </h2>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mt-6">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Cevabı görmek için kartı çevirin</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="text-4xl mb-2">📝</div>
-                  <p>Henüz kayıtlı konu bulunmuyor.</p>
-                  <p className="text-sm">AI ile yeni konu oluşturun!</p>
-                </div>
+
+                    {/* Arka Yüz (Cevap) */}
+                    <div 
+                      className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl shadow-lg border border-green-200 p-8 flex flex-col"
+                      style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
+                    >
+                      <div className="flex justify-between items-start mb-6">
+                        <span className="px-3 py-1 bg-green-600 text-white rounded-full text-sm font-medium">
+                          {generatedCards[currentCardIndex]?.category || 'Konu'}
+                        </span>
+                        <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium">
+                          {generatedCards[currentCardIndex]?.subject}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-4xl mb-4">💡</div>
+                          <p className="text-lg text-gray-700 leading-relaxed">
+                            {generatedCards[currentCardIndex]?.answer}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Aksiyon Butonları */}
+            <div className="flex gap-4 justify-center max-w-md mx-auto">
+              <motion.button
+                onClick={handleUnknown}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Bilmiyorum
+              </motion.button>
+              
+              <motion.button
+                onClick={handleKnown}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Biliyorum
+              </motion.button>
+            </div>
+
+            {/* Kontrol Butonları */}
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={resetSession}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                🔄 Oturumu Sıfırla
+              </button>
+              <button
+                onClick={clearAllCards}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                🗑️ Tüm Kartları Sil
+              </button>
+              <button
+                onClick={() => setShowStudyMode(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ➕ Yeni Kart Ekle
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="text-center text-gray-500">
+              <div className="text-4xl mb-4">📚</div>
+              <p className="text-lg mb-2">
+                {generatedCards.length > 0 ? 'Kartlarınız hazır!' : 'Henüz flashcard bulunmuyor'}
+              </p>
+              <p className="text-sm">
+                {generatedCards.length > 0 ? 'Çalışmaya başlamak için butonları kullanın' : 'Yeni bir konu oluşturun ve çalışmaya başlayın'}
+              </p>
+              {generatedCards.length > 0 && (
+                <button
+                  onClick={() => setShowStudyMode(true)}
+                  className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  📖 Çalışmaya Başla ({generatedCards.length} kart)
+                </button>
               )}
             </div>
-          )}
-        </div>
-
-
-
-        {/* Progress & Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Progress */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Target size={20} className="text-blue-600" />
-                İlerleme
-              </h3>
-              <span className="text-sm text-gray-500">
-                {sessionStats.correct + sessionStats.incorrect}/{currentCards.length}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${((sessionStats.correct + sessionStats.incorrect) / currentCards.length) * 100}%` }}
-              ></div>
-            </div>
-            <div className="text-xs text-gray-500">
-              {Math.round(((sessionStats.correct + sessionStats.incorrect) / currentCards.length) * 100)}% tamamlandı
-            </div>
           </div>
-
-          {/* Correct Stats */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Check size={20} className="text-green-600" />
-                </div>
-                <div>
-                <div className="text-2xl font-bold text-green-600">{sessionStats.correct}</div>
-                <div className="text-sm text-gray-600">Biliyorum</div>
-              </div>
-                </div>
-              </div>
-              
-          {/* Incorrect Stats */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <X size={20} className="text-red-600" />
-                </div>
-              <div>
-                <div className="text-2xl font-bold text-red-600">{sessionStats.incorrect}</div>
-                <div className="text-sm text-gray-600">Bilmiyorum</div>
-            </div>
-          </div>
-          </div>
-        </div>
-
-        {/* Flashcard Container */}
-        <div className="flex justify-center mb-8">
-          <div className="w-full max-w-2xl h-96 relative" style={{ perspective: '1000px' }}>
-        <motion.div
-              key={currentCard.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-full h-full relative cursor-pointer"
-              onClick={handleCardFlip}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <motion.div
-                className="w-full h-full relative"
-                animate={{ rotateY: isFlipped ? 180 : 0 }}
-                transition={{ duration: 0.6 }}
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                {/* Front Side */}
-                <div className="absolute inset-0 w-full h-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col" style={{ backfaceVisibility: 'hidden' }}>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                      {currentCard.category}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(currentCard.difficulty)}`}>
-                      {getDifficultyText(currentCard.difficulty)}
-                    </span>
-              </div>
-                  
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-4">🤔</div>
-                      <h2 className="text-xl font-semibold text-gray-900 leading-relaxed">
-                        {currentCard.question}
-                      </h2>
-              </div>
-            </div>
-            
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-6">
-                    <RotateCcw size={16} />
-                    <span>Cevabı görmek için kartı çevirin</span>
-              </div>
-          </div>
-
-                {/* Back Side */}
-                <div 
-                  className="absolute inset-0 w-full h-full bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col"
-                  style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
-                >
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                      {currentCard.category}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(currentCard.difficulty)}`}>
-                      {getDifficultyText(currentCard.difficulty)}
-                    </span>
-            </div>
-                  
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-4">💡</div>
-                      <p className="text-lg text-gray-700 leading-relaxed">
-                        {currentCard.answer}
-                      </p>
-              </div>
-            </div>
-                  
-                  <div className="text-center text-sm text-gray-500 mt-6">
-                    {currentCard.subject}
-                  </div>
-          </div>
-              </motion.div>
-        </motion.div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 justify-center max-w-md mx-auto mb-8">
-          <motion.button
-            onClick={handleUnknown}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
-          >
-            <X size={20} />
-            Bilmiyorum
-          </motion.button>
-          
-          <motion.button
-            onClick={handleKnown}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-sm"
-          >
-            <Check size={20} />
-            Biliyorum
-          </motion.button>
-        </div>
-
-        {/* Navigation & Reset */}
-        <div className="flex items-center justify-center gap-8">
-          {/* Navigation */}
-          <div className="flex items-center gap-4">
-            <motion.button
-              onClick={() => setCurrentCardIndex(Math.max(0, currentCardIndex - 1))}
-              disabled={currentCardIndex === 0}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-3 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={20} className="text-gray-600" />
-            </motion.button>
-            
-            <span className="text-sm text-gray-500 font-medium min-w-16 text-center">
-              {currentCardIndex + 1} / {currentCards.length}
-            </span>
-            
-            <motion.button
-              onClick={() => setCurrentCardIndex(Math.min(currentCards.length - 1, currentCardIndex + 1))}
-              disabled={currentCardIndex === currentCards.length - 1}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-3 bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight size={20} className="text-gray-600" />
-            </motion.button>
-          </div>
-
-          {/* Reset Button */}
-          <motion.button
-            onClick={resetSession}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-xl font-medium hover:bg-gray-700 transition-colors"
-          >
-            <RotateCcw size={18} />
-            Sıfırla
-          </motion.button>
-        </div>
+        )}
       </div>
     </div>
   );
